@@ -4,7 +4,7 @@
     <div id="app" class="app-layout">
         <header class="app-header">
             <div class="header-content">
-                <button class="icon-btn menu-toggle-btn"">
+                <button class="icon-btn menu-toggle-btn">
                     <i class="mdi mdi-menu"></i>
                 </button>
                 <div class="toolbar-title">Webtrader</div>
@@ -50,158 +50,182 @@
                     </div>
                 </div>
 
-                <div class="d-flex align-start row-header">
-                    <div class="col-card">
-                        <div class="card card-small">
-                            <div class="card-title">Cac</div>
-                            <div class="card-text card-metrics">
-                                <span class="text-h6">7500.55 pts</span>
-                                <i class="mdi mdi-arrow-up-thin icon icon-up"></i>
-                                <span class="text-body-2 text-muted">+0.85%</span>
+                <div class="main-content-row d-flex">
+
+                    <div class="col-left">
+
+                        <div class="row-header d-flex align-start">
+                            <div class="col-card">
+                                <div class="card card-small">
+                                    <div class="card-title">Cac</div>
+                                    <div class="card-text card-metrics">
+                                        <span class="text-h6">7500.55 pts</span>
+                                        <i class="mdi mdi-arrow-up-thin icon icon-up"></i>
+                                        <span class="text-body-2 text-muted">+0.85%</span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <div class="col-card">
-                        <div class="card card-small">
-                            <div class="card-title">Last High</div>
-                            <div class="card-text card-metrics">
-                                <span class="text-body-2 text-muted">29/11/24</span>
-                                <span class="text-h6 px-6">7450.00 pts</span>
+                            <div class="col-card">
+                                <div class="card card-small">
+                                    <div class="card-title">Last High</div>
+                                    <div class="card-text card-metrics">
+                                        <span class="text-body-2 text-muted">29/11/24</span>
+                                        <span class="text-h6 px-6">7450.00 pts</span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <div class="col-card">
-                        <div class="card card-small">
-                            <div class="card-title">Buy Limit</div>
-                            <div class="card-text card-metrics">
-                                <span class="text-h6">7400.00 pts</span>
-                                <span class="text-body-2 text-muted px-6">-1.34%</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-button d-flex align-center">
-                        <button class="btn btn-primary">
-                            <i class="mdi mdi-refresh icon-left"></i>
-                            Rafraîchir les données
-                        </button>
-                    </div>
-                </div>
-
-                <div class="d-flex row-content">
-                    <div class="col-table">
-                        <div class="data-table-container elevation-5">
-                            <table class="data-table">
-                                <thead>
-                                <tr>
-                                    <th colspan="5" class="table-header-group">Cotations du CAC</th>
-                                    <th colspan="1" class="table-header-group">LVC</th>
-                                </tr>
-                                <tr>
-                                    <th>Date</th>
-                                    <th class="align-right">Clôture</th>
-                                    <th class="align-right">Ouverture</th>
-                                    <th class="align-right">Plus haut</th>
-                                    <th class="align-right">Plus bas</th>
-                                    <th class="align-right">Clôture</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr>
-                                    <td>29/11/24</td>
-                                    <td class="align-right">7500.55</td>
-                                    <td class="align-right">7480.10</td>
-                                    <td class="align-right">7510.90</td>
-                                    <td class="align-right">7470.00</td>
-                                    <td class="align-right">12.50</td>
-                                </tr>
-                                <tr class="hover-effect">
-                                    <td>28/11/24</td>
-                                    <td class="align-right">7437.20</td>
-                                    <td class="align-right">7450.00</td>
-                                    <td class="align-right">7480.00</td>
-                                    <td class="align-right">7400.00</td>
-                                    <td class="align-right">11.90</td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="col-positions">
-                        <div class="card position-card running-positions">
-                            <div class="card-title position-header-running">Positions en cours</div>
-                            <div class="card-divider"></div>
-                            <div class="card-text pa-0">
-                                <table class="position-table">
-                                    <thead>
-                                    <tr>
-                                        <th rowspan="2">Acheté</th>
-                                        <th rowspan="2">Qté</th>
-                                        <th rowspan="2">Trade</th>
-                                        <th colspan="2" class="align-center">Achat</th>
-                                        <th colspan="2" class="align-left">Revente</th>
-                                        <th rowspan="2" class="align-left">Edit</th>
-                                    </tr>
-                                    <tr>
-                                        <th>LVC</th>
-                                        <th>CAC</th>
-                                        <th>LVC</th>
-                                        <th>CAC</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <tr>
-                                        <td>28/11/24</td>
-                                        <td>10</td>
-                                        <td>1234</td>
-                                        <td>7400.00</td>
-                                        <td>12.00</td>
-                                        <td>NON</td>
-                                        <td>NON</td>
-                                        <td><i class="mdi mdi-pencil edit-icon"></i></td>
-                                    </tr>
-                                    </tbody>
-                                </table>
+                            <div class="col-card">
+                                <div class="card card-small">
+                                    <div class="card-title">Buy Limit</div>
+                                    <div class="card-text card-metrics">
+                                        <span class="text-h6">7400.00 pts</span>
+                                        <span class="text-body-2 text-muted px-6">-1.34%</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="card position-card waiting-positions">
-                            <div class="card-title position-header-waiting">Positions en attente</div>
-                            <div class="card-divider"></div>
-                            <div class="card-text pa-0">
-                                <table class="position-table">
-                                    <thead>
-                                    <tr>
-                                        <th rowspan="2">Validité</th>
-                                        <th rowspan="2">Qté</th>
-                                        <th rowspan="2">Trade</th>
-                                        <th colspan="2" class="align-center">Achat</th>
-                                        <th colspan="2" class="align-left">Revente</th>
-                                    </tr>
-                                    <tr>
-                                        <th>LVC</th>
-                                        <th>CAC</th>
-                                        <th>LVC</th>
-                                        <th>CAC</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <tr>
-                                        <td>01/03/25</td>
-                                        <td>5</td>
-                                        <td>5678</td>
-                                        <td>7300.00</td>
-                                        <td>11.50</td>
-                                        <td>NON</td>
-                                        <td>NON</td>
-                                    </tr>
-                                    </tbody>
-                                </table>
+                        <div class="row-table">
+                            <div class="col-table">
+                                <div class="data-table-container elevation-5">
+                                    <table class="data-table">
+                                        <thead>
+                                        <tr>
+                                            <th colspan="5" class="table-header-group">Cotations du CAC</th>
+                                            <th colspan="1" class="table-header-group">LVC</th>
+                                        </tr>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th class="align-right">Clôture</th>
+                                            <th class="align-right">Ouverture</th>
+                                            <th class="align-right">Plus haut</th>
+                                            <th class="align-right">Plus bas</th>
+                                            <th class="align-right">Clôture</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td>29/11/24</td>
+                                            <td class="align-right">7500.55</td>
+                                            <td class="align-right">7480.10</td>
+                                            <td class="align-right">7510.90</td>
+                                            <td class="align-right">7470.00</td>
+                                            <td class="align-right">12.50</td>
+                                        </tr>
+                                        <tr class="hover-effect">
+                                            <td>28/11/24</td>
+                                            <td class="align-right">7437.20</td>
+                                            <td class="align-right">7450.00</td>
+                                            <td class="align-right">7480.00</td>
+                                            <td class="align-right">7400.00</td>
+                                            <td class="align-right">11.90</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
+
+                    </div>
+
+                    <div class="col-right">
+
+                        <div class="row-boxes d-flex align-start">
+                            <div class="box-1-3 card card-small">
+                                <div class="card-title">Stat 1</div>
+                                <div class="card-text text-h6">Graphique A</div>
+                            </div>
+                            <div class="box-1-3 card card-small">
+                                <div class="card-title">Stat 2</div>
+                                <div class="card-text text-h6">Graphique B</div>
+                            </div>
+                            <div class="box-1-3 card card-small">
+                                <div class="card-title">Stat 3</div>
+                                <div class="card-text text-h6">Graphique C</div>
+                            </div>
+                        </div>
+
+                        <div class="row-positions-spacer d-flex">
+                            <div class="col-positions-wrap">
+                                <div class="col-positions">
+                                    <div class="card position-card running-positions">
+                                        <div class="card-title position-header-running">Positions en cours</div>
+                                        <div class="card-divider"></div>
+                                        <div class="card-text pa-0">
+                                            <table class="position-table">
+                                                <thead>
+                                                <tr>
+                                                    <th rowspan="2">Acheté</th>
+                                                    <th rowspan="2">Qté</th>
+                                                    <th rowspan="2">Trade</th>
+                                                    <th colspan="2" class="align-center">Achat</th>
+                                                    <th colspan="2" class="align-left">Revente</th>
+                                                    <th rowspan="2" class="align-left">Edit</th>
+                                                </tr>
+                                                <tr>
+                                                    <th>LVC</th>
+                                                    <th>CAC</th>
+                                                    <th>LVC</th>
+                                                    <th>CAC</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tr>
+                                                    <td>28/11/24</td>
+                                                    <td>10</td>
+                                                    <td>1234</td>
+                                                    <td>7400.00</td>
+                                                    <td>12.00</td>
+                                                    <td>NON</td>
+                                                    <td>NON</td>
+                                                    <td><i class="mdi mdi-pencil edit-icon"></i></td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <div class="card position-card waiting-positions">
+                                        <div class="card-title position-header-waiting">Positions en attente</div>
+                                        <div class="card-divider"></div>
+                                        <div class="card-text pa-0">
+                                            <table class="position-table">
+                                                <thead>
+                                                <tr>
+                                                    <th rowspan="2">Validité</th>
+                                                    <th rowspan="2">Qté</th>
+                                                    <th rowspan="2">Trade</th>
+                                                    <th colspan="2" class="align-center">Achat</th>
+                                                    <th colspan="2" class="align-left">Revente</th>
+                                                </tr>
+                                                <tr>
+                                                    <th>LVC</th>
+                                                    <th>CAC</th>
+                                                    <th>LVC</th>
+                                                    <th>CAC</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tr>
+                                                    <td>01/03/25</td>
+                                                    <td>5</td>
+                                                    <td>5678</td>
+                                                    <td>7300.00</td>
+                                                    <td>11.50</td>
+                                                    <td>NON</td>
+                                                    <td>NON</td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-spacer"></div>
+                        </div>
+
                     </div>
                 </div>
 

@@ -186,30 +186,78 @@ body.drawer-open .app-main::before {
 }
 
 /* -------------------------------------- */
-/* 4. Layout du Contenu */
+/* 4. Layout du Contenu - STRUCTURE 50/50 */
 /* -------------------------------------- */
 
+.main-content-row {
+    display: flex;
+    gap: 20px; /* Espace entre les deux colonnes (Gauche/Droite) */
+}
+
+.col-left, .col-right {
+    flex: 0 0 calc(50% - 10px); /* Chacun occupe 50% de l'espace moins 10px pour laisser un gap total de 20px */
+    display: flex; /* Permet d'empiler les éléments verticalement */
+    flex-direction: column;
+    gap: 20px; /* Espace entre les groupes d'éléments (Cards/Table et Boxes/Positions) */
+}
+
+/* --- COLONNE GAUCHE (Cards 1/3 + Data Table) --- */
+
 .row-header {
+    /* Contient les 3 cartes */
+    width: 100%;
     gap: 15px;
-    margin-bottom: 20px;
+    margin-bottom: 0;
 }
 
-.row-content {
-    gap: 20px;
+.col-card {
+    /* Chaque card occupe 1/3 de l'espace disponible */
+    flex: 1 1 33%;
 }
 
-.col-card, .col-button {
-    flex-grow: 0;
-    flex-shrink: 0;
+.row-table {
+    /* Assure que le tableau prend la pleine largeur restante */
+    flex-grow: 1;
 }
 
 .col-table {
-    flex: 1 1 65%;
+    /* Le conteneur du tableau doit occuper 100% de .row-table */
+    flex: 0 0 100%;
 }
 
-.col-positions {
-    flex: 1 1 30%;
+/* --- COLONNE DROITE (3 Boîtes 1/3 + Positions 2/3) --- */
+
+.row-boxes {
+    /* Ligne des 3 boîtes */
+    width: 100%;
+    gap: 15px;
 }
+
+.box-1-3 {
+    /* Les 3 nouvelles boîtes occupent 1/3 de la largeur de .col-right */
+    flex: 1 1 33.333%;
+    /* Utilisé comme carte (voir section 5 pour le style card-small) */
+}
+
+.row-positions-spacer {
+    /* Ligne des positions (2/3) + espace vide (1/3) */
+    width: 100%;
+    gap: 20px;
+    flex-grow: 1;
+}
+
+.col-positions-wrap {
+    /* Conteneur des positions occupe 2/3 de la largeur de .col-right */
+    flex: 0 0 66.666%;
+}
+
+.col-spacer {
+    /* L'espace vide occupe 1/3 */
+    flex: 0 0 33.333%;
+}
+
+/* Suppression des anciennes règles de col-table et col-positions */
+
 
 /* -------------------------------------- */
 /* 5. Cartes (v-card) */
@@ -228,7 +276,6 @@ body.drawer-open .app-main::before {
 
 .card-small {
     height: 100px;
-    width: 250px;
     padding: 10px;
 }
 
@@ -306,15 +353,16 @@ body.drawer-open .app-main::before {
 /* 7. Tableau de données (v-data-table) */
 /* -------------------------------------- */
 
+/* IMPORTANT : On applique le border-radius au conteneur pour l'ombre/arrondi */
 .data-table-container {
     overflow-x: auto;
+    border-radius: var(--border-radius);
 }
 
 .data-table {
     width: 100%;
     border-collapse: collapse;
     background-color: var(--color-background-secondary);
-    border-radius: var(--border-radius);
 }
 
 .elevation-5 {
@@ -334,6 +382,16 @@ body.drawer-open .app-main::before {
     text-transform: uppercase;
     font-size: 0.8rem;
 }
+
+/* Arrondir les coins de l'en-tête (pour corriger le problème de border-radius) */
+.data-table thead tr:first-child th:first-child {
+    border-top-left-radius: var(--border-radius);
+}
+
+.data-table thead tr:first-child th:last-child {
+    border-top-right-radius: var(--border-radius);
+}
+
 
 /* Groupe d'en-tête */
 .table-header-group {
@@ -451,13 +509,14 @@ body.drawer-open .app-main::before {
 /* 10. Adaptation Mobile */
 /* -------------------------------------- */
 @media (max-width: 900px) {
-    .row-header, .row-content {
+    .main-content-row, .row-header, .row-boxes, .row-positions-spacer {
         flex-direction: column;
         gap: 10px;
     }
-    .col-card, .col-table, .col-positions {
+    .col-left, .col-right, .col-card, .col-table, .col-positions-wrap, .col-spacer {
         width: 100%;
         max-width: 100%;
+        flex: 1 1 100% !important; /* Force le mode empilement */
     }
     .col-button {
         width: 100%;
@@ -467,7 +526,6 @@ body.drawer-open .app-main::before {
         width: 100%;
     }
     .data-table-container {
-        /* Permet de scroller horizontalement les petits tableaux */
         overflow-x: scroll;
     }
 }

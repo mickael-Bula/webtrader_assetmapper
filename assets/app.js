@@ -9,3 +9,6 @@ import './styles/app.css';
 
 // Menu latéral
 import './js/menu.js';
+
+// Bouton de déconnexion
+import './js/off_button.js';

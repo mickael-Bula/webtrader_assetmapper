@@ -106,6 +106,29 @@ body {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
+/* --- Couleurs de bascule pour l'icône --- */
+
+/* Couleur par défaut (Vert) */
+.icon-on {
+    color: #64DD17; /* Light Green light-green-accent-4 de la palette MDI */
+}
+
+/* Couleur alternative (Orange) */
+.icon-off {
+    color: #FF7043; /* Deep Orange deep-orange-lighten-1 de la palette MDI */
+}
+
+.icon-btn svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: currentColor; /* Permet d'hériter de la couleur définie par .icon-red ou .icon-green */
+    transition: color 0.3s ease; /* Ajoute une transition pour un effet plus doux */
+}
+
+/* Retire la couleur blanche du style initial */
+.icon-btn.login-btn {
+}
+
 /* -------------------------------------- */
 /* 3. Menu latéral (v-navigation-drawer) */
 /* -------------------------------------- */

@@ -163,7 +163,8 @@
                     <div class="col-right">
 
                         <div class="image-box elevation-5">
-                            <img src="{{ asset('images/fchi_daily.png') }}"
+                            {# On pointe directement sur le dossier public #}
+                            <img src="{{ chart_url('/charts/fchi_daily.png') }}"
                                  alt="Graphique quotidien de l'indice"
                                  class="full-width-image"/>
                         </div>

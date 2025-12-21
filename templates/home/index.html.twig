@@ -9,7 +9,10 @@
                 </button>
                 <div class="toolbar-title">Webtrader</div>
                 <div class="spacer"></div>
-                <button id="toggle-icon-color" class="icon-btn login-btn icon-on">
+                <button class="icon-btn login-btn icon-on"
+                        data-controller="login-icon"
+                        data-login-icon-target="button"
+                        data-action="click->login-icon#toggle">
                     {{ ux_icon('quill:off') }}
                 </button>
             </div>

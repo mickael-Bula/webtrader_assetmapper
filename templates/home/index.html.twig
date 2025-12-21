@@ -1,10 +1,13 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-    <div id="app" class="app-layout">
+    <div id="app" class="app-layout"
+         data-controller="menu"
+         data-menu-open-class="menu-open">
         <header class="app-header">
             <div class="header-content">
-                <button class="icon-btn menu-toggle-btn">
+                <button class="icon-btn menu-toggle-btn"
+                        data-action="click->menu#toggle">
                     <i class="mdi mdi-menu"></i>
                 </button>
                 <div class="toolbar-title">Webtrader</div>
@@ -42,7 +45,7 @@
             </ul>
         </nav>
 
-        <main class="app-main">
+        <main class="app-main" data-action="click->menu#close">
             <div class="dashboard-container">
                 <div class="notification-area">
                     <div class="notification danger" style="background-color: #D84315;">

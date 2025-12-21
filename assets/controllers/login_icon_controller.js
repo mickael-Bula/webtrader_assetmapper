@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 /**
- * @property {HTMLElement} buttonTarget
+ * @property {HTMLButtonElement} buttonTarget
  * @property {string} onClassValue
  * @property {string} offClassValue
  */
@@ -18,7 +18,10 @@ export default class extends Controller {
     toggle() {
         const btn = this.buttonTarget;
 
-        // Bascule entre les deux classes
+        /**
+         * On utilise onClassValue et pas onClass,
+         * car Stimulus impose le suffixe Value pour distinguer données et méthodes/classes.
+         */
         if (btn.classList.contains(this.offClassValue)) {
             btn.classList.replace(this.offClassValue, this.onClassValue);
         } else {

@@ -148,12 +148,12 @@ body {
 }
 
 /* État 'drawer-open' simulé via JS */
-body.drawer-open .navigation-drawer {
+body.menu-open .navigation-drawer {
     transform: translateX(0);
 }
 
 /* Overlay lorsque le menu est ouvert (style 'temporary') */
-body.drawer-open .app-main::before {
+body.menu-open .app-main::before {
     content: '';
     position: fixed;
     top: 0;

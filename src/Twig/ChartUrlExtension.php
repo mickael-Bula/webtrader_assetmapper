@@ -4,36 +4,32 @@ declare(strict_types=1);
 
 namespace App\Twig;
 
-use Twig\Extension\AbstractExtension;
-use Twig\TwigFunction;
+use Twig\Attribute\AsTwigFunction;
 
-class ChartUrlExtension extends AbstractExtension
+/**
+ * @noinspection PhpUnused La classe est instanciée dynamiquement par Twig.
+ */
+class ChartUrlExtension
 {
     private string $publicDir;
 
     public function __construct(string $projectDir)
     {
-        // On récupère le chemin vers /public
+        // On prépare le chemin vers le dossier public
         $this->publicDir = $projectDir . '/public';
     }
 
-    public function getFunctions(): array
-    {
-        return [
-            // On crée une fonction Twig nommée 'chart_url'
-            new TwigFunction('chart_url', [$this, 'getChartUrl']),
-        ];
-    }
-
+    #[AsTwigFunction('chart_url')]
     public function getChartUrl(string $path): string
     {
         $fullPath = $this->publicDir . $path;
 
         if (file_exists($fullPath)) {
-            // On ajoute le timestamp de modification du fichier
+            // filemtime renvoie le timestamp de modification (ex: 1734730000)
             return $path . '?v=' . filemtime($fullPath);
         }
 
+        // Si le fichier n'existe pas, on renvoie le chemin brut pour éviter de casser l'image
         return $path;
     }
 }

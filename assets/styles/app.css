@@ -543,8 +543,31 @@ body.drawer-open .app-main::before {
     padding: 0 10px;
 }
 
+/* ---------------------------------------- */
+/* 11. Onglets pour afficher les graphiques */
+/* ---------------------------------------- */
+.tab-btn {
+    background: #2c2c2c;
+    color: #888;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s;
+}
+
+.tab-btn.active {
+    color: #4CAF50; /* Vert trading */
+    border-bottom: 2px solid #4CAF50;
+    background: #333;
+}
+
+.tab-btn:hover {
+    background: #383838;
+}
+
 /* -------------------------------------- */
-/* 10. Adaptation Mobile */
+/* Adaptation Mobile                      */
 /* -------------------------------------- */
 @media (max-width: 900px) {
     .main-content-row, .row-header, .row-boxes, .row-positions-spacer {

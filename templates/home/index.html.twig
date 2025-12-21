@@ -162,11 +162,25 @@
 
                     <div class="col-right">
 
-                        <div class="image-box elevation-5">
-                            {# On pointe directement sur le dossier public #}
-                            <img src="{{ chart_url('/charts/fchi_daily.png') }}"
-                                 alt="Graphique quotidien de l'indice"
-                                 class="full-width-image"/>
+                        <div class="image-box elevation-5" data-controller="chart">
+                            <div class="tabs-container d-flex mb-2">
+                                <button class="tab-btn"
+                                        data-action="click->chart#switch"
+                                        data-url="{{ chart_url('/charts/fchi_hourly.png') }}">Horaire</button>
+                                <button class="tab-btn active"
+                                        data-action="click->chart#switch"
+                                        data-url="{{ chart_url('/charts/fchi_daily.png') }}">Quotidien</button>
+                                <button class="tab-btn"
+                                        data-action="click->chart#switch"
+                                        data-url="{{ chart_url('/charts/fchi_weekly.png') }}">Hebdo</button>
+                            </div>
+
+                            <div class="chart-display">
+                                <img data-chart-target="display"
+                                     src="{{ chart_url('/charts/fchi_daily.png') }}"
+                                     alt="Graphique CAC40"
+                                     class="full-width-image" />
+                            </div>
                         </div>
 
                         <div class="row-positions-spacer d-flex">

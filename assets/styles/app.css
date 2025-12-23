@@ -106,6 +106,29 @@ body {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
+/* --- Couleurs de bascule pour l'icône --- */
+
+/* Couleur par défaut (Vert) */
+.icon-on {
+    color: #64DD17; /* Light Green light-green-accent-4 de la palette MDI */
+}
+
+/* Couleur alternative (Orange) */
+.icon-off {
+    color: #FF7043; /* Deep Orange deep-orange-lighten-1 de la palette MDI */
+}
+
+.icon-btn svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: currentColor; /* Permet d'hériter de la couleur définie par .icon-red ou .icon-green */
+    transition: color 0.3s ease; /* Ajoute une transition pour un effet plus doux */
+}
+
+/* Retire la couleur blanche du style initial */
+.icon-btn.login-btn {
+}
+
 /* -------------------------------------- */
 /* 3. Menu latéral (v-navigation-drawer) */
 /* -------------------------------------- */
@@ -125,12 +148,12 @@ body {
 }
 
 /* État 'drawer-open' simulé via JS */
-body.drawer-open .navigation-drawer {
+body.menu-open .navigation-drawer {
     transform: translateX(0);
 }
 
 /* Overlay lorsque le menu est ouvert (style 'temporary') */
-body.drawer-open .app-main::before {
+body.menu-open .app-main::before {
     content: '';
     position: fixed;
     top: 0;
@@ -186,29 +209,92 @@ body.drawer-open .app-main::before {
 }
 
 /* -------------------------------------- */
-/* 4. Layout du Contenu */
+/* 4. Layout du Contenu - STRUCTURE 50/50 */
 /* -------------------------------------- */
 
+.main-content-row {
+    display: flex;
+    gap: 20px; /* Espace entre les deux colonnes (Gauche/Droite) */
+}
+
+.col-left, .col-right {
+    flex: 0 0 calc(50% - 10px); /* Chacun occupe 50% de l'espace moins 10px pour laisser un gap total de 20px */
+    display: flex; /* Permet d'empiler les éléments verticalement */
+    flex-direction: column;
+    gap: 20px; /* Espace entre les groupes d'éléments (Cards/Table et Boxes/Positions) */
+}
+
+/* --- COLONNE GAUCHE : Cards (1/3 chacune) + Data Table --- */
+
 .row-header {
+    /* Contient les 3 cartes */
+    width: 100%;
     gap: 15px;
-    margin-bottom: 20px;
+    margin-bottom: 0;
 }
 
-.row-content {
-    gap: 20px;
+.col-card {
+    /* Chaque carte prend 1/3 de l'espace moins les gaps */
+    flex: 1 1 33.333%;
 }
 
-.col-card, .col-button {
+.col-button {
+    /* Le bouton prend juste l'espace nécessaire */
     flex-grow: 0;
     flex-shrink: 0;
 }
 
+.row-table {
+    /* Assure que le tableau prend la pleine largeur restante */
+    flex-grow: 1;
+}
+
 .col-table {
-    flex: 1 1 65%;
+    /* Le conteneur du tableau doit occuper 100% de .row-table */
+    flex: 0 0 100%;
+}
+
+/* --- COLONNE DROITE : Image + Positions (2/3) --- */
+
+.image-box {
+    /* Ligne 1: Image - Pleine largeur de .col-right (50% de la page) */
+    width: 100%;
+    height: 400px; /* Hauteur fixe souhaitée */
+    overflow: hidden;
+    border-radius: var(--border-radius);
+    background-color: var(--color-background-secondary);
+}
+
+.full-width-image {
+    /* Style pour l'image à l'intérieur de image-box */
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.row-positions-spacer {
+    /* Ligne 2 : Positions (2/3) + Espace vide (1/3) */
+    width: 100%;
+    gap: 20px;
+    flex-grow: 1; /* Permet à cette ligne d'occuper l'espace vertical restant */
+}
+
+.col-positions-wrap {
+    /* Conteneur des positions occupe 2/3 de la largeur de .col-right */
+    flex: 0 0 66.666%;
+}
+
+.col-spacer {
+    /* L'espace vide occupe 1/3 */
+    flex: 0 0 33.333%;
 }
 
 .col-positions {
-    flex: 1 1 30%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Espace entre les deux tableaux de positions */
 }
 
 /* -------------------------------------- */
@@ -228,7 +314,6 @@ body.drawer-open .app-main::before {
 
 .card-small {
     height: 100px;
-    width: 250px;
     padding: 10px;
 }
 
@@ -306,15 +391,16 @@ body.drawer-open .app-main::before {
 /* 7. Tableau de données (v-data-table) */
 /* -------------------------------------- */
 
+/* IMPORTANT : On applique le border-radius au conteneur pour l'ombre/arrondi */
 .data-table-container {
     overflow-x: auto;
+    border-radius: var(--border-radius);
 }
 
 .data-table {
     width: 100%;
     border-collapse: collapse;
     background-color: var(--color-background-secondary);
-    border-radius: var(--border-radius);
 }
 
 .elevation-5 {
@@ -334,6 +420,16 @@ body.drawer-open .app-main::before {
     text-transform: uppercase;
     font-size: 0.8rem;
 }
+
+/* Arrondir les coins de l'en-tête (pour corriger le problème de border-radius) */
+.data-table thead tr:first-child th:first-child {
+    border-top-left-radius: var(--border-radius);
+}
+
+.data-table thead tr:first-child th:last-child {
+    border-top-right-radius: var(--border-radius);
+}
+
 
 /* Groupe d'en-tête */
 .table-header-group {
@@ -447,17 +543,41 @@ body.drawer-open .app-main::before {
     padding: 0 10px;
 }
 
+/* ---------------------------------------- */
+/* 11. Onglets pour afficher les graphiques */
+/* ---------------------------------------- */
+.tab-btn {
+    background: #2c2c2c;
+    color: #888;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s;
+}
+
+.tab-btn.active {
+    color: #4CAF50; /* Vert trading */
+    border-bottom: 2px solid #4CAF50;
+    background: #333;
+}
+
+.tab-btn:hover {
+    background: #383838;
+}
+
 /* -------------------------------------- */
-/* 10. Adaptation Mobile */
+/* Adaptation Mobile                      */
 /* -------------------------------------- */
 @media (max-width: 900px) {
-    .row-header, .row-content {
+    .main-content-row, .row-header, .row-boxes, .row-positions-spacer {
         flex-direction: column;
         gap: 10px;
     }
-    .col-card, .col-table, .col-positions {
+    .col-left, .col-right, .col-card, .col-table, .col-positions-wrap, .col-spacer {
         width: 100%;
         max-width: 100%;
+        flex: 1 1 100% !important; /* Force le mode empilement */
     }
     .col-button {
         width: 100%;
@@ -467,7 +587,6 @@ body.drawer-open .app-main::before {
         width: 100%;
     }
     .data-table-container {
-        /* Permet de scroller horizontalement les petits tableaux */
         overflow-x: scroll;
     }
 }

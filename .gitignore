@@ -18,3 +18,7 @@
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+
+# Ignorer les images dans le dossier des images, sauf pour le dossier .gitkeep (force le suivi du dossier vide).
+assets/images/*
+!assets/images/.gitkeep

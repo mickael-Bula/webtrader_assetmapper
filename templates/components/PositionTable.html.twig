@@ -1,0 +1,48 @@
+<div class="card position-card {{ type }}-positions">
+    <div class="card-title {{ this.headerClass }}">
+        {{ this.displayTitle }}
+    </div>
+    <div class="card-divider"></div>
+    <div class="card-text pa-0">
+        <table class="position-table">
+            <thead>
+            <tr>
+                <th rowspan="2">{{ this.dateLabel }}</th>
+                <th rowspan="2">Qté</th>
+                <th rowspan="2">Trade</th>
+                <th colspan="2" class="align-center">Achat</th>
+                <th colspan="2" class="align-left">Revente</th>
+                {% if type == 'running' %}
+                    <th rowspan="2" class="align-left">Edit</th>
+                {% endif %}
+            </tr>
+            <tr>
+                <th>LVC</th>
+                <th>CAC</th>
+                <th>LVC</th>
+                <th>CAC</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for pos in positions %}
+                <tr>
+                    <td>{{ pos.date }}</td>
+                    <td>{{ pos.qty }}</td>
+                    <td>{{ pos.id }}</td>
+                    <td>{{ pos.lvc_buy }}</td>
+                    <td>{{ pos.cac_buy }}</td>
+                    <td>{{ pos.lvc_sell }}</td>
+                    <td>{{ pos.cac_sell }}</td>
+                    {% if type == 'running' %}
+                        <td><i class="mdi mdi-pencil edit-icon"></i></td>
+                    {% endif %}
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="{{ type == 'running' ? 8 : 7 }}" class="text-center">Aucune position</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

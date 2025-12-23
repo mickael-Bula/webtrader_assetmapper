@@ -192,77 +192,14 @@
                         <div class="row-positions-spacer d-flex">
                             <div class="col-positions-wrap">
                                 <div class="col-positions">
-                                    <div class="card position-card running-positions">
-                                        <div class="card-title position-header-running">Positions en cours</div>
-                                        <div class="card-divider"></div>
-                                        <div class="card-text pa-0">
-                                            <table class="position-table">
-                                                <thead>
-                                                <tr>
-                                                    <th rowspan="2">Acheté</th>
-                                                    <th rowspan="2">Qté</th>
-                                                    <th rowspan="2">Trade</th>
-                                                    <th colspan="2" class="align-center">Achat</th>
-                                                    <th colspan="2" class="align-left">Revente</th>
-                                                    <th rowspan="2" class="align-left">Edit</th>
-                                                </tr>
-                                                <tr>
-                                                    <th>LVC</th>
-                                                    <th>CAC</th>
-                                                    <th>LVC</th>
-                                                    <th>CAC</th>
-                                                </tr>
-                                                </thead>
-                                                <tbody>
-                                                <tr>
-                                                    <td>28/11/24</td>
-                                                    <td>10</td>
-                                                    <td>1234</td>
-                                                    <td>7400.00</td>
-                                                    <td>12.00</td>
-                                                    <td>NON</td>
-                                                    <td>NON</td>
-                                                    <td><i class="mdi mdi-pencil edit-icon"></i></td>
-                                                </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-
-                                    <div class="card position-card waiting-positions">
-                                        <div class="card-title position-header-waiting">Positions en attente</div>
-                                        <div class="card-divider"></div>
-                                        <div class="card-text pa-0">
-                                            <table class="position-table">
-                                                <thead>
-                                                <tr>
-                                                    <th rowspan="2">Validité</th>
-                                                    <th rowspan="2">Qté</th>
-                                                    <th rowspan="2">Trade</th>
-                                                    <th colspan="2" class="align-center">Achat</th>
-                                                    <th colspan="2" class="align-left">Revente</th>
-                                                </tr>
-                                                <tr>
-                                                    <th>LVC</th>
-                                                    <th>CAC</th>
-                                                    <th>LVC</th>
-                                                    <th>CAC</th>
-                                                </tr>
-                                                </thead>
-                                                <tbody>
-                                                <tr>
-                                                    <td>01/03/25</td>
-                                                    <td>5</td>
-                                                    <td>5678</td>
-                                                    <td>7300.00</td>
-                                                    <td>11.50</td>
-                                                    <td>NON</td>
-                                                    <td>NON</td>
-                                                </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
+                                    <twig:PositionTable
+                                        type="running"
+                                        :positions="runningPositions"
+                                    />
+                                    <twig:PositionTable
+                                        type="waiting"
+                                        :positions="waitingPositions"
+                                    />
                                 </div>
                             </div>
                             <div class="col-spacer"></div>
@@ -274,8 +211,4 @@
             </div>
         </main>
     </div>
-
-    <script>
-
-    </script>
 {% endblock %}

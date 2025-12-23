@@ -8,8 +8,11 @@ export default class extends Controller {
     static targets = ["display"];
 
     connect() {
+        /** @type {HTMLElement} */
+        const element = this.element;
+
         // Pre-loading pour la fluidité
-        this.element.querySelectorAll('.tab-btn').forEach(btn => {
+        element.querySelectorAll('.tab-btn').forEach(btn => {
             const img = new Image();
             img.src = btn.dataset.url;
         });
@@ -18,10 +21,13 @@ export default class extends Controller {
         // Pour que le lien ne recharge pas la page
         event.preventDefault();
 
+        /** @type {HTMLElement} */
+        const element = this.element;
+
         // On récupère l'URL de l'image stockée dans le bouton
         this.displayTarget.src = event.currentTarget.dataset.url;
 
-        this.element.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        element.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         event.currentTarget.classList.add('active');
     }
 }

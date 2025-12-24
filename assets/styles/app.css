@@ -29,12 +29,29 @@ body {
 }
 
 /* Utilitaires de flexbox (traduction des classes Vuetify) */
-.d-flex { display: flex; }
-.align-start { align-items: flex-start; }
-.align-center { align-items: center; }
-.justify-start { justify-content: flex-start; }
-.align-right { text-align: right !important; }
-.align-center { text-align: center !important; }
+.d-flex {
+    display: flex;
+}
+
+.align-start {
+    align-items: flex-start;
+}
+
+.align-center {
+    align-items: center;
+}
+
+.justify-start {
+    justify-content: flex-start;
+}
+
+.align-right {
+    text-align: right !important;
+}
+
+.align-center {
+    text-align: center !important;
+}
 
 /* -------------------------------------- */
 /* 1. Layout Principal (v-app) */
@@ -353,8 +370,13 @@ body.menu-open .app-main::before {
     padding-right: 1rem;
 }
 
-.icon-up { color: var(--color-primary); }
-.icon-down { color: var(--color-danger); }
+.icon-up {
+    color: var(--color-primary);
+}
+
+.icon-down {
+    color: var(--color-danger);
+}
 
 /* -------------------------------------- */
 /* 6. Bouton (v-btn) */
@@ -572,18 +594,22 @@ body.menu-open .app-main::before {
         flex-direction: column;
         gap: 10px;
     }
+
     .col-left, .col-right, .col-card, .col-table, .col-positions-wrap, .col-spacer {
         width: 100%;
         max-width: 100%;
         flex: 1 1 100% !important; /* Force le mode empilement */
     }
+
     .col-button {
         width: 100%;
         justify-content: center;
     }
+
     .btn-primary {
         width: 100%;
     }
+
     .data-table-container {
         overflow-x: scroll;
     }

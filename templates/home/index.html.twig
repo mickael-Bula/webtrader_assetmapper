@@ -80,73 +80,10 @@
 
                         <div class="row-table">
                             <div class="col-table">
-                                <div class="data-table-container elevation-5">
-                                    <table class="data-table">
-                                        <thead>
-                                        <tr>
-                                            <th colspan="5" class="table-header-group">Cotations du CAC</th>
-                                            <th colspan="1" class="table-header-group">LVC</th>
-                                        </tr>
-                                        <tr>
-                                            <th>Date</th>
-                                            <th class="align-right">Clôture</th>
-                                            <th class="align-right">Ouverture</th>
-                                            <th class="align-right">Plus haut</th>
-                                            <th class="align-right">Plus bas</th>
-                                            <th class="align-right">Clôture</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        <tr>
-                                            <td>29/11/24</td>
-                                            <td class="align-right">7500.55</td>
-                                            <td class="align-right">7480.10</td>
-                                            <td class="align-right">7510.90</td>
-                                            <td class="align-right">7470.00</td>
-                                            <td class="align-right">12.50</td>
-                                        </tr>
-                                        <tr class="hover-effect">
-                                            <td>28/11/24</td>
-                                            <td class="align-right">7437.20</td>
-                                            <td class="align-right">7450.00</td>
-                                            <td class="align-right">7480.00</td>
-                                            <td class="align-right">7400.00</td>
-                                            <td class="align-right">11.90</td>
-                                        </tr>
-                                        <tr class="hover-effect">
-                                            <td>28/11/24</td>
-                                            <td class="align-right">7437.20</td>
-                                            <td class="align-right">7450.00</td>
-                                            <td class="align-right">7480.00</td>
-                                            <td class="align-right">7400.00</td>
-                                            <td class="align-right">11.90</td>
-                                        </tr>
-                                        <tr class="hover-effect">
-                                            <td>28/11/24</td>
-                                            <td class="align-right">7437.20</td>
-                                            <td class="align-right">7450.00</td>
-                                            <td class="align-right">7480.00</td>
-                                            <td class="align-right">7400.00</td>
-                                            <td class="align-right">11.90</td>
-                                        </tr>
-                                        <tr class="hover-effect">
-                                            <td>28/11/24</td>
-                                            <td class="align-right">7437.20</td>
-                                            <td class="align-right">7450.00</td>
-                                            <td class="align-right">7480.00</td>
-                                            <td class="align-right">7400.00</td>
-                                            <td class="align-right">11.90</td>
-                                        </tr>
-                                        <tr class="hover-effect">
-                                            <td>28/11/24</td>
-                                            <td class="align-right">7437.20</td>
-                                            <td class="align-right">7450.00</td>
-                                            <td class="align-right">7480.00</td>
-                                            <td class="align-right">7400.00</td>
-                                            <td class="align-right">11.90</td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
+                                <div class="row-table">
+                                    <div class="col-table">
+                                        <twig:StockMarketTable :quotes="cacQuotes" />
+                                    </div>
                                 </div>
                             </div>
                         </div>

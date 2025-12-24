@@ -1,0 +1,30 @@
+<div class="data-table-container elevation-5">
+    <table class="data-table">
+        <thead>
+        <tr>
+            <th colspan="5" class="table-header-group text-center">Cotations du CAC</th>
+            <th colspan="1" class="table-header-group text-center">LVC</th>
+        </tr>
+        <tr>
+            <th>Date</th>
+            <th class="align-right">Clôture</th>
+            <th class="align-right">Ouverture</th>
+            <th class="align-right">Plus haut</th>
+            <th class="align-right">Plus bas</th>
+            <th class="align-right">Clôture</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for quote in quotes %}
+            <tr class="hover-effect">
+                <td>{{ quote.date }}</td>
+                <td class="align-right">{{ this.format(quote.close) }}</td>
+                <td class="align-right">{{ this.format(quote.open) }}</td>
+                <td class="align-right">{{ this.format(quote.high) }}</td>
+                <td class="align-right">{{ this.format(quote.low) }}</td>
+                <td class="align-right font-weight-bold">{{ this.format(quote.lvc) }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>

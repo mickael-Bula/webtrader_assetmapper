@@ -313,7 +313,7 @@ body.menu-open .app-main::before {
 }
 
 .card-small {
-    height: 100px;
+    height: 80px;
     padding: 10px;
 }
 
@@ -340,6 +340,10 @@ body.menu-open .app-main::before {
     font-size: 0.875rem;
 }
 
+.add-margin-left {
+    margin-left: auto;
+}
+
 .text-muted {
     color: var(--color-text-muted);
 }
@@ -347,12 +351,6 @@ body.menu-open .app-main::before {
 .px-6 {
     padding-left: 1rem;
     padding-right: 1rem;
-}
-
-.icon {
-    font-size: 1.5rem;
-    margin-left: 10px;
-    margin-right: 5px;
 }
 
 .icon-up { color: var(--color-primary); }

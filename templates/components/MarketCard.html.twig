@@ -1,0 +1,17 @@
+<div class="col-card">
+    <div class="card card-small">
+        <div class="card-title">{{ title }}</div>
+        <div class="card-text card-metrics">
+            <span class="text-h6">{{ this.formattedValue }}</span>
+            {% if trend == 'up' %}
+                <i class="mdi mdi-arrow-up-thin icon-up add-margin-left"></i>
+                <span class="text-body-2 text-muted">{{ subtitle }}</span>
+            {% elseif trend == 'down' %}
+                <i class="mdi mdi-arrow-down-thin icon-down add-margin-left"></i>
+                <span class="text-body-2 text-muted">{{ subtitle }}</span>
+            {% else %}
+                <span class="text-body-2 add-margin-left text-muted">{{ subtitle }}</span>
+            {% endif %}
+        </div>
+    </div>
+</div>

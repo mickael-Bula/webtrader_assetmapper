@@ -340,7 +340,7 @@ body.menu-open .app-main::before {
     font-size: 0.875rem;
 }
 
-.align-left {
+.add-margin-left {
     margin-left: auto;
 }
 

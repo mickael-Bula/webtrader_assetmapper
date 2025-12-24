@@ -4,13 +4,13 @@
         <div class="card-text card-metrics">
             <span class="text-h6">{{ this.formattedValue }}</span>
             {% if trend == 'up' %}
-                <i class="mdi mdi-arrow-up-thin icon-up align-left"></i>
+                <i class="mdi mdi-arrow-up-thin icon-up add-margin-left"></i>
                 <span class="text-body-2 text-muted">{{ subtitle }}</span>
             {% elseif trend == 'down' %}
-                <i class="mdi mdi-arrow-down-thin icon-down align-left"></i>
+                <i class="mdi mdi-arrow-down-thin icon-down add-margin-left"></i>
                 <span class="text-body-2 text-muted">{{ subtitle }}</span>
             {% else %}
-                <span class="text-body-2 align-left text-muted">{{ subtitle }}</span>
+                <span class="text-body-2 add-margin-left text-muted">{{ subtitle }}</span>
             {% endif %}
         </div>
     </div>

@@ -7,8 +7,8 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\LvcDailyRepository;
 
+#[ORM\Table(name: 'lvc_daily', schema: 'market_data')]
 #[ORM\Entity(repositoryClass: LvcDailyRepository::class, readOnly: true)]
-#[ORM\Table(name: 'lvc_daily')]
 readonly class LvcDaily
 {
     #[ORM\Id]

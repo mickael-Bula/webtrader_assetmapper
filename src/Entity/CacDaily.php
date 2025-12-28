@@ -7,6 +7,7 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\CacDailyRepository;
 
+#[ORM\Table(name: 'cac_daily', schema: 'market_data')]
 #[ORM\Entity(repositoryClass: CacDailyRepository::class, readOnly: true)]
 readonly class CacDaily
 {

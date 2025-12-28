@@ -7,8 +7,8 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\CacDailyRepository;
 
-#[ORM\Entity(repositoryClass: CacDailyRepository::class)]
-class CacDaily
+#[ORM\Entity(repositoryClass: CacDailyRepository::class, readOnly: true)]
+readonly class CacDaily
 {
     #[ORM\Id]
     #[ORM\Column(type: 'datetime')]
@@ -21,10 +21,10 @@ class CacDaily
     private float $open;
 
     #[ORM\Column(type: 'float')]
-    private ?float $high = null;
+    private float $high;
 
     #[ORM\Column(type: 'float')]
-    private ?float $low = null;
+    private float $low;
 
     public function getDate(): \DateTimeInterface
     {

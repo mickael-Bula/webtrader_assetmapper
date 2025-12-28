@@ -7,9 +7,9 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\LvcDailyRepository;
 
-#[ORM\Entity(repositoryClass: LvcDailyRepository::class)]
+#[ORM\Entity(repositoryClass: LvcDailyRepository::class, readOnly: true)]
 #[ORM\Table(name: 'lvc_daily')]
-class LvcDaily
+readonly class LvcDaily
 {
     #[ORM\Id]
     #[ORM\Column(type: 'datetime')]
@@ -22,10 +22,10 @@ class LvcDaily
     private float $open;
 
     #[ORM\Column(type: 'float')]
-    private ?float $high = null;
+    private float $high;
 
     #[ORM\Column(type: 'float')]
-    private ?float $low = null;
+    private float $low;
 
     public function getDate(): \DateTimeInterface
     {

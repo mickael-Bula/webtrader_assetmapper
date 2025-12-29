@@ -1339,9 +1339,9 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *             lifetime?: int, // Default: 31536000
  *             path?: scalar|null, // Default: "/"
  *             domain?: scalar|null, // Default: null
- *             secure?: true|false|"auto", // Default: false
+ *             secure?: true|false|"auto", // Default: null
  *             httponly?: bool, // Default: true
- *             samesite?: null|"lax"|"strict"|"none", // Default: null
+ *             samesite?: null|"lax"|"strict"|"none", // Default: "lax"
  *             always_remember_me?: bool, // Default: false
  *             remember_me_parameter?: scalar|null, // Default: "_remember_me"
  *         },
@@ -1534,6 +1534,9 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *     profiler?: bool, // Enables the profiler for Twig Component (in debug mode) // Default: "%kernel.debug%"
  *     controllers_json?: scalar|null, // Deprecated: The "twig_component.controllers_json" config option is deprecated, and will be removed in 3.0. // Default: null
  * }
+ * @psalm-type SymfonycastsVerifyEmailConfig = array{
+ *     lifetime?: int, // The length of time in seconds that a signed URI is valid for after it is created. // Default: 3600
+ * }
  * @psalm-type ConfigType = array{
  *     imports?: ImportsConfig,
  *     parameters?: ParametersConfig,
@@ -1549,6 +1552,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *     monolog?: MonologConfig,
  *     ux_icons?: UxIconsConfig,
  *     twig_component?: TwigComponentConfig,
+ *     symfonycasts_verify_email?: SymfonycastsVerifyEmailConfig,
  *     "when@dev"?: array{
  *         imports?: ImportsConfig,
  *         parameters?: ParametersConfig,
@@ -1567,6 +1571,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         maker?: MakerConfig,
  *         ux_icons?: UxIconsConfig,
  *         twig_component?: TwigComponentConfig,
+ *         symfonycasts_verify_email?: SymfonycastsVerifyEmailConfig,
  *     },
  *     "when@prod"?: array{
  *         imports?: ImportsConfig,
@@ -1583,6 +1588,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         monolog?: MonologConfig,
  *         ux_icons?: UxIconsConfig,
  *         twig_component?: TwigComponentConfig,
+ *         symfonycasts_verify_email?: SymfonycastsVerifyEmailConfig,
  *     },
  *     "when@test"?: array{
  *         imports?: ImportsConfig,
@@ -1600,6 +1606,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         monolog?: MonologConfig,
  *         ux_icons?: UxIconsConfig,
  *         twig_component?: TwigComponentConfig,
+ *         symfonycasts_verify_email?: SymfonycastsVerifyEmailConfig,
  *     },
  *     ...<string, ExtensionType|array{ // extra keys must follow the when@%env% pattern or match an extension alias
  *         imports?: ImportsConfig,

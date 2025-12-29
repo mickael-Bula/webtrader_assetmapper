@@ -96,9 +96,13 @@ body {
 }
 
 .toolbar-title {
-    font-size: 1.25rem;
+    font-size: 1.50rem;
     font-weight: 500;
     margin-left: 16px;
+}
+
+.text-brand-blue {
+    color: #60a5fa;
 }
 
 .spacer {
@@ -133,6 +137,7 @@ body {
 /* Couleur alternative (Orange) */
 .icon-off {
     color: #FF7043; /* Deep Orange deep-orange-lighten-1 de la palette MDI */
+    filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.4));
 }
 
 .icon-btn svg {
@@ -144,6 +149,11 @@ body {
 
 /* Retire la couleur blanche du style initial */
 .icon-btn.login-btn {
+}
+
+/* Évite les clics multiples pendant le délai */
+.is-logging-out {
+    pointer-events: none;
 }
 
 /* -------------------------------------- */

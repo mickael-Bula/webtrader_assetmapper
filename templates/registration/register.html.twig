@@ -1,0 +1,99 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inscription - WebTrader{% endblock %}
+
+{% block body %}
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <div class="min-h-screen bg-[#0f172a] flex flex-col justify-center py-12 sm:px-6 lg:px-8 text-gray-100">
+        <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
+            <div class="mx-auto h-14 w-14 flex items-center justify-center rounded-xl bg-green-500/10 border border-green-500/20 mb-4">
+                <svg class="h-8 w-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                </svg>
+            </div>
+            <h2 class="text-3xl font-bold tracking-tight text-white">
+                Créer un <span class="text-green-500">Compte</span>
+            </h2>
+            <p class="mt-2 text-sm text-gray-400">Rejoignez la plateforme <span class="text-white">Web</span><span class="text-blue-400">Trader</span></p>
+        </div>
+
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+            <div class="bg-[#1e293b] py-8 px-4 shadow-2xl border border-gray-700/50 sm:rounded-2xl sm:px-10">
+
+                {% for flash_error in app.flashes('verify_email_error') %}
+                    <div class="mb-4 p-4 rounded-lg bg-red-900/20 border border-red-500/50 text-sm text-red-400" role="alert">
+                        {{ flash_error }}
+                    </div>
+                {% endfor %}
+
+                {# Désactivation de Turbo pour éviter la persistance des styles Tailwind lors de la redirection depuis les pages login et register #}
+                {{ form_start(registrationForm, {'attr': {'class': 'space-y-5', 'data-turbo': 'false'}}) }}
+
+                {# Champ Email #}
+                <div>
+                    {{ form_label(registrationForm.email, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-300'}}) }}
+                    <div class="mt-1.5">
+                        {{ form_widget(registrationForm.email, {
+                            'attr': {
+                                'class': 'block w-full bg-[#0f172a] border border-gray-600 rounded-lg px-4 py-2.5 text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all sm:text-sm',
+                                'placeholder': 'votre@email.com'
+                            }
+                        }) }}
+                    </div>
+                    <div class="text-red-400 text-xs mt-1">{{ form_errors(registrationForm.email) }}</div>
+                </div>
+
+                {# Champ Mot de passe #}
+                <div>
+                    {{ form_label(registrationForm.plainPassword, 'Mot de passe', {'label_attr': {'class': 'block text-sm font-medium text-gray-300'}}) }}
+                    <div class="mt-1.5">
+                        {{ form_widget(registrationForm.plainPassword, {
+                            'attr': {
+                                'class': 'block w-full bg-[#0f172a] border border-gray-600 rounded-lg px-4 py-2.5 text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-green-500/50 focus:border-green-500 outline-none transition-all sm:text-sm',
+                                'placeholder': 'Minimum 6 caractères'
+                            }
+                        }) }}
+                    </div>
+                    <div class="text-red-400 text-xs mt-1">{{ form_errors(registrationForm.plainPassword) }}</div>
+                </div>
+
+                {# Case à cocher Conditions #}
+                <div class="flex items-start">
+                    <div class="flex items-center h-5">
+                        {{ form_widget(registrationForm.agreeTerms, {
+                            'attr': {
+                                'class': 'h-4 w-4 rounded border-gray-600 bg-[#0f172a] text-green-600 focus:ring-green-500/50 focus:ring-offset-[#1e293b]'
+                            }
+                        }) }}
+                    </div>
+                    <div class="ml-3 text-sm">
+                        {{ form_label(registrationForm.agreeTerms, 'J\'accepte les conditions d\'utilisation', {'label_attr': {'class': 'font-medium text-gray-300'}}) }}
+                    </div>
+                </div>
+                <div class="text-red-400 text-xs">{{ form_errors(registrationForm.agreeTerms) }}</div>
+
+                {# Bouton de soumission #}
+                <div class="pt-2">
+                    <button type="submit"
+                            class="w-full flex justify-center py-3 px-4 rounded-lg shadow-lg text-sm font-semibold text-white bg-green-600 hover:bg-green-500 focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#1e293b] focus:ring-green-500 transition-all duration-200">
+                        CRÉER MON COMPTE
+                    </button>
+                </div>
+
+                <div class="mt-6 pt-6 border-t border-gray-700/50 text-center text-sm">
+                    <p class="text-gray-400">
+                        Déjà inscrit ?
+                        <a href="{{ path('app_login') }}"
+                           data-turbo="false"
+                           class="font-medium text-green-400 hover:text-green-300"
+                        >
+                            Connectez-vous ici
+                        </a>
+                    </p>
+                </div>
+                {{ form_end(registrationForm) }}
+            </div>
+        </div>
+    </div>
+{% endblock %}

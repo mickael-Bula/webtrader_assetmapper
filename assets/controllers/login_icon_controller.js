@@ -2,30 +2,31 @@ import { Controller } from '@hotwired/stimulus';
 
 /**
  * @property {HTMLButtonElement} buttonTarget
- * @property {string} onClassValue
- * @property {string} offClassValue
  */
 // noinspection JSUnusedGlobalSymbols
 export default class extends Controller {
     static targets = ["button"]
 
-    // On définit les classes comme des valeurs pour pouvoir les changer depuis le HTML si besoin (flexibilité)
-    static values = {
-        onClass: { type: String, default: 'icon-on' },
-        offClass: { type: String, default: 'icon-off' }
-    }
+    toggle(event) {
+        // 1. Empêche toute action par défaut immédiate
+        event.preventDefault();
 
-    toggle() {
-        const btn = this.buttonTarget;
+        // 1. PHASE DE PRESSION (Immédiate)
+        this.buttonTarget.classList.add('icon-off', 'is-logging-out');
+        this.buttonTarget.style.transition = "transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+        this.buttonTarget.style.transform = "scale(0.85)"; // Enfoncement
 
-        /**
-         * On utilise onClassValue et pas onClass,
-         * car Stimulus impose le suffixe Value pour distinguer données et méthodes/classes.
-         */
-        if (btn.classList.contains(this.offClassValue)) {
-            btn.classList.replace(this.offClassValue, this.onClassValue);
-        } else {
-            btn.classList.replace(this.onClassValue, this.offClassValue);
-        }
+        // 2. PHASE DE RELÂCHEMENT / REBOND (Après 100ms)
+        setTimeout(() => {
+            // On augmente la durée à 0.5s pour ralentir le relâchement. La courbe de Bézier donne l'effet de rebond élastique à la fin.
+            this.buttonTarget.style.transition = "transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease";
+            this.buttonTarget.style.transform = "scale(1.25)";
+            this.buttonTarget.style.opacity = "0.7";
+        }, 300);
+
+        // 3. REDIRECTION (Après 250ms au total)
+        setTimeout(() => {
+            window.location.href = '/logout';
+        }, 300);
     }
 }

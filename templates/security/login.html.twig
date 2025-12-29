@@ -1,28 +1,117 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Log in!{% endblock %}
+{% block title %}Connexion - WebTrader{% endblock %}
 
 {% block body %}
-<form method="post">
-    {% if error %}
-        <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-    {% endif %}
+    <script src="https://cdn.tailwindcss.com"></script>
 
-    {% if app.user %}
-        <div class="mb-3">
-            You are logged in as {{ app.user.userIdentifier }}, <a href="{{ logout_path() }}">Logout</a>
+    {% for message in app.flashes('error') %}
+        <div class="mb-4 p-4 rounded-lg bg-red-900/20 border border-red-500/50 text-sm text-red-400">
+            {{ message }}
         </div>
-    {% endif %}
+    {% endfor %}
 
-    <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
-    <label for="inputEmail">Email</label>
-    <input type="email" value="{{ last_username }}" name="email" id="inputEmail" class="form-control" autocomplete="email" required autofocus>
-    <label for="inputPassword">Password</label>
-    <input type="password" name="password" id="inputPassword" class="form-control" autocomplete="current-password" required>
-    <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
+    <div class="min-h-screen bg-[#0f172a] flex flex-col justify-center py-12 sm:px-6 lg:px-8 text-gray-100">
+        <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
+            <div
+                class="mx-auto h-14 w-14 flex items-center justify-center rounded-xl bg-blue-500/10 border border-blue-500/20 mb-4">
+                <svg class="h-8 w-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                </svg>
+            </div>
+            <h2 class="text-3xl font-bold tracking-tight text-white">
+                Web<span class="text-blue-400">Trader</span>
+            </h2>
+            <p class="mt-2 text-sm text-gray-400">Accédez à votre terminal de gestion</p>
+        </div>
 
-    <button class="btn btn-lg btn-primary" type="submit">
-        Sign in
-    </button>
-</form>
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+            <div class="bg-[#1e293b] py-8 px-4 shadow-2xl border border-gray-700/50 sm:rounded-2xl sm:px-10">
+
+                {# Désactivation de Turbo pour éviter la persistance des styles Tailwind lors de la redirection depuis les pages login et register #}
+                <form method="post" data-turbo="false">
+                    {% if error %}
+                        <div class="mb-4 p-4 rounded-lg bg-red-900/20 border border-red-500/50 text-sm text-red-400">
+                            {{ error.messageKey|trans(error.messageData, 'security') }}
+                        </div>
+                    {% endif %}
+
+                    {% if app.user %}
+                        <div
+                            class="mb-6 p-4 rounded-lg bg-blue-900/20 border border-blue-500/30 text-sm text-blue-300 flex justify-between items-center">
+                            <span>Connecté : <strong class="text-white">{{ app.user.userIdentifier }}</strong></span>
+                            <a href="{{ logout_path() }}"
+                               class="font-medium hover:text-white underline decoration-blue-500/50">Déconnexion</a>
+                        </div>
+                    {% endif %}
+
+                    <div class="space-y-5">
+                        <div>
+                            <label for="inputEmail" class="block text-sm font-medium text-gray-300">Email</label>
+                            <div class="mt-1.5">
+                                <input type="email" value="{{ last_username }}" name="email" id="inputEmail"
+                                       class="block w-full bg-[#0f172a] border border-gray-600 rounded-lg px-4 py-2.5 text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all sm:text-sm"
+                                       placeholder="nom@exemple.com" required autofocus>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="inputPassword" class="block text-sm font-medium text-gray-300">Mot de
+                                passe</label>
+                            <div class="mt-1.5">
+                                <input type="password" name="password" id="inputPassword"
+                                       class="block w-full bg-[#0f172a] border border-gray-600 rounded-lg px-4 py-2.5 text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all sm:text-sm"
+                                       placeholder="••••••••" required>
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+                        <div class="pt-2">
+                            <button type="submit"
+                                    class="
+                                    w-full
+                                    flex
+                                    justify-center
+                                    py-3
+                                    px-4
+                                    rounded-lg
+                                    shadow-lg
+                                    text-sm
+                                    font-semibold
+                                    text-white
+                                    bg-blue-600
+                                    hover:bg-blue-500
+                                    focus:ring-2
+                                    focus:ring-offset-2
+                                    focus:ring-offset-[#1e293b]
+                                    focus:ring-blue-500
+                                    transition-all
+                                    duration-200"
+                            >
+                                SE CONNECTER
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-gray-700/50 text-center">
+                        <p class="text-sm text-gray-400">
+                            Pas de compte ?
+                            <a href="{{ path('app_register') }}"
+                               data-turbo="false"
+                               class="font-medium text-blue-400 hover:text-blue-300 transition-colors"
+                            >
+                                Créer un accès
+                            </a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+
+            <p class="mt-6 text-center text-xs text-gray-500">
+                &copy; {{ "now"|date("Y") }} WebTrader Engine. Connexion sécurisée SSL.
+            </p>
+        </div>
+    </div>
 {% endblock %}

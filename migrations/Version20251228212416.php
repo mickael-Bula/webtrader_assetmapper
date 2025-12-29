@@ -9,6 +9,7 @@ use Doctrine\Migrations\AbstractMigration;
 
 /**
  * Auto-generated Migration: Please modify to your needs!
+ * @noinspection PhpUnused
  */
 final class Version20251228212416 extends AbstractMigration
 {

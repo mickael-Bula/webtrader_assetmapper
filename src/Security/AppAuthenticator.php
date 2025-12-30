@@ -44,8 +44,18 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
+        // 1. Si l'utilisateur a un chemin mémorisé
         if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
             return new RedirectResponse($targetPath);
+        }
+
+        // 2. Si l'utilisateur vient de s'enregistrer
+        if ($request->getSession()->get('just_registered')) {
+            // On supprime le marqueur pour que la prochaine connexion soit normale
+            $request->getSession()->remove('just_registered');
+
+            // Redirection vers la page de configuration
+            return new RedirectResponse($this->urlGenerator->generate('app_settings'));
         }
 
         return new RedirectResponse($this->urlGenerator->generate('app_home'));

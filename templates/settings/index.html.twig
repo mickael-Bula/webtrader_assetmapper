@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Configuration Stratégie - WebTrader{% endblock %}
+
+{% block body %}
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+
+                <div class="mb-4 text-center">
+                    <h2 class="fw-bold text-white">Configuration du <span class="text-success">Portefeuille</span></h2>
+                    <p class="text-webtrader-muted">Définissez vos règles de gestion pour activer la stratégie de suivi.</p>
+                </div>
+
+                <div class="card bg-dark text-white border-secondary shadow-lg">
+                    <div class="card-body p-4">
+
+                        {% for message in app.flashes('error') %}
+                            <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger small">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+
+                        {{ form_start(settingsForm, {'attr': {'data-turbo': 'false'}}) }}
+
+                        <div class="mb-4">
+                            <label class="form-label text-success fw-bold small uppercase">Capital & Référence</label>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    {{ form_label(settingsForm.buy_limit, "Première cible d'achat (buy limit)") }}
+                                    {{ form_widget(settingsForm.buy_limit, {'attr': {'class': 'form-control bg-black text-white border-secondary', 'placeholder': '0.00'}}) }}
+                                </div>
+                                <div class="col-6">
+                                    {{ form_label(settingsForm.total_allocation, "Montant par position") }}
+                                    {{ form_widget(settingsForm.total_allocation, {'attr': {'class': 'form-control bg-black text-white border-secondary', 'placeholder': '€'}}) }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4 p-3 bg-black rounded border border-secondary border-opacity-25">
+                            <label class="form-label text-success fw-bold small uppercase">Exécution</label>
+                            {{ form_label(settingsForm.position_size, 'Taille par position') }}
+                            <div class="input-group">
+                                {{ form_widget(settingsForm.position_size, {'attr': {'class': 'form-control bg-black text-white border-secondary fs-5', 'placeholder': 'Minimum : 1 LVC'}}) }}
+                                <span class="input-group-text bg-secondary border-secondary text-white">€</span>
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-2 small text-webtrader-muted">
+                                <span>Min: <strong id="min-lvc-val" class="text-light">-- €</strong></span>
+                                <span>Max (1/10e): <strong id="max-allowed-val" class="text-light">-- €</strong></span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 pt-2">
+                            <button type="submit" class="btn btn-success btn-lg fw-bold shadow-sm">
+                                INITIALISER LA STRATÉGIE
+                            </button>
+                        </div>
+
+                        {{ form_end(settingsForm) }}
+                    </div>
+                </div>
+
+                <div class="mt-4 text-center">
+                    <a href="{{ path('app_strategy_description') }}" class="text-decoration-none text-webtrader-muted small">
+                        <i class="mdi mdi-arrow-left"></i> Retour à la stratégie d'investissement
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dynamisme Bootstrap pour aider l'utilisateur
+        document.addEventListener('DOMContentLoaded', () => {
+            const allocationInput = document.querySelector('[name*="total_allocation"]');
+            const maxLabel = document.getElementById('max-allowed-val');
+
+            allocationInput.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value);
+                maxLabel.textContent = !isNaN(val) ? (val / 10).toFixed(2) + ' €' : '-- €';
+            });
+        });
+    </script>
+{% endblock %}

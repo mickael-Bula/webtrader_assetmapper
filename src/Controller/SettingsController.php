@@ -19,6 +19,7 @@ final class SettingsController extends AbstractController
     public function index(Request $request, EntityManagerInterface $em, LvcDailyRepository $lvcRepo): Response
     {
         $user = $this->getUser();
+
         // Récupère la dernière valeur du LVC en base.
         $lastLvcPrice = (float) $lvcRepo->createQueryBuilder('l')
             ->select('l.high') // On ne sélectionne QUE le champ high
@@ -32,22 +33,20 @@ final class SettingsController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
-            $allocation = $data['total_allocation'];
+            $allocation = $data['total_portfolio'];
             $posSize = $data['position_size'];
 
-            // 1. Validation de la règle des 1/10e
-            if ($posSize > ($allocation / 10)) {
-                $this->addFlash('error', 'La taille de position ne peut dépasser 1/10e du capital.');
-                return $this->redirectToRoute('app_settings');
-            }
-
-            // 2. Validation du minimum (Valeur d'un LVC)
+            // Validation du minimum (Valeur d'un LVC)
             if ($posSize < $lastLvcPrice) {
-                $this->addFlash('error', "La position est trop faible (Minimum: valeur d'un LVC soit {$lastLvcPrice}€).");
+                $this->addFlash(
+                    'error',
+                    "La position est trop faible (Minimum: valeur d'un LVC, soit {$lastLvcPrice}€)."
+                );
+
                 return $this->redirectToRoute('app_settings');
             }
 
-//            // 3. Enregistrement des réglages Utilisateur (Profil)
+            // Enregistrement des réglages Utilisateur (Profil)
 //            $user->setHighestLocal($data['highest_local']);
 //            $user->setTotalAllocation($allocation);
 //            $user->setPositionSize($posSize);

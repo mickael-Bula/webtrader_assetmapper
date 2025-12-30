@@ -16,36 +16,33 @@ class PortfolioSettingsType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('buy_limit', NumberType::class, [
-                'label' => "Limite d'achat",
+            ->add('total_portfolio', NumberType::class, [
+                'label' => 'Valeur totale du portefeuille',
                 'scale' => 2,
                 'html5' => true,
-                'attr' => [
-                    'step' => '0.01',
-                ],
+                'attr' => ['step' => '0.01'],
                 'constraints' => [
-                    new NotBlank(message: 'Veuillez renseigner la buy limit.'),
+                    new NotBlank(message: 'Veuillez renseigner la valeur de votre portefeuille.'),
                     new Positive(message: 'La valeur doit être positive.'),
                 ],
             ])
-            ->add('total_allocation', NumberType::class, [
-                'label' => 'Montant alloué au portefeuille',
+            ->add('buy_limit', NumberType::class, [
+                'label' => "Niveau d'achat (Seuil CAC40)",
                 'scale' => 2,
                 'html5' => true,
-                'attr' => [
-                    'step' => '0.01',
+                'attr' => ['step' => '1.0'
                 ],
                 'constraints' => [
-                    new NotBlank(message: 'Veuillez renseigner le capital investi.'),
+                    new NotBlank(message: 'Veuillez renseigner le seuil d\'achat.'),
                     new Positive(message: 'Le montant doit être positif.'),
                 ],
             ])
             ->add('position_size', NumberType::class, [
-                'label' => 'Taille des positions',
+                'label' => 'Montant par position',
                 'scale' => 2,
                 'html5' => true,
                 'attr' => [
-                    'step' => '0.01',
+                    'step' => '1.0',
                 ],
                 'constraints' => [
                     new NotBlank(message: 'Veuillez définir une taille de position.'),

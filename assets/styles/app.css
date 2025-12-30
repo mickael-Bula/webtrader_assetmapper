@@ -599,9 +599,46 @@ body.menu-open .app-main::before {
 
 .form-control.bg-black:focus {
     background-color: #000 !important;
-    border-color: #198754 !important; /* Le vert 'success' de Bootstrap */
-    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25); /* Halo vert subtil */
+    border-color: #198754 !important;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
     color: white;
+}
+
+/* Atténuer les flèches sur Chrome, Safari, Edge et Opera (les rendre transparentes à 30%) */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    filter: invert(1) opacity(0.3);
+}
+
+/* Suppression pour Firefox */
+input[type=number] {
+    appearance: textfield; /* Standard */
+    -moz-appearance: textfield; /* Fallback pour les anciennes versions de Firefox */
+}
+
+/* Style de base pour l'input group */
+.input-group {
+    border-radius: 0.375rem;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    border: 1px solid #545b62; /* border-secondary */
+}
+
+/* Quand l'input est focus, on modifie le parent (input-group) */
+.input-group:focus-within {
+    border-color: #198754 !important; /* Vert success */
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}
+
+/* On supprime la bordure et le shadow par défaut de l'input pour ne pas faire double emploi */
+.input-group .form-control:focus {
+    box-shadow: none !important;
+    border-color: transparent !important;
+}
+
+/* On aligne les bordures internes */
+.input-group .form-control,
+.input-group .input-group-text {
+    border: none !important;
 }
 
 /* -------------------------------------- */

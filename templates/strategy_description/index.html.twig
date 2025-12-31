@@ -1,0 +1,154 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Description de la Stratégie - WebTrader{% endblock %}
+
+{% block body %}
+    <div class="bg-webtrader-dark text-light min-vh-100 pb-5">
+
+        <header class="hero-gradient py-5 mb-5 border-bottom border-secondary border-opacity-25 relative">
+            <div class="container py-4">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="d-inline-flex align-items-center justify-content-center p-3 bg-success bg-opacity-10 border border-green-web rounded-4 mb-4">
+                            <svg class="text-success" width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                            </svg>
+                        </div>
+                        <h1 class="display-4 fw-bold text-white">
+                            Description de la <span class="text-green-web">Stratégie</span>
+                        </h1>
+                        <p class="lead text-secondary mt-3">
+                            Optimisation des entrées sur repli via le levier LVC et une gestion rigoureuse des plus hauts locaux.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <div class="row g-5">
+
+                <div class="col-12">
+                    <section class="glass-effect rounded-4 p-4 p-md-5 border border-secondary border-opacity-25 shadow-sm">
+                        <div class="d-flex align-items-start gap-4">
+                            <div class="p-3 bg-success bg-opacity-10 rounded-3 d-none d-md-block">
+                                <i class="mdi mdi-trending-down fs-2 text-green-web"></i>
+                            </div>
+                            <div>
+                                <h2 class="h3 text-white mb-4 font-bold">Achats sur repli</h2>
+                                <p class="fs-5 text-secondary leading-relaxed">
+                                    Le principe est d'effectuer des achats sur repli. L'entrée sur le marché se fait en définissant une première limite d'achat.
+                                    Dès l'instant où cette limite est touchée, <span class="text-white fw-semibold">trois ordres sont passés, espacés de 2 %</span>.
+                                    <br><br>
+                                    Dans le même temps, le niveau d'achat de la première des trois positions devient le plus haut local et une nouvelle limite d'achat est fixée à <span class="text-green-web">-6 %</span> de ce niveau.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="col-12">
+                    <h3 class="h4 text-white mb-4 d-flex align-items-center">
+                        <span class="mdi mdi-account-plus me-3 text-info"></span>
+                        Opération lors d'une première connexion
+                    </h3>
+                    <div class="row g-4">
+                        <div class="col-md-7">
+                            <div class="bg-webtrader-card p-4 rounded-4 h-100">
+                                <p class="text-secondary mb-0">
+                                    Quand un utilisateur s'enregistre, il doit se rendre sur la page de configuration pour renseigner :
+                                    le <span class="text-info">plus haut local</span> de son compte, le <span class="text-info">montant alloué</span>
+                                    et la <span class="text-info">taille de ses positions</span>.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="bg-info bg-opacity-10 border border-info border-opacity-25 p-4 rounded-4 h-100">
+                                <ul class="list-unstyled mb-0 small text-info">
+                                    <li class="mb-2"><i class="mdi mdi-check-circle me-2"></i>Min : Valeur d'un LVC</li>
+                                    <li><i class="mdi mdi-check-circle me-2"></i>Max : 1/10e du portefeuille</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="bg-webtrader-card p-4 rounded-4 h-100 shadow-lg">
+                        <h4 class="h5 text-white mb-4 d-flex align-items-center">
+                            <i class="mdi mdi-refresh me-2 text-primary"></i> Définition d'une position
+                        </h4>
+                        <div class="vstack gap-3">
+                            <div class="d-flex align-items-center gap-3 p-2 rounded bg-dark bg-opacity-25">
+                                <span class="badge bg-warning text-dark px-3">isWaiting</span>
+                                <span class="small text-secondary">BuyLimit non touchée</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-3 p-2 rounded bg-dark bg-opacity-25">
+                                <span class="badge bg-primary px-3">isRunning</span>
+                                <span class="small text-secondary">Achat actif, SellTarget en attente</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-3 p-2 rounded bg-dark bg-opacity-25">
+                                <span class="badge bg-success px-3">isSold</span>
+                                <span class="small text-secondary">BuyTarget touchée (Trade clos)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="bg-webtrader-card p-4 rounded-4 h-100 shadow-lg">
+                        <h4 class="h5 text-white mb-4 d-flex align-items-center">
+                            <i class="mdi mdi-layers me-2 text-warning"></i> Ligne vs Trade
+                        </h4>
+                        <div class="mb-3">
+                            <label class="text-warning small fw-bold text-uppercase">La Ligne</label>
+                            <p class="text-secondary small">Achat de LVC pour un montant de 750 €.</p>
+                        </div>
+                        <hr class="border-secondary border-opacity-25">
+                        <div>
+                            <label class="text-warning small fw-bold text-uppercase">Le Trade</label>
+                            <p class="text-secondary small">Achat d'une ou plusieurs lignes liées à un plus haut. Clos à la revente de la dernière ligne.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="p-4 p-md-5 rounded-4 border border-secondary border-opacity-25 shadow" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+                        <h3 class="h4 text-white mb-4">Seuil d'achat & Revente</h3>
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <div class="h2 fw-bold text-danger">-6%</div>
+                                <p class="small text-secondary">Baisse depuis le dernier plus haut local.</p>
+                            </div>
+                            <div class="col-md-4 border-start border-secondary border-opacity-25">
+                                <div class="h2 fw-bold text-info">2%</div>
+                                <p class="small text-secondary">Écart homogène entre les 3 lignes du cycle.</p>
+                            </div>
+                            <div class="col-md-4 border-start border-secondary border-opacity-25">
+                                <div class="h2 fw-bold text-success">+6%</div>
+                                <p class="small text-secondary">Seuil de revente (SellTarget).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="border-start border-4 border-success ps-4 py-2 my-4">
+                        <h4 class="h5 text-white italic">Plus haut local</h4>
+                        <p class="text-secondary fst-italic mb-0">
+                            "La cotation la plus élevée atteinte par le CAC depuis la dernière prise de position.
+                            À défaut, fixé au plus haut de la dernière cotation disponible."
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-12 text-center py-4">
+                    <a href="{{ path('app_settings') }}" class="btn btn-success btn-lg px-5 py-3 rounded-pill fw-bold shadow-lg transform-hover">
+                        <i class="mdi mdi-cog-outline me-2"></i> Configurer mon portefeuille
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

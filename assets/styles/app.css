@@ -28,31 +28,6 @@ body {
     transition: margin-left 0.3s ease; /* Pour le décalage potentiel du contenu */
 }
 
-/* Utilitaires de flexbox (traduction des classes Vuetify) */
-.d-flex {
-    display: flex;
-}
-
-.align-start {
-    align-items: flex-start;
-}
-
-.align-center {
-    align-items: center;
-}
-
-.justify-start {
-    justify-content: flex-start;
-}
-
-.align-right {
-    text-align: right !important;
-}
-
-.align-center {
-    text-align: center !important;
-}
-
 /* -------------------------------------- */
 /* 1. Layout Principal (v-app) */
 /* -------------------------------------- */
@@ -113,10 +88,21 @@ body {
     background: none;
     border: none;
     color: white;
-    padding: 12px;
     cursor: pointer;
     border-radius: 50%;
     transition: background-color 0.2s;
+
+    /* Force un carré parfait pour que radius ne soit pas oval */
+    width: 48px;
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.icon-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .icon-btn i {
@@ -331,6 +317,7 @@ body.menu-open .app-main::before {
 .card {
     background-color: var(--color-background-secondary);
     border-radius: var(--border-radius);
+    overflow: hidden;
     box-shadow: 0 4px 12px var(--color-shadow);
     transition: box-shadow 0.3s ease;
 }
@@ -358,20 +345,11 @@ body.menu-open .app-main::before {
     margin-top: 5px;
 }
 
-.text-h6 {
-    font-size: 1.25rem;
-    font-weight: 600;
-}
-
-.text-body-2 {
-    font-size: 0.875rem;
-}
-
 .add-margin-left {
     margin-left: auto;
 }
 
-.text-muted {
+.text-webtrader-muted {
     color: var(--color-text-muted);
 }
 
@@ -425,12 +403,6 @@ body.menu-open .app-main::before {
 .data-table-container {
     overflow-x: auto;
     border-radius: var(--border-radius);
-}
-
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: var(--color-background-secondary);
 }
 
 .elevation-5 {
@@ -507,26 +479,6 @@ body.menu-open .app-main::before {
     background-color: #333;
 }
 
-.position-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.position-table th, .position-table td {
-    padding: 8px 10px;
-    text-align: left;
-    font-size: 0.85rem;
-    border-bottom: 1px solid #2a2a2a;
-}
-
-.position-table thead th {
-    background-color: #333;
-    color: var(--color-text-primary);
-    font-weight: normal;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-}
-
 .edit-icon {
     font-size: 1rem;
     color: var(--color-text-muted);
@@ -594,6 +546,99 @@ body.menu-open .app-main::before {
 
 .tab-btn:hover {
     background: #383838;
+}
+
+/* -------------------------------------- */
+/* 12. Styles de la page de description   */
+/* -------------------------------------- */
+.bg-webtrader-dark {
+    background-color: #0f172a;
+}
+
+.bg-webtrader-card {
+    background-color: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hero-gradient {
+    background: radial-gradient(circle at top right, rgba(34, 197, 94, 0.05), transparent),
+    linear-gradient(180deg, #111827 0%, #0f172a 100%);
+}
+
+.text-green-web {
+    color: #22c55e;
+}
+
+.border-green-web {
+    border-color: rgba(34, 197, 94, 0.2) !important;
+}
+
+.glass-effect {
+    backdrop-filter: blur(8px);
+    background-color: rgba(30, 41, 59, 0.7);
+}
+
+/* -------------------------------------- */
+/* 13. Style de placeholders (formulaire) */
+/* -------------------------------------- */
+
+/* Cible tous les inputs ayant la classe form-control */
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important; /* Blanc à 50% d'opacité */
+    opacity: 1; /* Nécessaire pour Firefox qui baisse l'opacité par défaut */
+}
+
+/* Optionnel : couleur différente au focus pour un effet moderne */
+.form-control:focus::placeholder {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+.form-control.bg-black {
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control.bg-black:focus {
+    background-color: #000 !important;
+    border-color: #198754 !important;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+    color: white;
+}
+
+/* Atténuer les flèches sur Chrome, Safari, Edge et Opera (les rendre transparentes à 30%) */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    filter: invert(1) opacity(0.3);
+}
+
+/* Suppression pour Firefox */
+input[type=number] {
+    appearance: textfield; /* Standard */
+    -moz-appearance: textfield; /* Fallback pour les anciennes versions de Firefox */
+}
+
+/* Style de base pour l'input group */
+.input-group {
+    border-radius: 0.375rem;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    border: 1px solid #545b62; /* border-secondary */
+}
+
+/* Quand l'input est focus, on modifie le parent (input-group) */
+.input-group:focus-within {
+    border-color: #198754 !important; /* Vert success */
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}
+
+/* On supprime la bordure et le shadow par défaut de l'input pour ne pas faire double emploi */
+.input-group .form-control:focus {
+    box-shadow: none !important;
+    border-color: transparent !important;
+}
+
+/* On aligne les bordures internes */
+.input-group .form-control,
+.input-group .input-group-text {
+    border: none !important;
 }
 
 /* -------------------------------------- */

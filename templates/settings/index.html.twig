@@ -1,0 +1,126 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Configuration Stratégie - WebTrader{% endblock %}
+
+{% block body %}
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+
+                <div class="mb-4 text-center">
+                    <h2 class="fw-bold text-white">Configuration du <span class="text-success">Portefeuille</span></h2>
+                    <p class="text-webtrader-muted">Définissez vos règles de gestion pour activer la surveillance.</p>
+                </div>
+
+                <div class="card bg-dark text-white border-secondary shadow-lg">
+                    <div class="card-body p-4">
+
+                        {{ form_start(settingsForm, {'attr': {'data-turbo': 'false'}}) }}
+
+                        <label class="form-label text-success fw-bold small uppercase">GESTION DU CAPITAL</label>
+                        <div class="mb-4 p-3 bg-black rounded border border-secondary border-opacity-25">
+                            <div class="mb-3">
+                                {{ form_label(settingsForm.total_portfolio, "Valeur totale du portefeuille") }}
+                                <div class="input-group">
+                                    {{ form_widget(settingsForm.total_portfolio, {'attr': {
+                                        'class': 'form-control bg-black text-white fs-5',
+                                        'placeholder': '10000.00'
+                                    }}) }}
+                                    <span class="input-group-text bg-secondary text-white border-secondary">€</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <label class="form-label text-success fw-bold small uppercase">PARAMÈTRES DE LA POSITION INITIALE</label>
+                        <div class="mb-4 p-3 bg-black rounded border border-secondary border-opacity-25">
+
+                            <div class="mb-3">
+                                {{ form_label(settingsForm.buy_limit, "Niveau d'achat souhaité (Seuil CAC40)") }}
+                                {{ form_widget(settingsForm.buy_limit, {'attr': {
+                                    'class': 'form-control bg-black text-white border-secondary',
+                                    'placeholder': 'Ex: 7450.00',
+                                    'step': '0.1'
+                                }}) }}
+                                <div class="form-text text-webtrader-muted small">L'achat du tracker sera exécuté quand le CAC40 atteindra ce niveau.</div>
+                            </div>
+
+                            <div class="mb-2">
+                                {{ form_label(settingsForm.position_size, "Montant à allouer par position (€)") }}
+                                <div class="input-group">
+                                    {{ form_widget(settingsForm.position_size, {'attr': {
+                                        'class': 'form-control bg-black text-white fs-5',
+                                        'placeholder': 'Ex: 1000.00'
+                                    }}) }}
+                                    <span class="input-group-text bg-secondary text-white">€</span>
+                                </div>
+
+                                {# Zone pour l'avertissement #}
+                                <div id="risk-warning" class="mt-2 small text-warning d-none">
+                                    <i class="mdi mdi-alert-outline"></i> Attention : Ce montant dépasse 10% de votre capital total.
+                                </div>
+                            </div>
+
+                            <div class="mt-2 small text-webtrader-muted text-end">
+                                <span>Ratio conseillé (1/10e) : <strong id="ratio-val" class="text-success">-- €</strong></span>
+                            </div>
+
+                        </div>
+
+                        <div class="d-grid gap-2 pt-2">
+                            <button type="submit" class="btn btn-success btn-lg fw-bold shadow-sm">
+                                ACTIVER LA SURVEILLANCE
+                            </button>
+                        </div>
+
+                        {{ form_end(settingsForm) }}
+                    </div>
+                </div>
+
+                <div class="mt-4 text-center">
+                    <a href="{{ path('app_strategy_description') }}" class="text-decoration-none text-webtrader-muted small">
+                        <i class="mdi mdi-arrow-left"></i> Retour à la stratégie
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const portfolioInput = document.querySelector('[name*="total_portfolio"]');
+            const positionSizeInput = document.querySelector('[name*="position_size"]');
+            const ratioLabel = document.getElementById('ratio-val');
+            const warning = document.getElementById('risk-warning');
+
+            const checkRisk = () => {
+                const total = parseFloat(portfolioInput.value);
+                const size = parseFloat(positionSizeInput.value);
+
+                if (!isNaN(total) && !isNaN(size) && total > 0) {
+                    const tenPercent = total / 10;
+
+                    // Affichage de l'avertissement si > 10%
+                    if (size > tenPercent) {
+                        warning.classList.remove('d-none');
+                    } else {
+                        warning.classList.add('d-none');
+                    }
+                }
+            };
+
+            portfolioInput.addEventListener('input', (e) => {
+                const total = parseFloat(e.target.value);
+                if (!isNaN(total) && total > 0) {
+                    const tenPercent = (total / 10).toFixed(2);
+                    ratioLabel.textContent = tenPercent + ' €';
+
+                    checkRisk();
+                }
+            });
+
+            // On écoute aussi les changements manuels sur la taille de la position
+            positionSizeInput.addEventListener('input', checkRisk);
+        });
+    </script>
+{% endblock %}

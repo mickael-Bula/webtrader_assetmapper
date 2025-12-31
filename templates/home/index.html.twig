@@ -1,51 +1,6 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-    <div id="app" class="app-layout"
-         data-controller="menu"
-         data-menu-open-class="menu-open">
-        <header class="app-header">
-            <div class="header-content">
-                <button class="icon-btn menu-toggle-btn"
-                        data-action="click->menu#toggle">
-                    <i class="mdi mdi-menu"></i>
-                </button>
-                <div class="toolbar-title text-white">Web<span class="text-brand-blue">Trader</span></div>
-                <div class="spacer"></div>
-                <button class="icon-btn login-btn icon-on"
-                        data-controller="login-icon"
-                        data-login-icon-target="button"
-                        data-action="click->login-icon#toggle">
-                    {{ ux_icon('quill:off') }}
-                </button>
-            </div>
-        </header>
-
-        <nav class="navigation-drawer">
-            <div class="drawer-header">Menu</div>
-            <ul class="list-compact">
-                <li class="list-item">
-                    <a href="/" class="list-link active">
-                        <i class="mdi mdi-home list-icon icon-green"></i>
-                        <span class="list-item-title">Portefeuille</span>
-                    </a>
-                </li>
-                <li class="list-item">
-                    <a href="/settings" class="list-link">
-                        <i class="mdi mdi-cog list-icon icon-green"></i>
-                        <span class="list-item-title">Paramètres</span>
-                    </a>
-                </li>
-                <li class="list-item">
-                    <a href="/stocks" class="list-link">
-                        <i class="mdi mdi-finance list-icon icon-green"></i>
-                        <span class="list-item-title">Stocks</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-
-        <main class="app-main" data-action="click->menu#close">
             <div class="dashboard-container">
                 <div class="notification-area">
                     <div class="notification danger" style="background-color: #D84315;">
@@ -136,6 +91,4 @@
                 </div>
 
             </div>
-        </main>
-    </div>
 {% endblock %}

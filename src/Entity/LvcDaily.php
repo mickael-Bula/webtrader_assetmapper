@@ -9,10 +9,14 @@ use App\Repository\LvcDailyRepository;
 
 #[ORM\Table(name: 'lvc_daily', schema: 'market_data')]
 #[ORM\Entity(repositoryClass: LvcDailyRepository::class, readOnly: true)]
-readonly class LvcDaily
+class LvcDaily
 {
     #[ORM\Id]
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    private ?int $id = null;
+
+    #[ORM\Column(type: 'datetime', unique: true)]
     private \DateTimeInterface $date;
 
     #[ORM\Column(type: 'float')]
@@ -27,14 +31,19 @@ readonly class LvcDaily
     #[ORM\Column(type: 'float')]
     private float $low;
 
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
     public function getDate(): \DateTimeInterface
     {
         return $this->date;
     }
 
-    public function setDate(): static
+    public function setDate(\DateTimeInterface $date): static
     {
-        $this->date = new \DateTimeImmutable();
+        $this->date = $date;
 
         return $this;
     }

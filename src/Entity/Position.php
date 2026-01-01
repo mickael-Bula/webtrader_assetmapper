@@ -33,6 +33,12 @@ class Position
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     private string $targetPrice;
 
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    private ?string $lvcBuyPrice = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    private ?string $lvcTargetPrice = null;
+
     #[ORM\Column(type: 'string', enumType: PositionStatus::class)]
     private PositionStatus $status = PositionStatus::RUNNING;
 
@@ -45,7 +51,7 @@ class Position
     }
 
     /**
-     * Calcule automatiquement le targetPrice à +10% lors de la définition du prix d'achat
+     * Calcule automatiquement le targetPrice à +10 % lors de la définition du prix d'achat
      */
     public function setBuyPrice(string $buyPrice): static
     {
@@ -100,6 +106,41 @@ class Position
     public function setTargetPrice(string $targetPrice): static
     {
         $this->targetPrice = $targetPrice;
+
+        return $this;
+    }
+
+    /**
+     * Définit le prix d'achat LVC et calcule automatiquement
+     * le prix de revente cible à +20 %
+     */
+    public function setLvcBuyPrice(?string $lvcBuyPrice): static
+    {
+        $this->lvcBuyPrice = $lvcBuyPrice;
+
+        if (null === $lvcBuyPrice) {
+            return $this;
+        }
+
+        $target = (float) $lvcBuyPrice * 1.20;
+        $this->lvcTargetPrice = (string) round($target, 2);
+
+        return $this;
+    }
+
+    public function getLvcBuyPrice(): ?string
+    {
+        return $this->lvcBuyPrice;
+    }
+
+    public function getLvcTargetPrice(): ?string
+    {
+        return $this->lvcTargetPrice;
+    }
+
+    public function setLvcTargetPrice(?string $lvcTargetPrice): static
+    {
+        $this->lvcTargetPrice = $lvcTargetPrice;
 
         return $this;
     }

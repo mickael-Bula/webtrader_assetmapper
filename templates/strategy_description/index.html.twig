@@ -162,7 +162,7 @@
                         </p>
                         <div class="p-3 rounded bg-dark bg-opacity-50 border border-secondary border-opacity-25">
                             <p class="small text-secondary mb-0">
-                                Un nouveau cycle de 3 lignes est généré. Pour éviter les doublons sur des niveaux de prix similaires :
+                                Un nouveau cycle de trois lignes est généré. Pour éviter les doublons sur des niveaux de prix similaires :
                             </p>
                             <div class="mt-2 text-danger small fw-bold">
                                 <i class="mdi mdi-delete-sweep me-1"></i> Toutes les anciennes positions "En attente" sont supprimées.
@@ -190,7 +190,7 @@
 
                                 <div class="mt-4 p-4 bg-black bg-opacity-50 rounded-4 border border-secondary border-opacity-25">
                                     <div class="mb-3">
-                                        <label class="form-label text-webtrader-muted small text-uppercase fw-bold">Seuil d'entrée (Points CAC)</label>
+                                        <label for="sim-entrypoint" class="form-label text-webtrader-muted small text-uppercase fw-bold">Seuil d'entrée (Points CAC)</label>
                                         <div class="input-group mb-2">
                                             <input type="number" id="sim-entrypoint" class="form-control form-control-lg bg-dark text-white border-secondary" placeholder="Ex: 7400">
                                             <span class="input-group-text bg-secondary border-secondary text-white">pts</span>
@@ -291,7 +291,6 @@
         </div>
     </div>
 
-    {# LE JAVASCRIPT #}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const entryInput = document.getElementById('sim-entrypoint');
@@ -299,15 +298,31 @@
             const nextCycleLabel = document.getElementById('next-cycle-val');
             const warning = document.getElementById('sim-warning');
 
-            const LAST_CAC = {{ lastCacPrice|default(0) }};
-            const LAST_LVC = {{ lastLvcPrice|default(0) }};
+            // Pour éviter les avertissements de l'IDE, on double l'initialisation par défaut (pour Twig et pour le js).
+            const LAST_CAC = Number({{ lastCacPrice|default(0) }}) || 0;
+            const LAST_LVC = Number({{ lastLvcPrice|default(0) }}) || 0;
+
+            /**
+             * INITIALISATION :
+             * On préremplit avec le DERNIER COURS DU CAC courant
+             */
+            if (LAST_CAC > 0 && entryInput) {
+                entryInput.value = Math.floor(LAST_CAC);
+            }
 
             const updateSimulation = () => {
-                const startCac = parseFloat(entryInput.value);
+                const startCac = parseFloat(entryInput.value.toString());
 
+                // Gestion de l'erreur si le seuil dépasse le cours réel (sécurité logique)
                 if (startCac > LAST_CAC) {
                     warning.classList.remove('d-none');
-                    simBody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-danger small">Seuil supérieur au cours actuel.</td></tr>';
+                    simBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-5">
+                            <div class="text-danger fw-bold">Seuil supérieur au cours actuel</div>
+                            <div class="text-secondary small">La simulation doit débuter au maximum au cours actuel (${LAST_CAC} pts).</div>
+                        </td>
+                    </tr>`;
                     nextCycleLabel.textContent = '-- pts';
                     return;
                 }
@@ -316,38 +331,62 @@
 
                 if (!isNaN(startCac) && startCac > 0) {
                     let html = '';
+
+                    // Simulation des 3 lignes (0%, -2%, -4% par rapport au seuil choisi)
                     [0, 0.02, 0.04].forEach((drop, index) => {
                         const cacTarget = startCac * (1 - drop);
+
+                        // Cible de revente CAC (+10% par rapport au prix d'achat de la ligne)
                         const cacExit = Math.round(cacTarget * 1.10);
+
+                        // Calcul de la variation LVC (Levier 2 par rapport au dernier cours connu)
                         const varCac = (cacTarget / LAST_CAC) - 1;
                         const variationLvc = varCac * 2;
                         const lvcPrice = LAST_LVC * (1 + variationLvc);
-                        const lvcPriceFormatted = lvcPrice.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        const lvcExit = (lvcPrice * 1.20).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                        const lvcPriceFormatted = lvcPrice.toLocaleString('fr-FR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+
+                        const lvcExit = (lvcPrice * 1.20).toLocaleString('fr-FR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
 
                         html += `
-                        <tr class="border-bottom border-secondary border-opacity-25 text-center align-middle">
-                            <td class="ps-3 py-3 text-start text-success fw-bold">#${index + 1}</td>
-                            <td><span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 small text-uppercase" style="width: 100px;">En attente</span></td>
-                            <td class="py-3">
-                                <div class="text-white fw-bold">${Math.round(cacTarget)} pts</div>
-                                <div class="text-webtrader-muted small">${lvcPriceFormatted} €</div>
-                            </td>
-                            <td class="pe-3 py-3">
-                                <div class="text-info fw-bold">${cacExit} pts</div>
-                                <div class="text-webtrader-muted small">${lvcExit} €</div>
-                            </td>
-                        </tr>`;
+                    <tr class="border-bottom border-secondary border-opacity-25 text-center align-middle">
+                        <td class="ps-3 py-3 text-start text-success fw-bold">#${index + 1}</td>
+                        <td>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 small text-uppercase" style="width: 100px;">
+                                En attente
+                            </span>
+                        </td>
+                        <td class="py-3">
+                            <div class="text-white fw-bold">${Math.round(cacTarget)} pts</div>
+                            <div class="text-webtrader-muted small">${lvcPriceFormatted} €</div>
+                        </td>
+                        <td class="pe-3 py-3">
+                            <div class="text-info fw-bold">${cacExit} pts</div>
+                            <div class="text-webtrader-muted small">${lvcExit} €</div>
+                        </td>
+                    </tr>`;
                     });
 
                     simBody.innerHTML = html;
+
+                    // Prochain cycle théorique (-6% après le seuil simulé)
                     nextCycleLabel.textContent = Math.round(startCac * 0.94) + ' pts';
                 } else {
-                    simBody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-webtrader-muted">En attente de saisie...</td></tr>';
+                    simBody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-webtrader-muted">Saisissez un seuil pour simuler...</td></tr>';
                     nextCycleLabel.textContent = '-- pts';
                 }
             };
+
             entryInput.addEventListener('input', updateSimulation);
+
+            // Lancement immédiat au chargement de la page
+            updateSimulation();
         });
     </script>
 {% endblock %}

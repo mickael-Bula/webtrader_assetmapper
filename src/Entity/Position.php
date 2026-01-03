@@ -11,7 +11,7 @@ use App\Repository\PositionRepository;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: PositionRepository::class)]
-#[ORM\Table(name: 'position', schema: 'app')]
+#[ORM\Table(name: 'position')]
 class Position
 {
     #[ORM\Id]
@@ -160,5 +160,15 @@ class Position
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function getQuantity(): string
+    {
+        return number_format(
+            $this->getEntrypoint()?->getPositionSize() / $this->lvcBuyPrice,
+            2,
+            ',',
+            ' '
+        );
     }
 }

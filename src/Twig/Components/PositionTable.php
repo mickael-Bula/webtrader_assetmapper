@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Twig\Components;
 
+use App\Entity\Position;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 
 /**
@@ -15,7 +16,7 @@ class PositionTable
     public string $type; // 'running' (en cours) ou 'waiting' (en attente)
 
     /**
-     * @var array Un tableau de vos données de trading
+     * @var array<Position> Un tableau de vos données de trading
      */
     public array $positions = [];
 

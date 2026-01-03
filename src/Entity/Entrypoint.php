@@ -12,7 +12,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
 
 #[ORM\Entity(repositoryClass: EntrypointRepository::class)]
-#[ORM\Table(name: 'entrypoint', schema: 'app')]
+#[ORM\Table(name: 'entrypoint')]
 class Entrypoint
 {
     #[ORM\Id]
@@ -120,5 +120,11 @@ class Entrypoint
     public function getPositions(): Collection
     {
         return $this->positions;
+    }
+
+    // TODO : la valeur de 6 % pourrait devenir paramétrable
+    public function getCalculatedUpperRange(): string
+    {
+        return number_format((float)$this->entrypoint * 1.06, 2, '.', '');
     }
 }

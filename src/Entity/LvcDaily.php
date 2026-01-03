@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use App\Repository\LvcDailyRepository;
 
+#[ORM\MappedSuperclass]
 #[ORM\Table(name: 'lvc_daily', schema: 'market_data')]
-#[ORM\Entity(repositoryClass: LvcDailyRepository::class, readOnly: true)]
 class LvcDaily
 {
     #[ORM\Id]

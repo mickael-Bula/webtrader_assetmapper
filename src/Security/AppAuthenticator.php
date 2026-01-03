@@ -54,8 +54,8 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
             // On supprime le marqueur pour que la prochaine connexion soit normale
             $request->getSession()->remove('just_registered');
 
-            // Redirection vers la page de configuration
-            return new RedirectResponse($this->urlGenerator->generate('app_settings'));
+            // Redirection vers la page décrivant la stratégie
+            return new RedirectResponse($this->urlGenerator->generate('app_strategy_description'));
         }
 
         return new RedirectResponse($this->urlGenerator->generate('app_home'));

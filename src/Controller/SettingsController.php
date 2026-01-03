@@ -9,16 +9,20 @@ use App\Entity\Position;
 use App\Entity\Entrypoint;
 use App\Form\EntrypointType;
 use App\Enum\PositionStatus;
-use App\Repository\LvcDailyRepository;
-use App\Repository\CacDailyRepository;
+use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Repository\MarketData\LvcDailyRepository;
+use App\Repository\MarketData\CacDailyRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 final class SettingsController extends AbstractController
 {
+    /**
+     * @throws Exception
+     */
     #[Route('/settings', name: 'app_settings')]
     public function index(
         Request                $request,
@@ -30,21 +34,11 @@ final class SettingsController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
-        // 1. Récupérer les derniers prix du CAC et du LVC
-        $lastCacData = $cacRepo->createQueryBuilder('c')
-            ->orderBy('c.date', 'DESC')
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
+        // 1. Récupérer (sous forme de DTO) les derniers prix du CAC et du LVC
+        $lastCacPrice = $cacRepo->findLast()?->getClose();
+        $lastLvcPrice = $lvcRepo->findLast()?->getClose();
 
-        $lastLvcPrice = (float)$lvcRepo->createQueryBuilder('l')
-            ->select('l.high')
-            ->orderBy('l.date', 'DESC')
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getSingleScalarResult();
-
-        if (!$lastCacData) {
+        if (!$lastCacPrice) {
             $this->addFlash('error', "Données de marché (CAC40) indisponibles.");
             return $this->redirectToRoute('app_home');
         }
@@ -57,11 +51,10 @@ final class SettingsController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
 
-            $lastCacPrice = (float)$lastCacData->getClose();
-
             // 1. Validation : La position doit être au moins égale à 1 part de LVC
             if ($entrypoint->getPositionSize() < $lastLvcPrice) {
                 $this->addFlash('error', "Position trop faible (Min: {$lastLvcPrice}€).");
+
                 return $this->redirectToRoute('app_settings');
             }
 
@@ -80,6 +73,8 @@ final class SettingsController extends AbstractController
             // 3. Lier l'utilisateur et initialiser
             $entrypoint->setUser($user);
             $entrypoint->setStatus(PositionStatus::WAITING);
+            $user->setBuyLimit($entrypoint->getEntrypoint());
+            $user->setUpperRange($entrypoint->getCalculatedUpperRange());
 
             // 4. LOGIQUE DES 3 POSITIONS
             $seuilCacInitial = (float)$entrypoint->getEntrypoint();

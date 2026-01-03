@@ -127,4 +127,27 @@ class Entrypoint
     {
         return number_format((float)$this->entrypoint * 1.06, 2, '.', '');
     }
+
+    /**
+     * Cette méthode vérifie si une position en cours existe pour cet entrypoint.
+     */
+    public function isLocked(): bool
+    {
+        foreach ($this->positions as $position) {
+            if ($position->getStatus() === PositionStatus::RUNNING) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function removePosition(Position $position): self
+    {
+        if ($this->positions->removeElement($position) && $position->getEntrypoint() === $this) {
+            $position->setEntrypoint(null);
+        }
+
+        return $this;
+    }
 }

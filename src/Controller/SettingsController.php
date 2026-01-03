@@ -11,6 +11,7 @@ use App\Form\EntrypointType;
 use App\Enum\PositionStatus;
 use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Repository\EntrypointRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -70,13 +71,17 @@ final class SettingsController extends AbstractController
                 return $this->redirectToRoute('app_settings');
             }
 
-            // 3. Lier l'utilisateur et initialiser
+            // 3. On s'assure de ne pas dupliquer les positions pour ne pas être surexposé.
+            $message = $this->deleteFormerWaitingPositions($em);
+            $this->addFlash('info', $message);
+
+            // 4. Lier l'utilisateur et initialiser
             $entrypoint->setUser($user);
             $entrypoint->setStatus(PositionStatus::WAITING);
             $user->setBuyLimit($entrypoint->getEntrypoint());
             $user->setUpperRange($entrypoint->getCalculatedUpperRange());
 
-            // 4. LOGIQUE DES 3 POSITIONS
+            // 5. LOGIQUE DES 3 POSITIONS
             $seuilCacInitial = (float)$entrypoint->getEntrypoint();
 
             for ($rank = 1; $rank <= 3; $rank++) {
@@ -115,5 +120,49 @@ final class SettingsController extends AbstractController
             'settingsForm' => $form->createView(),
             'lastLvcPrice' => $lastLvcPrice,
         ]);
+    }
+
+    /**
+     * Supprime les positions en attente de tous les entrypoints actifs de l'utilisateur.
+     * Marque tous les entrypoints sans positions en cours comme inactifs.
+     */
+    private function deleteFormerWaitingPositions(EntityManagerInterface $em): string
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        /** @var EntrypointRepository $entrypointRepo */
+        $entrypointRepo = $em->getRepository(Entrypoint::class);
+
+        // On récupère la totalité et le dernier des entrypoints actifs de l'utilisateur
+        $activeEntrypoints = $entrypointRepo->findActiveEntrypoints($user);
+        $latestEntrypoint = $activeEntrypoints[0] ?? null;
+
+        if (!$latestEntrypoint) {
+            return '';
+        }
+
+        // Si des ordres en cours existent, on les conserve.
+        $startMessage = '';
+        if ($latestEntrypoint->isLocked()) {
+            $startMessage = 'Une ou plusieurs positions en cours existent et ont été conservées. ';
+        }
+
+        // On supprime les positions en attente de tous les entrypoints actifs de l'utilisateur.
+        foreach ($activeEntrypoints as $entrypoint) {
+            foreach ($entrypoint->getPositions() as $position) {
+                if ($position->getStatus() === PositionStatus::WAITING) {
+                    $entrypoint->removePosition($position);
+                    $em->remove($position);
+                }
+            }
+            // On change le statut des entrypoints précédents et sans positions 'en cours' pour les rendre 'inactifs'.
+            if (!$entrypoint->isLocked()) {
+                $entrypoint->setStatus(PositionStatus::CLOSED);
+                $em->flush();
+            }
+        }
+
+        return $startMessage . 'Les anciens ordres en attente ont été supprimés.';
     }
 }

@@ -1,94 +1,112 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-            <div class="dashboard-container">
-                <div class="notification-area">
-                    <div class="notification danger" style="background-color: #D84315;">
-                        <span class="notification-text">Erreur de connexion aux données.</span>
-                        <button class="close-btn">×</button>
+    <div class="dashboard-container">
+        <div class="notification-area">
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    {% set bootstrapClass = (label == 'error') ? 'danger' : (label == 'success' ? 'success' : 'info') %}
+
+                    <div class="alert alert-{{ bootstrapClass }} alert-dismissible fade show"
+                         role="alert"
+                         data-controller="alert">
+                        <div class="d-flex align-items-center">
+                            {% if label == 'error' %}
+                                <i class="mdi mdi-alert-circle me-2"></i>
+                            {% elseif label == 'success' %}
+                                <i class="mdi mdi-check-circle me-2"></i>
+                            {% else %}
+                                <i class="mdi mdi-information me-2"></i>
+                            {% endif %}
+
+                            <div>{{ message }}</div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+
+        <div class="main-content-row d-flex">
+
+            <div class="col-left">
+
+                <div class="row-header d-flex align-start">
+                    <twig:MarketCard
+                        title="Cac"
+                        :value="lastQuote"
+                        subtitle="+0.85 %"
+                        trend="up"
+                    />
+                    <twig:MarketCard
+                        title="Last High"
+                        :value="lastHigh"
+                        subtitle="29/11/24"
+                    />
+                    <twig:MarketCard
+                        title="Buy Limit"
+                        :value="buyLimit"
+                        subtitle="-1.34 %"
+                        trend="down"
+                    />
                 </div>
 
-                <div class="main-content-row d-flex">
-
-                    <div class="col-left">
-
-                        <div class="row-header d-flex align-start">
-                            <twig:MarketCard
-                                title="Cac"
-                                :value="lastQuote"
-                                subtitle="+0.85 %"
-                                trend="up"
-                            />
-                            <twig:MarketCard
-                                title="Last High"
-                                :value="lastHigh"
-                                subtitle="29/11/24"
-                            />
-                            <twig:MarketCard
-                                title="Buy Limit"
-                                :value="buyLimit"
-                                subtitle="-1.34 %"
-                                trend="down"
-                            />
-                        </div>
-
+                <div class="row-table">
+                    <div class="col-table">
                         <div class="row-table">
                             <div class="col-table">
-                                <div class="row-table">
-                                    <div class="col-table">
-                                        <twig:StockMarketTable :quotes="cacQuotes" />
-                                    </div>
-                                </div>
+                                <twig:StockMarketTable :quotes="cacQuotes"/>
                             </div>
                         </div>
-
-                    </div>
-
-                    <div class="col-right">
-
-                        <div class="image-box elevation-5" data-controller="chart">
-                            <div class="tabs-container d-flex mb-2">
-                                <button class="tab-btn"
-                                        data-action="click->chart#switch"
-                                        data-url="{{ chart_url('/charts/fchi_hourly.png') }}">Horaire
-                                </button>
-                                <button class="tab-btn active"
-                                        data-action="click->chart#switch"
-                                        data-url="{{ chart_url('/charts/fchi_daily.png') }}">Quotidien
-                                </button>
-                                <button class="tab-btn"
-                                        data-action="click->chart#switch"
-                                        data-url="{{ chart_url('/charts/fchi_weekly.png') }}">Hebdo
-                                </button>
-                            </div>
-
-                            <div class="chart-display">
-                                <img data-chart-target="display"
-                                     src="{{ chart_url('/charts/fchi_daily.png') }}"
-                                     alt="Graphique CAC40"
-                                     class="full-width-image"/>
-                            </div>
-                        </div>
-
-                        <div class="row-positions-spacer d-flex">
-                            <div class="col-positions-wrap">
-                                <div class="col-positions">
-                                    <twig:PositionTable
-                                        type="running"
-                                        :positions="runningPositions"
-                                    />
-                                    <twig:PositionTable
-                                        type="waiting"
-                                        :positions="waitingPositions"
-                                    />
-                                </div>
-                            </div>
-                            <div class="col-spacer"></div>
-                        </div>
-
                     </div>
                 </div>
 
             </div>
+
+            <div class="col-right">
+
+                <div class="image-box elevation-5" data-controller="chart">
+                    <div class="tabs-container d-flex mb-2">
+                        <button class="tab-btn"
+                                data-action="click->chart#switch"
+                                data-url="{{ chart_url('/charts/fchi_hourly.png') }}">Horaire
+                        </button>
+                        <button class="tab-btn active"
+                                data-action="click->chart#switch"
+                                data-url="{{ chart_url('/charts/fchi_daily.png') }}">Quotidien
+                        </button>
+                        <button class="tab-btn"
+                                data-action="click->chart#switch"
+                                data-url="{{ chart_url('/charts/fchi_weekly.png') }}">Hebdo
+                        </button>
+                    </div>
+
+                    <div class="chart-display">
+                        <img data-chart-target="display"
+                             src="{{ chart_url('/charts/fchi_daily.png') }}"
+                             alt="Graphique CAC40"
+                             class="full-width-image"/>
+                    </div>
+                </div>
+
+                <div class="row-positions-spacer d-flex">
+                    <div class="col-positions-wrap">
+                        <div class="col-positions">
+                            <twig:PositionTable
+                                type="running"
+                                :positions="runningPositions"
+                            />
+                            <twig:PositionTable
+                                type="waiting"
+                                :positions="waitingPositions"
+                            />
+                        </div>
+                    </div>
+                    <div class="col-spacer"></div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
 {% endblock %}

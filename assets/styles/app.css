@@ -498,31 +498,8 @@ body.menu-open .app-main::before {
     margin-bottom: 15px;
 }
 
-.notification {
-    width: 100%;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-weight: bold;
-    border-radius: var(--border-radius);
-    color: white;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-}
-
-.notification-text {
-    flex-grow: 1;
-    text-align: left;
-}
-
-.close-btn {
-    background: none;
-    border: none;
-    font-size: 20px;
-    font-weight: bold;
-    cursor: pointer;
-    color: inherit;
-    padding: 0 10px;
+.alert.fade {
+    transition: opacity 0.8s linear, transform 0.5s ease-out;
 }
 
 /* ---------------------------------------- */

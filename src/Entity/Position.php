@@ -40,7 +40,7 @@ class Position
     private ?string $lvcTargetPrice = null;
 
     #[ORM\Column(type: 'string', enumType: PositionStatus::class)]
-    private PositionStatus $status = PositionStatus::RUNNING;
+    private PositionStatus $status = PositionStatus::WAITING;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;

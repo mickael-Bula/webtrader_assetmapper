@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\Entity\User;
 use App\Entity\Entrypoint;
+use App\Enum\PositionStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,5 +18,22 @@ class EntrypointRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Entrypoint::class);
+    }
+
+    /**
+     * Retourne tous les entrypoints actifs pour un utilisateur.
+     * @param User $user
+     * @return array<Entrypoint>
+     */
+    public function findActiveEntrypoints(User $user): array
+    {
+        return $this->createQueryBuilder('e')
+            ->where('e.user = :user')
+            ->andWhere('e.status != :status')
+            ->setParameter('user', $user)
+            ->setParameter('status', PositionStatus::CLOSED)
+            ->orderBy('e.id', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 }

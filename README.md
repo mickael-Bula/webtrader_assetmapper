@@ -67,3 +67,37 @@ Name : Local
 Host : 127.0.0.1
 Port : 8000
 Ne pas cocher Use path mapping
+
+### GESTION DES SCHÉMAS BDD
+
+Les cotations étant récupérées et enregistrées en base par les scripts Python,
+j'ai opté pour deux schémas séparés pour que doctrine ne touche pas aux tables CacDaily et LvcDaily.
+Ces tables sont dans le schéma `market_data`, tandis que celles gérées par doctrine sont dans le schéma `public`.
+
+Pour que cette organisation fonctionne, j'ai précisé dans le fichier `config/packages/doctrine.yaml` :
+
+```yaml
+schema_filter: '~^(?!market_data\.).*~'
+```
+
+Mais définir les schémas ne semble pas suffisant pour que doctrine ignore les tables déclarées comme entité,
+même en indiquant un schéma spécifique dans les attributs `@ORM\Table`.
+
+Pour contourner le problème, j'ai donc déclaré ces entités comme ceci :
+
+```php
+#[ORM\MappedSuperclass]
+#[ORM\Table(name: 'cac_daily', schema: 'market_data')]
+```
+
+Avec cette configuration, les tables sont bien ignorées par doctrine, mais les repositories deviennent inexploitables.
+En effet, il n'est plus possible de gérer ces entités avec le DQL, il faut utiliser DBAL et du SQL classique.
+
+Pour conserver l'aspect objet et ne pas avoir à gérer des tableaux, j'ai donc ajouté des DTO pour ces classes.
+Le principe est de mapper le résultat de la requête, récupéré par DBAL sous forme de tableau, 
+vers un objet ayant des propriétés correspondantes typées.
+
+À noter que pour appeler ces propriétés depuis un twig, bien qu'il existe des getters,
+le plus simple est d'utiliser la syntaxe `object.property` plutôt que `object.getProperty()`.
+
+

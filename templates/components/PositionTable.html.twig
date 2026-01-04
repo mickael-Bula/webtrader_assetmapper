@@ -26,7 +26,13 @@
             <tbody class="text-white">
             {% for pos in positions %}
                 <tr>
-                    <td>{{ pos.createdAt|date('d/m/Y') }}</td>
+                    {# Si la date de validité d'une position en attente est proche, elle est signalée #}
+                    <td class="{{ this.isExpiringSoon(pos) ? 'text-warning fw-bold' : '' }}">
+                        {{ this.formattedDate(pos) }}
+                        {% if this.isExpiringSoon(pos) %}
+                            <i class="mdi mdi-clock-alert" title="Expire bientôt"></i>
+                        {% endif %}
+                    </td>
                     <td>{{ pos.quantity }}</td>
                     <td>{{ pos.id }}</td>
                     <td>{{ pos.lvcBuyPrice|number_format(2, ',', ' ') }}</td>

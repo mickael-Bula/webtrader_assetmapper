@@ -16,7 +16,7 @@ class PositionTable
     public string $type; // 'running' (en cours) ou 'waiting' (en attente)
 
     /**
-     * @var array<Position> Un tableau de vos données de trading
+     * @var array<Position> Un tableau des données de trading
      */
     public array $positions = [];
 
@@ -27,6 +27,43 @@ class PositionTable
     public function getDateLabel(): string
     {
         return $this->type === 'running' ? 'Acheté' : 'Validité';
+    }
+
+    /**
+     * Affiche la date d'achat pour les positions en cours
+     * et une date de validité calculée à trois mois pour les positions en attente.
+     * @noinspection PhpUnused
+     */
+    public function getFormattedDate(Position $position): string
+    {
+        $date = clone $position->getCreatedAt();
+
+        if ($this->type === 'waiting') {
+            $date = $date->modify('+3 months');
+        }
+
+        return $date->format('d/m/Y');
+    }
+
+    /**
+     * Retourne un booléen indiquant que la date de validité est inférieure à une semaine ou non.
+     * @noinspection PhpUnused
+     */
+    public function isExpiringSoon(Position $position): bool
+    {
+        if ($this->type !== 'waiting') {
+            return false;
+        }
+
+        $validityDate = $position->getCreatedAt()->modify('+3 months');
+        $now = new \DateTimeImmutable();
+
+        // On calcule la différence
+        $interval = $now->diff($validityDate);
+        $daysRemaining = (int)$interval->format('%r%a');
+
+        // On considère "urgent" s'il reste entre 0 et 7 jours
+        return $daysRemaining <= 7 && $daysRemaining >= 0;
     }
 
     /**

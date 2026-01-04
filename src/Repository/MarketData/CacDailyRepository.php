@@ -17,14 +17,41 @@ final readonly class CacDailyRepository
     ) {}
 
     /**
-     * Dernière cotation CAC
-     * @throws Exception
-     * @throws \Exception
+     * Récupère un DTO par son ID.
+     * @throws \Exception|Exception
+     */
+    public function findById(int $id): ?CacDailyDto
+    {
+        $sql = <<<SQL
+            SELECT $id, date, open, high, low, close
+            FROM market_data.cac_daily
+            WHERE id = :id
+            SQL;
+
+        $row = $this->connection->fetchAssociative($sql, ['id' => $id]);
+
+        if ($row === false) {
+            return null;
+        }
+
+        return new CacDailyDto(
+            (int) $row['id'],
+            new \DateTimeImmutable($row['date']),
+            (float) $row['open'],
+            (float) $row['high'],
+            (float) $row['low'],
+            (float) $row['close'],
+        );
+    }
+
+    /**
+     * Dernière cotation CAC sous forme de DTO pour affichage et calculs.
+     * @throws \Exception|Exception
      */
     public function findLast(): ?CacDailyDto
     {
         $sql = <<<SQL
-            SELECT date, open, high, low, close
+            SELECT id, date, open, high, low, close
             FROM market_data.cac_daily
             ORDER BY date DESC
             LIMIT 1
@@ -37,6 +64,7 @@ final readonly class CacDailyRepository
         }
 
         return new CacDailyDto(
+            (int) $row['id'],
             new \DateTimeImmutable($row['date']),
             (float) $row['open'],
             (float) $row['high'],
@@ -49,13 +77,13 @@ final readonly class CacDailyRepository
     /**
      * Dernières cotations CAC avec le prix LVC associé
      * @return array<CacLvcQuoteDto>
-     * @throws Exception
-     * @throws \Exception
+     * @throws \Exception|Exception
      */
     public function findLastQuotesWithLvc(int $limit = 15): array
     {
         $sql = <<<SQL
         SELECT
+            c.id,
             c.date,
             c.close AS cac_close,
             c.open,
@@ -77,6 +105,7 @@ final readonly class CacDailyRepository
         $result = [];
         foreach ($rows as $row) {
             $result[] = new CacLvcQuoteDto(
+                (int) $row['id'],
                 new \DateTimeImmutable($row['date']),
                 (float) $row['cac_close'],
                 (float) $row['open'],

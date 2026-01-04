@@ -37,9 +37,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\ManyToOne(targetEntity: CacDaily::class)]
-    #[ORM\JoinColumn(name: "last_cac_updated_id", referencedColumnName: "id", nullable: true)]
-    private ?CacDaily $lastCacUpdated = null;
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private ?int $lastCacUpdatedId = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     private ?string $upperRange = null;
@@ -136,14 +135,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // @deprecated, to be removed when upgrading to Symfony 8
     }
 
-    public function getLastCacUpdated(): ?CacDaily
+    public function getLastCacUpdatedId(): ?int
     {
-        return $this->lastCacUpdated;
+        return $this->lastCacUpdatedId;
     }
 
-    public function setLastCacUpdated(?CacDaily $lastCacUpdated): static
+    public function setLastCacUpdatedId(?int $id): static
     {
-        $this->lastCacUpdated = $lastCacUpdated;
+        $this->lastCacUpdatedId = $id;
 
         return $this;
     }

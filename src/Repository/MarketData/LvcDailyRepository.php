@@ -22,7 +22,7 @@ final readonly class LvcDailyRepository
     public function findLast(): ?LvcDailyDto
     {
         $sql = <<<SQL
-            SELECT date, open, high, low, close
+            SELECT id, date, open, high, low, close
             FROM market_data.lvc_daily
             ORDER BY date DESC
             LIMIT 1
@@ -35,6 +35,7 @@ final readonly class LvcDailyRepository
         }
 
         return new LvcDailyDto(
+            (int) $row['id'],
             new \DateTimeImmutable($row['date']),
             (float) $row['open'],
             (float) $row['high'],

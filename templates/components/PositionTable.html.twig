@@ -12,9 +12,7 @@
                 <th rowspan="2">Trade</th>
                 <th colspan="2" class="align-center">Achat</th>
                 <th colspan="2" class="align-left">Revente</th>
-                {% if type == 'running' %}
-                    <th rowspan="2" class="align-left">Edit</th>
-                {% endif %}
+                <th rowspan="2" class="align-left">Détail</th>
             </tr>
             <tr>
                 <th>LVC</th>
@@ -39,9 +37,18 @@
                     <td>{{ pos.buyPrice|number_format(0, ',', ' ') }}</td>
                     <td>{{ pos.lvcTargetPrice|number_format(2, ',', ' ') }}</td>
                     <td>{{ pos.targetPrice|number_format(0, ',', ' ') }}</td>
-                    {% if type == 'running' %}
-                        <td><i class="mdi mdi-pencil edit-icon"></i></td>
-                    {% endif %}
+                    <td>
+                        <button class="btn btn-sm btn-outline-info"
+                                type="button"
+                                data-bs-toggle="offcanvas"
+                                data-bs-target="#offcanvasPosition{{ pos.id }}">
+                            <i class="mdi mdi-eye"></i>
+                        </button>
+
+                        {# On inclut le menu latéral ici pour qu'il ait accès à la variable 'pos' #}
+                        {{ include('_partials/_position_drawer.html.twig', { 'position': pos }) }}
+                    </td>
+
                 </tr>
             {% else %}
                 <tr>

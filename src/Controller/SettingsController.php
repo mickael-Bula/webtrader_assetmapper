@@ -52,13 +52,12 @@ final class SettingsController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
 
-            // 1. Validation : La position doit être au moins égale à 1 part de LVC
+            // 1. Validation : La position doit être au moins égale à une part de LVC
             if ($entrypoint->getPositionSize() < $lastLvcPrice) {
                 $this->addFlash('error', "Position trop faible (Min: {$lastLvcPrice}€).");
 
                 return $this->redirectToRoute('app_settings');
             }
-
 
             // 2. Validation : Le seuil d'entrée doit être inférieur au plus bas du CAC
             if ($entrypoint->getEntrypoint() > $lastCacPrice) {
@@ -80,6 +79,7 @@ final class SettingsController extends AbstractController
             $entrypoint->setStatus(PositionStatus::WAITING);
             $user->setBuyLimit($entrypoint->getEntrypoint());
             $user->setUpperRange($entrypoint->getCalculatedUpperRange());
+            $user->setLastCacUpdatedId($cacRepo->findLast()?->getId());
 
             // 5. LOGIQUE DES 3 POSITIONS
             $seuilCacInitial = (float)$entrypoint->getEntrypoint();

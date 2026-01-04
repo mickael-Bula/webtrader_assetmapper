@@ -3,8 +3,8 @@ doctrine:
         url: '%env(resolve:DATABASE_URL)%'
         profiling_collect_backtrace: '%kernel.debug%'
         use_savepoints: true
-        schema_filter: '~^app\.~'
         driver: 'pdo_pgsql'
+        schema_filter: '~^(?!market_data\.).*~'
 
     orm:
         auto_generate_proxy_classes: true

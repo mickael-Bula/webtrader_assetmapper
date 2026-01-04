@@ -2,16 +2,19 @@
 
 namespace App\Entity;
 
+use Doctrine\DBAL\Types\Types;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[ORM\Table(name: '`user`', schema: 'app')]
+#[ORM\Table(name: '`user`')]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
-#[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
+#[UniqueEntity(fields: ['email'], message: 'Un compte existe déjà avec cet email.')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -34,11 +37,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?float $lastHigh = null;
+    #[ORM\ManyToOne(targetEntity: CacDaily::class)]
+    #[ORM\JoinColumn(name: "last_cac_updated_id", referencedColumnName: "id", nullable: true)]
+    private ?CacDaily $lastCacUpdated = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?float $buyLimit = null;
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    private ?string $upperRange = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    private ?string $buyLimit = null;
+
+    #[ORM\OneToMany(targetEntity: Entrypoint::class, mappedBy: 'user', orphanRemoval: true)]
+    private Collection $entrypoints;
+
+    public function __construct()
+    {
+        $this->entrypoints = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -121,27 +136,47 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // @deprecated, to be removed when upgrading to Symfony 8
     }
 
-    public function getLastHigh(): ?float
+    public function getLastCacUpdated(): ?CacDaily
     {
-        return $this->lastHigh;
+        return $this->lastCacUpdated;
     }
 
-    public function setLastHigh(?float $lastHigh): static
+    public function setLastCacUpdated(?CacDaily $lastCacUpdated): static
     {
-        $this->lastHigh = $lastHigh;
+        $this->lastCacUpdated = $lastCacUpdated;
 
         return $this;
     }
 
-    public function getBuyLimit(): ?float
+    public function getUpperRange(): ?string
+    {
+        return $this->upperRange;
+    }
+
+    public function setUpperRange(?string $upperRange): static
+    {
+        $this->upperRange = $upperRange;
+
+        return $this;
+    }
+
+    public function getBuyLimit(): ?string
     {
         return $this->buyLimit;
     }
 
-    public function setBuyLimit(?float $buyLimit): static
+    public function setBuyLimit(?string $buyLimit): static
     {
         $this->buyLimit = $buyLimit;
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, Entrypoint>
+     */
+    public function getEntrypoints(): Collection
+    {
+        return $this->entrypoints;
     }
 }

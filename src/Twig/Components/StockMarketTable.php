@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Twig\Components;
 
+use App\Dto\MarketData\CacLvcQuoteDto;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 
 /** @noinspection PhpUnused */
@@ -11,7 +12,7 @@ use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 class StockMarketTable
 {
     /**
-     * @var array Les données brutes du CAC
+     * @var array<CacLvcQuoteDto> Les données brutes du CAC
      */
     public array $quotes = [];
 

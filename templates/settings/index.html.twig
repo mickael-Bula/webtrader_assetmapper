@@ -20,9 +20,9 @@
                         <label class="form-label text-success fw-bold small uppercase">GESTION DU CAPITAL</label>
                         <div class="mb-4 p-3 bg-black rounded border border-secondary border-opacity-25">
                             <div class="mb-3">
-                                {{ form_label(settingsForm.total_portfolio, "Valeur totale du portefeuille") }}
+                                {{ form_label(settingsForm.totalPortfolio, "Valeur totale du portefeuille") }}
                                 <div class="input-group">
-                                    {{ form_widget(settingsForm.total_portfolio, {'attr': {
+                                    {{ form_widget(settingsForm.totalPortfolio, {'attr': {
                                         'class': 'form-control bg-black text-white fs-5',
                                         'placeholder': '10000.00'
                                     }}) }}
@@ -35,8 +35,8 @@
                         <div class="mb-4 p-3 bg-black rounded border border-secondary border-opacity-25">
 
                             <div class="mb-3">
-                                {{ form_label(settingsForm.buy_limit, "Niveau d'achat souhaité (Seuil CAC40)") }}
-                                {{ form_widget(settingsForm.buy_limit, {'attr': {
+                                {{ form_label(settingsForm.entrypoint, "Niveau d'achat souhaité (Seuil CAC40)") }}
+                                {{ form_widget(settingsForm.entrypoint, {'attr': {
                                     'class': 'form-control bg-black text-white border-secondary',
                                     'placeholder': 'Ex: 7450.00',
                                     'step': '0.1'
@@ -45,9 +45,9 @@
                             </div>
 
                             <div class="mb-2">
-                                {{ form_label(settingsForm.position_size, "Montant à allouer par position (€)") }}
+                                {{ form_label(settingsForm.positionSize, "Montant à allouer par position (€)") }}
                                 <div class="input-group">
-                                    {{ form_widget(settingsForm.position_size, {'attr': {
+                                    {{ form_widget(settingsForm.positionSize, {'attr': {
                                         'class': 'form-control bg-black text-white fs-5',
                                         'placeholder': 'Ex: 1000.00'
                                     }}) }}

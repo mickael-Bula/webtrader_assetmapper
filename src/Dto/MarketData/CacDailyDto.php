@@ -1,0 +1,41 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Dto\MarketData;
+
+final readonly class CacDailyDto
+{
+    public function __construct(
+        private \DateTimeImmutable $date,
+        private float              $open,
+        private float              $high,
+        private float              $low,
+        private float              $close
+    ) {}
+
+    public function getDate(): \DateTimeImmutable
+    {
+        return $this->date;
+    }
+
+    public function getClose(): float
+    {
+        return $this->close;
+    }
+
+    public function getOpen(): float
+    {
+        return $this->open;
+    }
+
+    public function getHigh(): float
+    {
+        return $this->high;
+    }
+
+    public function getLow(): float
+    {
+        return $this->low;
+    }
+}

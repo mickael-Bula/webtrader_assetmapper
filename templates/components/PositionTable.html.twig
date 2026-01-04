@@ -26,13 +26,19 @@
             <tbody class="text-white">
             {% for pos in positions %}
                 <tr>
-                    <td>{{ pos.date }}</td>
-                    <td>{{ pos.qty }}</td>
+                    {# Si la date de validité d'une position en attente est proche, elle est signalée #}
+                    <td class="{{ this.isExpiringSoon(pos) ? 'text-warning fw-bold' : '' }}">
+                        {{ this.formattedDate(pos) }}
+                        {% if this.isExpiringSoon(pos) %}
+                            <i class="mdi mdi-clock-alert" title="Expire bientôt"></i>
+                        {% endif %}
+                    </td>
+                    <td>{{ pos.quantity }}</td>
                     <td>{{ pos.id }}</td>
-                    <td>{{ pos.lvc_buy }}</td>
-                    <td>{{ pos.cac_buy }}</td>
-                    <td>{{ pos.lvc_sell }}</td>
-                    <td>{{ pos.cac_sell }}</td>
+                    <td>{{ pos.lvcBuyPrice|number_format(2, ',', ' ') }}</td>
+                    <td>{{ pos.buyPrice|number_format(0, ',', ' ') }}</td>
+                    <td>{{ pos.lvcTargetPrice|number_format(2, ',', ' ') }}</td>
+                    <td>{{ pos.targetPrice|number_format(0, ',', ' ') }}</td>
                     {% if type == 'running' %}
                         <td><i class="mdi mdi-pencil edit-icon"></i></td>
                     {% endif %}

@@ -164,11 +164,36 @@ class Position
 
     public function getQuantity(): string
     {
+        $entrypoint = $this->getEntrypoint();
+
+        // Si lvcBuyPrice vaut zéro ou null, on évite la division par zéro en retournant un montant.
+        if (!$entrypoint || !(float)$this->lvcBuyPrice) {
+            return '0,00';
+        }
+
         return number_format(
             $this->getEntrypoint()?->getPositionSize() / $this->lvcBuyPrice,
             2,
             ',',
             ' '
         );
+    }
+
+    /**
+     * Calcule l'écart entre le cours actuel et l'objectif en points et en pourcentage.
+     */
+    public function getTargetDistance(string $currentCacPrice): array
+    {
+        $current = (float) $currentCacPrice;
+        $target = (float) $this->targetPrice;
+
+        $points = $target - $current;
+        $percent = ($points / $current) * 100;
+
+        return [
+            'points' => round($points, 2),
+            'percent' => round($percent, 2),
+            'is_close' => abs($percent) < 1.0 // Moins de 1% de l'objectif
+        ];
     }
 }

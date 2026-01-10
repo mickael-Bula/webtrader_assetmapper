@@ -7,12 +7,18 @@ namespace App\Dto\MarketData;
 final readonly class LvcDailyDto
 {
     public function __construct(
+        private int                $id,
         private \DateTimeImmutable $date,
         private float              $open,
         private float              $high,
         private float              $low,
         private float              $close
     ) {}
+
+    public function getId(): int
+    {
+        return $this->id;
+    }
 
     public function getDate(): \DateTimeImmutable
     {

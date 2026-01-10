@@ -7,6 +7,7 @@ namespace App\Dto\MarketData;
 final readonly class CacDailyDto
 {
     public function __construct(
+        private int                $id,
         private \DateTimeImmutable $date,
         private float              $open,
         private float              $high,
@@ -14,27 +15,37 @@ final readonly class CacDailyDto
         private float              $close
     ) {}
 
-    public function getDate(): \DateTimeImmutable
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    public
+    function getDate(): \DateTimeImmutable
     {
         return $this->date;
     }
 
-    public function getClose(): float
+    public
+    function getClose(): float
     {
         return $this->close;
     }
 
-    public function getOpen(): float
+    public
+    function getOpen(): float
     {
         return $this->open;
     }
 
-    public function getHigh(): float
+    public
+    function getHigh(): float
     {
         return $this->high;
     }
 
-    public function getLow(): float
+    public
+    function getLow(): float
     {
         return $this->low;
     }

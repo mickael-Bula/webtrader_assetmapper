@@ -21,7 +21,7 @@ class EntrypointRepository extends ServiceEntityRepository
     }
 
     /**
-     * Retourne tous les entrypoints actifs pour un utilisateur.
+     * Retourne tous les entrypoints de l'utilisateur qui ont un statut différent de CLOSED.
      * @param User $user
      * @return array<Entrypoint>
      */

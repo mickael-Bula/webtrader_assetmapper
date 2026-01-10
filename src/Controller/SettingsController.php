@@ -52,13 +52,12 @@ final class SettingsController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
 
-            // 1. Validation : La position doit être au moins égale à 1 part de LVC
+            // 1. Validation : La position doit être au moins égale à une part de LVC
             if ($entrypoint->getPositionSize() < $lastLvcPrice) {
                 $this->addFlash('error', "Position trop faible (Min: {$lastLvcPrice}€).");
 
                 return $this->redirectToRoute('app_settings');
             }
-
 
             // 2. Validation : Le seuil d'entrée doit être inférieur au plus bas du CAC
             if ($entrypoint->getEntrypoint() > $lastCacPrice) {
@@ -80,6 +79,7 @@ final class SettingsController extends AbstractController
             $entrypoint->setStatus(PositionStatus::WAITING);
             $user->setBuyLimit($entrypoint->getEntrypoint());
             $user->setUpperRange($entrypoint->getCalculatedUpperRange());
+            $user->setLastCacUpdatedId($cacRepo->findLast()?->getId());
 
             // 5. LOGIQUE DES 3 POSITIONS
             $seuilCacInitial = (float)$entrypoint->getEntrypoint();
@@ -123,8 +123,9 @@ final class SettingsController extends AbstractController
     }
 
     /**
-     * Supprime les positions en attente de tous les entrypoints actifs de l'utilisateur.
-     * Marque tous les entrypoints sans positions en cours comme inactifs.
+     * Méthode appelée uniquement lors de la configuration d'un nouvel Entrypoint par l'utilisateur.
+     * Elle supprime toutes les positions en attente des entrypoints actifs de l'utilisateur
+     * et passe tous les entrypoints sans positions en cours au statut CLOSED.
      */
     private function deleteFormerWaitingPositions(EntityManagerInterface $em): string
     {
@@ -142,7 +143,7 @@ final class SettingsController extends AbstractController
             return '';
         }
 
-        // Si des ordres en cours existent, on les conserve.
+        // Si des ordres en cours existent, on les conserve. Les ordres en attente de cette série seront supprimés.
         $startMessage = '';
         if ($latestEntrypoint->isLocked()) {
             $startMessage = 'Une ou plusieurs positions en cours existent et ont été conservées. ';

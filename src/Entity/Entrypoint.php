@@ -128,6 +128,11 @@ class Entrypoint
         return number_format((float)$this->entrypoint * 1.06, 2, '.', '');
     }
 
+    public function getCalculatedBuyLimit(): string
+    {
+        return number_format((float)$this->entrypoint * 0.94, 2, '.', '');
+    }
+
     /**
      * Cette méthode vérifie si une position en cours existe pour cet entrypoint.
      */

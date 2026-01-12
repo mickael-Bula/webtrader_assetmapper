@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Entity\Position;
 use App\Entity\Entrypoint;
 use App\Form\EntrypointType;
 use App\Enum\PositionStatus;
 use Doctrine\DBAL\Exception;
+use App\Service\PositionManager;
 use Doctrine\ORM\EntityManagerInterface;
-use App\Repository\EntrypointRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -29,7 +28,8 @@ final class SettingsController extends AbstractController
         Request                $request,
         EntityManagerInterface $em,
         CacDailyRepository     $cacRepo,
-        LvcDailyRepository     $lvcRepo
+        LvcDailyRepository     $lvcRepo,
+        PositionManager        $positionManager
     ): Response
     {
         /** @var User $user */
@@ -71,7 +71,7 @@ final class SettingsController extends AbstractController
             }
 
             // 3. On s'assure de ne pas dupliquer les positions pour ne pas être surexposé.
-            $message = $this->deleteFormerWaitingPositions($em);
+            $message = $positionManager->deleteFormerWaitingPositions($user);
             $this->addFlash('info', $message);
 
             // 4. Lier l'utilisateur et initialiser
@@ -81,32 +81,12 @@ final class SettingsController extends AbstractController
             $user->setUpperRange($entrypoint->getCalculatedUpperRange());
             $user->setLastCacUpdatedId($cacRepo->findLast()?->getId());
 
-            // 5. LOGIQUE DES 3 POSITIONS
-            $seuilCacInitial = (float)$entrypoint->getEntrypoint();
-
-            for ($rank = 1; $rank <= 3; $rank++) {
-                $position = new Position();
-                $position->setEntrypoint($entrypoint);
-                $position->setRank($rank);
-                $position->setStatus(PositionStatus::WAITING);
-
-                // Calcul du seuil CAC pour ce rang
-                $percentDropCac = ($rank - 1) * 0.02; // 0, 0.02, 0.04
-                $cacTargetForRank = $seuilCacInitial * (1 - $percentDropCac);
-                $position->setBuyPrice((string)$cacTargetForRank);
-
-                // CALCUL LVC THÉORIQUE
-                // 1. On calcule la baisse du CAC par rapport au cours actuel
-                $cacDiffPercent = ($cacTargetForRank / $lastCacPrice) - 1;
-
-                // 2. On applique le levier x2 pour trouver le prix LVC estimé
-                $lvcDiffPercent = $cacDiffPercent * 2;
-                $estimatedLvcBuy = $lastLvcPrice * (1 + $lvcDiffPercent);
-
-                $position->setLvcBuyPrice((string)round($estimatedLvcBuy, 2));
-
-                $em->persist($position);
-            }
+            // 5. Création des trois positions en attente.
+            $positionManager->createWaitingPositionsForEntrypoint(
+                $entrypoint,
+                (float)$entrypoint->getEntrypoint(),
+                (float)$lastLvcPrice
+            );
 
             $em->persist($entrypoint);
             $em->flush();
@@ -120,50 +100,5 @@ final class SettingsController extends AbstractController
             'settingsForm' => $form->createView(),
             'lastLvcPrice' => $lastLvcPrice,
         ]);
-    }
-
-    /**
-     * Méthode appelée uniquement lors de la configuration d'un nouvel Entrypoint par l'utilisateur.
-     * Elle supprime toutes les positions en attente des entrypoints actifs de l'utilisateur
-     * et passe tous les entrypoints sans positions en cours au statut CLOSED.
-     */
-    private function deleteFormerWaitingPositions(EntityManagerInterface $em): string
-    {
-        /** @var User $user */
-        $user = $this->getUser();
-
-        /** @var EntrypointRepository $entrypointRepo */
-        $entrypointRepo = $em->getRepository(Entrypoint::class);
-
-        // On récupère la totalité et le dernier des entrypoints actifs de l'utilisateur
-        $activeEntrypoints = $entrypointRepo->findActiveEntrypoints($user);
-        $latestEntrypoint = $activeEntrypoints[0] ?? null;
-
-        if (!$latestEntrypoint) {
-            return '';
-        }
-
-        // Si des ordres en cours existent, on les conserve. Les ordres en attente de cette série seront supprimés.
-        $startMessage = '';
-        if ($latestEntrypoint->isLocked()) {
-            $startMessage = 'Une ou plusieurs positions en cours existent et ont été conservées. ';
-        }
-
-        // On supprime les positions en attente de tous les entrypoints actifs de l'utilisateur.
-        foreach ($activeEntrypoints as $entrypoint) {
-            foreach ($entrypoint->getPositions() as $position) {
-                if ($position->getStatus() === PositionStatus::WAITING) {
-                    $entrypoint->removePosition($position);
-                    $em->remove($position);
-                }
-            }
-            // On change le statut des entrypoints précédents et sans positions 'en cours' pour les rendre 'inactifs'.
-            if (!$entrypoint->isLocked()) {
-                $entrypoint->setStatus(PositionStatus::CLOSED);
-                $em->flush();
-            }
-        }
-
-        return $startMessage . 'Les anciens ordres en attente ont été supprimés.';
     }
 }

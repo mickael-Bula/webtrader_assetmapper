@@ -36,4 +36,21 @@ class PositionRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Retourne les positions en attente de l'utilisateur.
+     * On trie par prix décroissant : on traite les targets les plus hautes d'abord
+     */
+    public function findWaitingPositionsOrderedByPrice(User $user): array
+    {
+        return $this->createQueryBuilder('p')
+            ->join('p.entrypoint', 'e')
+            ->where('e.user = :user')
+            ->andWhere('p.status = :status')
+            ->setParameter('user', $user)
+            ->setParameter('status', PositionStatus::WAITING)
+            ->orderBy('p.buyPrice', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

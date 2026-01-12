@@ -12,8 +12,11 @@ final readonly class CacDailyDto
         private float              $open,
         private float              $high,
         private float              $low,
-        private float              $close
-    ) {}
+        private float              $close,
+        private ?float             $lvcHigh = null
+    )
+    {
+    }
 
     public function getId(): int
     {
@@ -48,5 +51,10 @@ final readonly class CacDailyDto
     function getLow(): float
     {
         return $this->low;
+    }
+
+    public function getLvcHigh(): ?float
+    {
+        return $this->lvcHigh;
     }
 }

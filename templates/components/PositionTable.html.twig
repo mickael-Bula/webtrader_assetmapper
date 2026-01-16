@@ -32,7 +32,7 @@
                         {% endif %}
                     </td>
                     <td>{{ pos.quantity }}</td>
-                    <td>{{ pos.id }}</td>
+                    <td class="text-nowrap">{{ pos.entrypoint.entrypoint|number_format(0, ',', ' ') }}</td>
                     <td class="text-nowrap">{{ pos.lvcBuyPrice|number_format(2, ',', ' ') }}</td>
                     <td class="text-nowrap">{{ pos.buyPrice|number_format(0, ',', ' ') }}</td>
                     <td class="text-nowrap">{{ pos.lvcTargetPrice|number_format(2, ',', ' ') }}</td>

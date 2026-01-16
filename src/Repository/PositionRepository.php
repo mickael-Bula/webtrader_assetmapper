@@ -22,17 +22,30 @@ class PositionRepository extends ServiceEntityRepository
 
     /**
      * Récupère les positions d'un utilisateur en passant par la table Entrypoint.
+     * Si un ID d'entrypoint est fourni, on exclut les positions de cet entrypoint.
+     *
      * @return array<Position>
      */
-    public function findByStatusAndUser(PositionStatus $status, User $user): array
+    public function findByStatusAndUser(
+        PositionStatus $status,
+        User           $user,
+        ?int           $excludedEntrypointId = null
+    ): array
     {
-        return $this->createQueryBuilder('p')
+        $qb = $this->createQueryBuilder('p')
             ->innerJoin('p.entrypoint', 'e')
             ->where('e.user = :user')
             ->andWhere('p.status = :status')
             ->setParameter('user', $user)
-            ->setParameter('status', $status)
-            ->orderBy('p.createdAt', 'DESC')
+            ->setParameter('status', $status);
+
+        // Si un ID est fourni, on ajoute la condition d'exclusion
+        if ($excludedEntrypointId !== null) {
+            $qb->andWhere('e.id != :excludedId')
+                ->setParameter('excludedId', $excludedEntrypointId);
+        }
+
+        return $qb->orderBy('p.createdAt', 'DESC')
             ->getQuery()
             ->getResult();
     }

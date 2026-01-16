@@ -10,6 +10,7 @@ use App\Form\EntrypointType;
 use App\Enum\PositionStatus;
 use Doctrine\DBAL\Exception;
 use App\Service\PositionManager;
+use App\Service\StrategyManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -29,7 +30,8 @@ final class SettingsController extends AbstractController
         EntityManagerInterface $em,
         CacDailyRepository     $cacRepo,
         LvcDailyRepository     $lvcRepo,
-        PositionManager        $positionManager
+        PositionManager        $positionManager,
+        StrategyManager        $strategyManager
     ): Response
     {
         /** @var User $user */
@@ -46,20 +48,27 @@ final class SettingsController extends AbstractController
 
         // 2. Utiliser le formulaire lié à l'entité Entrypoint
         $entrypoint = new Entrypoint();
-        $form = $this->createForm(EntrypointType::class, $entrypoint);
+        $form = $this->createForm(EntrypointType::class, $entrypoint, ['user_data' => $user]);
 
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // 1. On met à jour l'entité User avec les données du formulaire
+            $user->setTotalPortfolio((string)$form->get('totalPortfolio')->getData());
+            $user->setPositionSize((string)$form->get('positionSize')->getData());
+            $user->setSpread($form->get('spread')->getData());
 
-            // 1. Validation : La position doit être au moins égale à une part de LVC
-            if ($entrypoint->getPositionSize() < $lastLvcPrice) {
+            // 2. On lie l'entrypoint à l'user
+            $entrypoint->setUser($user);
+
+            // 3. Validation : La position doit être au moins égale à une part de LVC
+            if ($user->getPositionSize() < $lastLvcPrice) {
                 $this->addFlash('error', "Position trop faible (Min: {$lastLvcPrice}€).");
 
                 return $this->redirectToRoute('app_settings');
             }
 
-            // 2. Validation : Le seuil d'entrée doit être inférieur au plus bas du CAC
+            // 4. Validation : Le seuil d'entrée doit être inférieur au plus bas du CAC
             if ($entrypoint->getEntrypoint() > $lastCacPrice) {
                 $this->addFlash('error', sprintf(
                     "Le seuil d'entrée (%.2f) est supérieur au cours actuel (%.2f).",
@@ -70,18 +79,18 @@ final class SettingsController extends AbstractController
                 return $this->redirectToRoute('app_settings');
             }
 
-            // 3. On s'assure de ne pas dupliquer les positions pour ne pas être surexposé.
+            // 5. On s'assure de ne pas dupliquer les positions pour ne pas être surexposé.
             $message = $positionManager->deleteFormerWaitingPositions($user);
             $this->addFlash('info', $message);
 
-            // 4. Lier l'utilisateur et initialiser
+            // 6. Lie l'utilisateur et initialiser
             $entrypoint->setUser($user);
             $entrypoint->setStatus(PositionStatus::WAITING);
             $user->setBuyLimit($entrypoint->getEntrypoint());
-            $user->setUpperRange($entrypoint->getCalculatedUpperRange());
+            $user->setUpperRange($strategyManager->calculateUpperRange($entrypoint));
             $user->setLastCacUpdatedId($cacRepo->findLast()?->getId());
 
-            // 5. Création des trois positions en attente.
+            // 7. Création des trois positions en attente.
             $positionManager->createWaitingPositionsForEntrypoint(
                 $entrypoint,
                 (float)$entrypoint->getEntrypoint(),

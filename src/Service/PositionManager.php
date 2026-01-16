@@ -21,8 +21,11 @@ readonly class PositionManager
         private PositionRepository     $positionRepository,
         private CacDailyRepository     $cacRepository,
         private EntityManagerInterface $entityManager,
-        private LoggerInterface        $tradingLogger
-    ) {}
+        private LoggerInterface        $tradingLogger,
+        private StrategyManager        $strategyManager
+    )
+    {
+    }
 
     /**
      * Mise à jour des positions en itérant sur chaque jour manqué de l'historique du CAC.
@@ -77,7 +80,7 @@ readonly class PositionManager
 
         $this->tradingLogger->info("Trailing : Remontée de l'upper range", [
             'old' => $user->getUpperRange(),
-            'new' => $newCacHigh
+            'new' => $newCacHigh,
         ]);
 
         // On met à jour l'upper range de l'utilisateur
@@ -152,24 +155,39 @@ readonly class PositionManager
         // On passe l'entrypoint en RUNNING.
         $currentEntrypoint->setStatus(PositionStatus::RUNNING);
 
-        // On supprime les positions en attente n'appartenant pas à l'entrypoint courant.
-        $positionsToRemove = $this->positionRepository->findByStatusAndUser(PositionStatus::WAITING, $user);
+        // On récupère les positions en attente n'appartenant pas à l'entrypoint courant.
+        $positionsToRemove = $this->positionRepository->findByStatusAndUser(
+            PositionStatus::WAITING,
+            $user,
+            $currentEntrypoint->getId()
+        );
+
+        // On supprime ces positions en attente des entrypoints précédents.
         foreach ($positionsToRemove as $position) {
-            if ($position->getEntrypoint() !== $currentEntrypoint) {
-                $this->entityManager->remove($position);
-            }
+            $this->entityManager->remove($position);
         }
+
         $this->entityManager->flush();
 
         // On crée un nouvel entrypoint pour l'utilisateur, avec le statut WAITING.
         $newEntrypoint = new Entrypoint();
-        $newEntrypoint->setEntrypoint($currentPosition->getBuyPrice()); // On assigne le niveau du CAC de la position courante.
-        $newEntrypoint->setPositionSize($currentEntrypoint->getPositionSize());
         $newEntrypoint->setStatus(PositionStatus::WAITING);
 
-        $user->setUpperRange($currentPosition->getBuyPrice()); // L'ancienne buyLimit devient le nouvel upperRange.
-        $user->setBuyLimit($newEntrypoint->getCalculatedBuyLimit()); // La nouvelle buyLimit se situe 6 % sous l'ancienne buyLimit.
+        // On calcule le nouvel entrypoint en fonction de la position courante.
+        $nextPrice = $this->strategyManager->calculateNextEntrypoint($user, $currentPosition);
+
+        // Le nouvel entrypoint se situe par défaut 6 % sous la position courante.
+        $newEntrypoint->setEntrypoint($nextPrice);
+
+        // L'ancienne buyLimit devient le nouvel upperRange.
+        $user->setUpperRange($currentPosition->getBuyPrice());
+
+        // La nouvelle buyLimit se situe par défaut 6 % sous l'ancienne buyLimit.
         $newEntrypoint->setUser($user);
+
+        // On calcule la buy limit pour le nouvel entrypoint, en utilisant par défaut 6 %.
+        $user->setBuyLimit($this->strategyManager->calculateBuyLimit($newEntrypoint));
+
         $this->entityManager->persist($newEntrypoint);
 
         // Génération des nouvelles positions.
@@ -185,6 +203,8 @@ readonly class PositionManager
 
     public function createWaitingPositionsForEntrypoint(Entrypoint $entrypoint, float $baseCac, float $baseLvc): void
     {
+        $spread = $this->strategyManager->calculateSpread($entrypoint);
+
         for ($rank = 1; $rank <= 3; $rank++) {
             $position = new Position();
             $position->setEntrypoint($entrypoint);
@@ -192,7 +212,7 @@ readonly class PositionManager
             $position->setStatus(PositionStatus::WAITING);
 
             // Calcul CAC
-            $cacTarget = $baseCac * (1 - (($rank - 1) * 0.02));
+            $cacTarget = $baseCac * (1 - (($rank - 1) * $spread));
             $position->setBuyPrice((string)$cacTarget);
 
             // Calcul LVC (Levier x2)

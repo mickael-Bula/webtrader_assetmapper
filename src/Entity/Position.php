@@ -162,21 +162,23 @@ class Position
         return $this->createdAt;
     }
 
-    public function getQuantity(): string
+    public function getQuantity(): int
     {
-        $entrypoint = $this->getEntrypoint();
+        $user = $this->getEntrypoint()?->getUser();
 
         // Si lvcBuyPrice vaut zéro ou null, on évite la division par zéro en retournant un montant.
-        if (!$entrypoint || !(float)$this->lvcBuyPrice) {
-            return '0,00';
+        if (!$user || !$this->lvcBuyPrice) {
+            return 0;
         }
 
-        return number_format(
-            $this->getEntrypoint()?->getPositionSize() / $this->lvcBuyPrice,
-            2,
-            ',',
-            ' '
-        );
+        $size = (float)$user->getPositionSize();
+        $price = (float)$this->lvcBuyPrice;
+
+        if ($price <= 0) {
+            return 0;
+        }
+
+        return (int) floor($size / $price);
     }
 
     /**

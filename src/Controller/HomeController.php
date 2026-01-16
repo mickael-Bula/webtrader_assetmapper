@@ -38,6 +38,11 @@ final class HomeController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
+        // Si l'utilisateur n'a pas configuré son capital, on le redirige vers la page de description de la stratégie.
+        if ($user->getTotalPortfolio() === null) {
+            return $this->redirectToRoute('app_settings');
+        }
+
         $latestCacDto = $cacRepository->findLast();
 
         // Si le dernier Cac disponible diffère de celui enregistré, on vérifie si les positions ont été touchées.

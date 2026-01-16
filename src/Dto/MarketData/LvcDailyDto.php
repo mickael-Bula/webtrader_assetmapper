@@ -8,7 +8,7 @@ final readonly class LvcDailyDto
 {
     public function __construct(
         private int                $id,
-        private \DateTimeImmutable $date,
+        private \DateTimeInterface $date,
         private float              $open,
         private float              $high,
         private float              $low,

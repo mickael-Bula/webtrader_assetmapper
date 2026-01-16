@@ -38,6 +38,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2,  nullable: true)]
+    private ?string $totalPortfolio = null; // Valeur du portefeuille
+
+    #[ORM\Column(type: 'integer', options: ['default' => 2])]
+    private int $spread = 2;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    private ?string $positionSize = null; // Somme allouée à une position
+
     #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $lastCacUpdatedId = null;
 
@@ -134,6 +143,38 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function eraseCredentials(): void
     {
         // @deprecated, to be removed when upgrading to Symfony 8
+    }
+
+    public function getTotalPortfolio(): ?string
+    {
+        return $this->totalPortfolio;
+    }
+
+    public function setTotalPortfolio(?string $totalPortfolio): void
+    {
+        $this->totalPortfolio = $totalPortfolio;
+    }
+
+    public function getPositionSize(): ?string
+    {
+        return $this->positionSize;
+    }
+
+    public function setPositionSize(?string $positionSize): void
+    {
+        $this->positionSize = $positionSize;
+    }
+
+    public function getSpread(): int
+    {
+        return $this->spread;
+
+    }
+
+    public function setSpread(int $spread): void
+    {
+        $this->spread = $spread;
+
     }
 
     public function getLastCacUpdatedId(): ?int

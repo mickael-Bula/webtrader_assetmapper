@@ -25,13 +25,7 @@ class Entrypoint
     private ?User $user = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
-    private ?string $totalPortfolio = null; // Valeur du portefeuille
-
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     private ?string $entrypoint = null; // Seuil d'activation d'un cycle d'achat
-
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
-    private ?string $positionSize = null; // Somme allouée à une position
 
     #[ORM\Column(type: 'string', enumType: PositionStatus::class)]
     private PositionStatus $status = PositionStatus::WAITING; // waiting, running, closed
@@ -62,16 +56,6 @@ class Entrypoint
         $this->user = $user;
     }
 
-    public function getTotalPortfolio(): ?string
-    {
-        return $this->totalPortfolio;
-    }
-
-    public function setTotalPortfolio(?string $totalPortfolio): void
-    {
-        $this->totalPortfolio = $totalPortfolio;
-    }
-
     public function getEntrypoint(): ?string
     {
         return $this->entrypoint;
@@ -80,16 +64,6 @@ class Entrypoint
     public function setEntrypoint(?string $entrypoint): void
     {
         $this->entrypoint = $entrypoint;
-    }
-
-    public function getPositionSize(): ?string
-    {
-        return $this->positionSize;
-    }
-
-    public function setPositionSize(?string $positionSize): void
-    {
-        $this->positionSize = $positionSize;
     }
 
     public function getStatus(): PositionStatus
@@ -120,17 +94,6 @@ class Entrypoint
     public function getPositions(): Collection
     {
         return $this->positions;
-    }
-
-    // TODO : la valeur de 6 % pourrait devenir paramétrable
-    public function getCalculatedUpperRange(): string
-    {
-        return number_format((float)$this->entrypoint * 1.06, 2, '.', '');
-    }
-
-    public function getCalculatedBuyLimit(): string
-    {
-        return number_format((float)$this->entrypoint * 0.94, 2, '.', '');
     }
 
     /**

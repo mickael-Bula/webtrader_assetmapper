@@ -44,6 +44,14 @@
                                 <div class="form-text text-webtrader-muted small">L'achat du tracker sera exécuté quand le CAC40 atteindra ce niveau.</div>
                             </div>
 
+                            <div class="mb-3">
+                                {{ form_label(settingsForm.spread, "Spread entre les positions (%)") }}
+                                {{ form_widget(settingsForm.spread, {'attr': {
+                                    'class': 'form-select bg-black text-white border-secondary'
+                                }}) }}
+                                <div class="form-text text-webtrader-muted small">Définit l'écart de prix entre vos 3 ordres d'achat.</div>
+                            </div>
+
                             <div class="mb-2">
                                 {{ form_label(settingsForm.positionSize, "Montant à allouer par position (€)") }}
                                 <div class="input-group">

@@ -110,6 +110,16 @@ class Entrypoint
         return false;
     }
 
+    public function addPosition(Position $position): self
+    {
+        if (!$this->positions->contains($position)) {
+            $this->positions->add($position);
+            $position->setEntrypoint($this);
+        }
+
+        return $this;
+    }
+
     public function removePosition(Position $position): self
     {
         if ($this->positions->removeElement($position) && $position->getEntrypoint() === $this) {

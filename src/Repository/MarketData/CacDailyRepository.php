@@ -62,13 +62,15 @@ final readonly class CacDailyRepository
     public function findLast(): ?CacDailyDto
     {
         $sql = <<<SQL
-            SELECT id,
-                   date,
-                   open,
-                   high,
-                   low,
-                   close
-            FROM market_data.cac_daily
+            SELECT c.id,
+                   c.date,
+                   c.open,
+                   c.high,
+                   c.low,
+                   c.close AS cac_close,
+                   l.close AS lvc_close
+            FROM market_data.cac_daily c
+            LEFT JOIN market_data.lvc_daily l ON l.date = c.date
             ORDER BY date DESC
             LIMIT 1
             SQL;
@@ -85,7 +87,8 @@ final readonly class CacDailyRepository
             (float)$row['open'],
             (float)$row['high'],
             (float)$row['low'],
-            (float)$row['close'],
+            (float)$row['cac_close'],
+            (float)$row['lvc_close'],
         );
     }
 
@@ -142,7 +145,7 @@ final readonly class CacDailyRepository
     public function findRangeWithLvc(int $startId, int $endId): array
     {
         return $this->entityManager->createQueryBuilder()
-            ->select('new App\Dto\MarketData\CacDailyDto(c.id, c.date, c.high, c.low, c.close, l.high)')
+            ->select('new App\Dto\MarketData\CacDailyDto(c.id, c.date, c.open, c.high, c.close, l.high)')
             ->from(CacDaily::class, 'c')
             ->join(LvcDaily::class, 'l', 'WITH', 'l.date = c.date')
             ->where('c.id > :startId')

@@ -45,7 +45,7 @@ class PositionRepository extends ServiceEntityRepository
                 ->setParameter('excludedId', $excludedEntrypointId);
         }
 
-        return $qb->orderBy('p.createdAt', 'DESC')
+        return $qb->orderBy('p.createdAt', 'ASC')
             ->getQuery()
             ->getResult();
     }

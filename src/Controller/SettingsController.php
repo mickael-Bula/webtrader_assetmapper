@@ -9,6 +9,7 @@ use App\Entity\Entrypoint;
 use App\Form\EntrypointType;
 use App\Enum\PositionStatus;
 use Doctrine\DBAL\Exception;
+use Psr\Log\LoggerInterface;
 use App\Service\PositionManager;
 use App\Service\StrategyManager;
 use Doctrine\ORM\EntityManagerInterface;
@@ -31,7 +32,8 @@ final class SettingsController extends AbstractController
         CacDailyRepository     $cacRepo,
         LvcDailyRepository     $lvcRepo,
         PositionManager        $positionManager,
-        StrategyManager        $strategyManager
+        StrategyManager        $strategyManager,
+        LoggerInterface        $tradingLogger
     ): Response
     {
         /** @var User $user */
@@ -53,12 +55,13 @@ final class SettingsController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // TODO : déplacer toute cette logique dans le service StrategyManager
             // 1. On met à jour l'entité User avec les données du formulaire
             $user->setTotalPortfolio((string)$form->get('totalPortfolio')->getData());
             $user->setPositionSize((string)$form->get('positionSize')->getData());
             $user->setSpread($form->get('spread')->getData());
 
-            // 2. On lie l'entrypoint à l'user
+            // 2. On lie l'entrypoint à son user
             $entrypoint->setUser($user);
 
             // 3. Validation : La position doit être au moins égale à une part de LVC
@@ -81,26 +84,31 @@ final class SettingsController extends AbstractController
 
             // 5. On s'assure de ne pas dupliquer les positions pour ne pas être surexposé.
             $message = $positionManager->deleteFormerWaitingPositions($user);
-            $this->addFlash('info', $message);
 
-            // 6. Lie l'utilisateur et initialiser
+            // On trace l'information.
+            $tradingLogger->info(sprintf('Entrypoint %d : %s', $entrypoint->getId(), $message));
+            $this->addFlash('success', $message);
+
+            // 6. Lie l'utilisateur et initialise
             $entrypoint->setUser($user);
             $entrypoint->setStatus(PositionStatus::WAITING);
             $user->setBuyLimit($entrypoint->getEntrypoint());
             $user->setUpperRange($strategyManager->calculateUpperRange($entrypoint));
             $user->setLastCacUpdatedId($cacRepo->findLast()?->getId());
 
-            // 7. Création des trois positions en attente.
-            $positionManager->createWaitingPositionsForEntrypoint(
-                $entrypoint,
-                (float)$entrypoint->getEntrypoint(),
-                (float)$lastLvcPrice
-            );
-
+            // On enregistre en mémoire l'entrypoint.
             $em->persist($entrypoint);
+
+            // 7. Création des trois positions en attente, la première créée au niveau de l'entrypoint.
+            $positionManager->createWaitingPositionsForInitialEntrypoint($entrypoint, $lastCacPrice, $lastLvcPrice);
+
+            // On sauvegarde en base de données.
             $em->flush();
 
-            $this->addFlash('success', "Stratégie activée. Trois positions en attente créées.");
+            // 8. On trace l'initialisation des positions en attente dans le journal.
+            $message = 'Stratégie activée. Trois positions en attente créées.';
+            $tradingLogger->info(sprintf('Entrypoint %d : %s', $entrypoint->getId(), $message));
+            $this->addFlash('success', $message);
 
             return $this->redirectToRoute('app_home');
         }

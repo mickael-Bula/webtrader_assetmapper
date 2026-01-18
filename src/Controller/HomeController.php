@@ -61,7 +61,7 @@ final class HomeController extends AbstractController
         return $this->render('home/index.html.twig', [
             'runningPositions' => $positionRepository->findByStatusAndUser(PositionStatus::RUNNING, $user),
             'waitingPositions' => $positionRepository->findByStatusAndUser(PositionStatus::WAITING, $user),
-            'cacQuotes' => $cacRepository->findLastQuotesWithLvc(),
+            'cacQuotes' => $cacQuotes,
             'lastQuote' => $cacQuotes[0]->getcacClose(),
             'lastHigh' => $user->getUpperRange(),
             'buyLimit' => $user->getBuyLimit(),

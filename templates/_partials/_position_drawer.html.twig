@@ -1,4 +1,4 @@
-{% set currentCacPrice = app.user.lastCacUpdated.close ?? 0 %}
+{% set currentCacPrice = app.user.lastCacUpdatedId.close ?? 0 %}
 
 {# On ne calcule la distance que si la position existe ET qu'on a un cours. Distance contient [points, percent, is_close] #}
 {% set distance = (position is defined and currentCacPrice > 0) ? position.targetDistance(currentCacPrice) : null %}
@@ -6,7 +6,9 @@
 <div class="offcanvas offcanvas-end bg-dark text-white" tabindex="-1" id="offcanvasPosition{{ position.id }}"
      style="width: 400px;">
     <div class="offcanvas-header border-bottom border-secondary">
-        <h5 class="offcanvas-title">Entrypoint #{{ position.entrypoint.id }} - Rang {{ position.rank }}</h5>
+        <h5 class="offcanvas-title">
+            Point d'entrée : {{ position.entrypoint.entrypoint|number_format(0, ',', ' ') }} pts - Rang #{{ position.rank }}
+        </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
     </div>
 
@@ -41,22 +43,22 @@
         <div class="row g-3">
             <div class="col-6">
                 <label class="small text-secondary">Achat (CAC)</label>
-                <div class="h5 border-start border-info ps-2">{{ position.buyPrice|number_format(2) }}</div>
+                <div class="h5 border-start border-info ps-2">{{ position.buyPrice|number_format(2, ',', ' ') }}</div>
             </div>
             <div class="col-6">
                 <label class="small text-secondary">Objectif (CAC)</label>
-                <div class="h5 border-start border-success ps-2">{{ position.targetPrice|number_format(2) }}</div>
+                <div class="h5 border-start border-success ps-2">{{ position.targetPrice|number_format(2, ',', ' ') }}</div>
             </div>
 
             <div class="col-12 mt-4">
                 <h6 class="text-info border-bottom border-secondary pb-2">PRODUIT LVC (Levier x2)</h6>
                 <div class="d-flex justify-content-between mt-2">
                     <span>Prix Achat LVC :</span>
-                    <span class="fw-bold">{{ position.lvcBuyPrice }} €</span>
+                    <span class="fw-bold">{{ position.lvcBuyPrice|number_format(2, ',', ' ') }} €</span>
                 </div>
                 <div class="d-flex justify-content-between">
                     <span>Objectif LVC :</span>
-                    <span class="fw-bold text-success">{{ position.lvcTargetPrice }} €</span>
+                    <span class="fw-bold text-success">{{ position.lvcTargetPrice|number_format(2, ',', ' ') }} €</span>
                 </div>
                 <div class="d-flex justify-content-between mt-2 pt-2 border-top border-secondary">
                     <span>Quantité :</span>

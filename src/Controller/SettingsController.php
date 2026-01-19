@@ -81,10 +81,10 @@ final class SettingsController extends AbstractController
 
                 return $this->redirectToRoute('app_settings');
             }
-
+            // TODO : afficher le message uniquement si des positions ont été supprimées
             // 5. On s'assure de ne pas dupliquer les positions pour ne pas être surexposé.
             $message = $positionManager->deleteFormerWaitingPositions($user);
-
+            // TODO : Voir s'il est possible d'afficher les flash messages successivement
             // On trace l'information.
             $tradingLogger->info(sprintf('Entrypoint %d : %s', $entrypoint->getId(), $message));
             $this->addFlash('success', $message);

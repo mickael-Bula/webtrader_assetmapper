@@ -35,19 +35,19 @@
                     <twig:MarketCard
                         title="Cac"
                         :value="lastQuote"
-                        subtitle="+0.85 %"
-                        trend="up"
+                        :subtitle="cacSubtitle"
+                        :trend="cacTrend"
                     />
                     <twig:MarketCard
                         title="Last High"
                         :value="lastHigh"
-                        subtitle="29/11/24"
+                        :subtitle="lastHighDate"
                     />
                     <twig:MarketCard
                         title="Buy Limit"
                         :value="buyLimit"
-                        subtitle="-1.34 %"
-                        trend="down"
+                        :subtitle="buyLimitSubtitle"
+                        :trend="buyLimitTrend"
                     />
                 </div>
 

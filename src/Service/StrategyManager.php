@@ -44,17 +44,6 @@ class StrategyManager
     }
 
     /**
-     * Calcule le delta entre le CAC actuel et l'Entrypoint,
-     * pour l'appliquer au LVC avec un levier x2.
-     */
-    public function getLvcPriceFromDeltaCac(Entrypoint $entrypoint, float $cac, float $lvc): float
-    {
-        $deltaCac = ($entrypoint->getEntrypoint() - $cac) / $cac;
-
-        return $lvc * (1 + ($deltaCac * 2));
-    }
-
-    /**
      * Calcule le prix cible initial du CAC pour une position.
      * Formule : Entrypoint de l'user - (RankOffset * Entrypoint)
      */
@@ -164,5 +153,20 @@ class StrategyManager
     public function calculateLvcTargetForPosition(Position $position, float $lvcHigh): float
     {
         return round($lvcHigh * (1 - ($this->getBaseDecline($position) * 2)), 2);
+    }
+
+    /**
+     * Calcule l'écart en pourcentage entre le prix actuel et la limite d'achat.
+     */
+    public function calculateBuyLimitGap(float $currentCac, float $buyLimit): string
+    {
+        if ($currentCac === 0.0) {
+            return '0,00 %';
+        }
+
+        $variation = (($buyLimit - $currentCac) / $currentCac) * 100;
+
+        // On ajoute + ou '' (si la variation est négative, le chiffre contient déjà le signe moins).
+        return sprintf('%s%.2f %%', ($variation > 0 ? '+' : ''), $variation);
     }
 }

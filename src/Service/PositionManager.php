@@ -84,7 +84,7 @@ readonly class PositionManager
             'new' => $newCacHigh,
         ]);
 
-        // On met à jour l'upper range de l'utilisateur
+        // On met à jour l'upper range de l'utilisateur // TODO : formater avec deux décimales
         $user->setUpperRange((string)$newCacHigh);
 
         // On met à jour la buy limit de l'utilisateur en appliquant le gap stratégique (par défaut 6 %).

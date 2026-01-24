@@ -81,18 +81,19 @@ final class HomeController extends AbstractController
         // Calcul la tendance de la buy limit.
         $buyLimitTrend = $currentClose > $buyLimit ? 'down' : 'up';
 
-        // TODO : revoir le mode de calcul de lastHigh, qui correspond au dernier plus haut du CAC depuis l'enregistrement d'un entrypoint.
+        // Récupération de la date à laquelle le dernier entrypoint a été créé (et non pas mis à jour).
+        $lastEntrypoint = $user->getEntrypoints()[count($user->getEntrypoints()) - 1];
 
         return $this->render('home/index.html.twig', [
             'runningPositions' => $positionRepository->findByStatusAndUser(PositionStatus::RUNNING, $user),
             'waitingPositions' => $positionRepository->findByStatusAndUser(PositionStatus::WAITING, $user),
             'cacQuotes' => $cacQuotes,
             'lastQuote' => $currentClose,
-            'lastHigh' => $user->getUpperRange(),
+            'entrypoint' => $lastEntrypoint->getEntrypoint(),
             'buyLimit' => $user->getBuyLimit(),
             'cacTrend' => $cacTrend,
             'cacSubtitle' => $cacSubtitle,
-            'lastHighDate' => $cacQuotes[0]->getDate()->format('d/m/y'), // Exemple
+            'entrypointCreatedAt' => $lastEntrypoint->getCreatedAt()->format('d/m/y'),
             'buyLimitSubtitle' => $buyLimitSpread,
             'buyLimitTrend' => $buyLimitTrend,
         ]);

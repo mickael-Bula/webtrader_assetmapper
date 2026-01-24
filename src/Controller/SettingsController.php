@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Entity\Position;
 use App\Entity\Entrypoint;
 use App\Form\EntrypointType;
 use App\Enum\PositionStatus;
 use Doctrine\DBAL\Exception;
+use Psr\Log\LoggerInterface;
+use App\Service\PositionManager;
+use App\Service\StrategyManager;
 use Doctrine\ORM\EntityManagerInterface;
-use App\Repository\EntrypointRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -29,7 +30,10 @@ final class SettingsController extends AbstractController
         Request                $request,
         EntityManagerInterface $em,
         CacDailyRepository     $cacRepo,
-        LvcDailyRepository     $lvcRepo
+        LvcDailyRepository     $lvcRepo,
+        PositionManager        $positionManager,
+        StrategyManager        $strategyManager,
+        LoggerInterface        $tradingLogger
     ): Response
     {
         /** @var User $user */
@@ -46,20 +50,28 @@ final class SettingsController extends AbstractController
 
         // 2. Utiliser le formulaire lié à l'entité Entrypoint
         $entrypoint = new Entrypoint();
-        $form = $this->createForm(EntrypointType::class, $entrypoint);
+        $form = $this->createForm(EntrypointType::class, $entrypoint, ['user_data' => $user]);
 
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // TODO : déplacer toute cette logique dans le service StrategyManager
+            // 1. On met à jour l'entité User avec les données du formulaire
+            $user->setTotalPortfolio((string)$form->get('totalPortfolio')->getData());
+            $user->setPositionSize((string)$form->get('positionSize')->getData());
+            $user->setSpread($form->get('spread')->getData());
 
-            // 1. Validation : La position doit être au moins égale à une part de LVC
-            if ($entrypoint->getPositionSize() < $lastLvcPrice) {
+            // 2. On lie l'entrypoint à son user
+            $entrypoint->setUser($user);
+
+            // 3. Validation : La position doit être au moins égale à une part de LVC
+            if ($user->getPositionSize() < $lastLvcPrice) {
                 $this->addFlash('error', "Position trop faible (Min: {$lastLvcPrice}€).");
 
                 return $this->redirectToRoute('app_settings');
             }
 
-            // 2. Validation : Le seuil d'entrée doit être inférieur au plus bas du CAC
+            // 4. Validation : Le seuil d'entrée doit être inférieur au plus bas du CAC
             if ($entrypoint->getEntrypoint() > $lastCacPrice) {
                 $this->addFlash('error', sprintf(
                     "Le seuil d'entrée (%.2f) est supérieur au cours actuel (%.2f).",
@@ -69,49 +81,34 @@ final class SettingsController extends AbstractController
 
                 return $this->redirectToRoute('app_settings');
             }
+            // TODO : afficher le message uniquement si des positions ont été supprimées
+            // 5. On s'assure de ne pas dupliquer les positions pour ne pas être surexposé.
+            $message = $positionManager->deleteFormerWaitingPositions($user);
+            // TODO : Voir s'il est possible d'afficher les flash messages successivement
+            // On trace l'information.
+            $tradingLogger->info(sprintf('Entrypoint %d : %s', $entrypoint->getId(), $message));
+            $this->addFlash('success', $message);
 
-            // 3. On s'assure de ne pas dupliquer les positions pour ne pas être surexposé.
-            $message = $this->deleteFormerWaitingPositions($em);
-            $this->addFlash('info', $message);
-
-            // 4. Lier l'utilisateur et initialiser
+            // 6. Lie l'utilisateur et initialise
             $entrypoint->setUser($user);
             $entrypoint->setStatus(PositionStatus::WAITING);
             $user->setBuyLimit($entrypoint->getEntrypoint());
-            $user->setUpperRange($entrypoint->getCalculatedUpperRange());
+            $user->setUpperRange($strategyManager->calculateUpperRange($entrypoint));
             $user->setLastCacUpdatedId($cacRepo->findLast()?->getId());
 
-            // 5. LOGIQUE DES 3 POSITIONS
-            $seuilCacInitial = (float)$entrypoint->getEntrypoint();
-
-            for ($rank = 1; $rank <= 3; $rank++) {
-                $position = new Position();
-                $position->setEntrypoint($entrypoint);
-                $position->setRank($rank);
-                $position->setStatus(PositionStatus::WAITING);
-
-                // Calcul du seuil CAC pour ce rang
-                $percentDropCac = ($rank - 1) * 0.02; // 0, 0.02, 0.04
-                $cacTargetForRank = $seuilCacInitial * (1 - $percentDropCac);
-                $position->setBuyPrice((string)$cacTargetForRank);
-
-                // CALCUL LVC THÉORIQUE
-                // 1. On calcule la baisse du CAC par rapport au cours actuel
-                $cacDiffPercent = ($cacTargetForRank / $lastCacPrice) - 1;
-
-                // 2. On applique le levier x2 pour trouver le prix LVC estimé
-                $lvcDiffPercent = $cacDiffPercent * 2;
-                $estimatedLvcBuy = $lastLvcPrice * (1 + $lvcDiffPercent);
-
-                $position->setLvcBuyPrice((string)round($estimatedLvcBuy, 2));
-
-                $em->persist($position);
-            }
-
+            // On enregistre en mémoire l'entrypoint.
             $em->persist($entrypoint);
+
+            // 7. Création des trois positions en attente, la première créée au niveau de l'entrypoint.
+            $positionManager->createWaitingPositionsForInitialEntrypoint($entrypoint, $lastCacPrice, $lastLvcPrice);
+
+            // On sauvegarde en base de données.
             $em->flush();
 
-            $this->addFlash('success', "Stratégie activée. Trois positions en attente créées.");
+            // 8. On trace l'initialisation des positions en attente dans le journal.
+            $message = 'Stratégie activée. Trois positions en attente créées.';
+            $tradingLogger->info(sprintf('Entrypoint %d : %s', $entrypoint->getId(), $message));
+            $this->addFlash('success', $message);
 
             return $this->redirectToRoute('app_home');
         }
@@ -120,50 +117,5 @@ final class SettingsController extends AbstractController
             'settingsForm' => $form->createView(),
             'lastLvcPrice' => $lastLvcPrice,
         ]);
-    }
-
-    /**
-     * Méthode appelée uniquement lors de la configuration d'un nouvel Entrypoint par l'utilisateur.
-     * Elle supprime toutes les positions en attente des entrypoints actifs de l'utilisateur
-     * et passe tous les entrypoints sans positions en cours au statut CLOSED.
-     */
-    private function deleteFormerWaitingPositions(EntityManagerInterface $em): string
-    {
-        /** @var User $user */
-        $user = $this->getUser();
-
-        /** @var EntrypointRepository $entrypointRepo */
-        $entrypointRepo = $em->getRepository(Entrypoint::class);
-
-        // On récupère la totalité et le dernier des entrypoints actifs de l'utilisateur
-        $activeEntrypoints = $entrypointRepo->findActiveEntrypoints($user);
-        $latestEntrypoint = $activeEntrypoints[0] ?? null;
-
-        if (!$latestEntrypoint) {
-            return '';
-        }
-
-        // Si des ordres en cours existent, on les conserve. Les ordres en attente de cette série seront supprimés.
-        $startMessage = '';
-        if ($latestEntrypoint->isLocked()) {
-            $startMessage = 'Une ou plusieurs positions en cours existent et ont été conservées. ';
-        }
-
-        // On supprime les positions en attente de tous les entrypoints actifs de l'utilisateur.
-        foreach ($activeEntrypoints as $entrypoint) {
-            foreach ($entrypoint->getPositions() as $position) {
-                if ($position->getStatus() === PositionStatus::WAITING) {
-                    $entrypoint->removePosition($position);
-                    $em->remove($position);
-                }
-            }
-            // On change le statut des entrypoints précédents et sans positions 'en cours' pour les rendre 'inactifs'.
-            if (!$entrypoint->isLocked()) {
-                $entrypoint->setStatus(PositionStatus::CLOSED);
-                $em->flush();
-            }
-        }
-
-        return $startMessage . 'Les anciens ordres en attente ont été supprimés.';
     }
 }

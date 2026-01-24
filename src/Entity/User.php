@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\PositionStatus;
 use Doctrine\DBAL\Types\Types;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
@@ -36,6 +37,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     #[ORM\Column]
     private ?string $password = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2,  nullable: true)]
+    private ?string $totalPortfolio = null; // Valeur du portefeuille
+
+    #[ORM\Column(type: 'integer', options: ['default' => 2])]
+    private int $spread = 2;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    private ?string $positionSize = null; // Somme allouée à une position
 
     #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $lastCacUpdatedId = null;
@@ -135,6 +145,38 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // @deprecated, to be removed when upgrading to Symfony 8
     }
 
+    public function getTotalPortfolio(): ?string
+    {
+        return $this->totalPortfolio;
+    }
+
+    public function setTotalPortfolio(?string $totalPortfolio): void
+    {
+        $this->totalPortfolio = $totalPortfolio;
+    }
+
+    public function getPositionSize(): ?string
+    {
+        return $this->positionSize;
+    }
+
+    public function setPositionSize(?string $positionSize): void
+    {
+        $this->positionSize = $positionSize;
+    }
+
+    public function getSpread(): int
+    {
+        return $this->spread;
+
+    }
+
+    public function setSpread(int $spread): void
+    {
+        $this->spread = $spread;
+
+    }
+
     public function getLastCacUpdatedId(): ?int
     {
         return $this->lastCacUpdatedId;
@@ -177,5 +219,34 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getEntrypoints(): Collection
     {
         return $this->entrypoints;
+    }
+
+    /**
+     * Méthode retournant les entrypoints dont le statut n'est pas CLOSED.
+     */
+    public function getActiveEntrypoints(): array
+    {
+        $activeEntrypoints = [];
+        foreach ($this->entrypoints as $entrypoint) {
+            if ($entrypoint->getStatus() !== PositionStatus::CLOSED) {
+                $activeEntrypoints[] = $entrypoint;
+            }
+        }
+
+        return $activeEntrypoints;
+    }
+
+    /**
+     * Récupère l'entrypoint avec le statut WAITING.
+     */
+    public function getWaitingEntrypoint(): ?Entrypoint
+    {
+        foreach ($this->entrypoints as $entrypoint) {
+            if ($entrypoint->getStatus() === PositionStatus::WAITING) {
+                return $entrypoint;
+            }
+        }
+
+        return null;
     }
 }

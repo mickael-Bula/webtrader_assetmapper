@@ -42,7 +42,7 @@ class PositionTable
             $date = $date->modify('+3 months');
         }
 
-        return $date->format('d/m/Y');
+        return $date->format('d/m/y');
     }
 
     /**

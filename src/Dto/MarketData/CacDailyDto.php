@@ -8,12 +8,15 @@ final readonly class CacDailyDto
 {
     public function __construct(
         private int                $id,
-        private \DateTimeImmutable $date,
+        private \DateTimeInterface $date,
         private float              $open,
         private float              $high,
         private float              $low,
-        private float              $close
-    ) {}
+        private float              $close,
+        private ?float             $lvcHigh = null
+    )
+    {
+    }
 
     public function getId(): int
     {
@@ -48,5 +51,10 @@ final readonly class CacDailyDto
     function getLow(): float
     {
         return $this->low;
+    }
+
+    public function getLvcHigh(): ?float
+    {
+        return $this->lvcHigh;
     }
 }

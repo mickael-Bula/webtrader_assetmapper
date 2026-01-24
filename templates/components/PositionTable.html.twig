@@ -9,7 +9,6 @@
             <tr class="text-secondary small">
                 <th rowspan="2">{{ this.dateLabel }}</th>
                 <th rowspan="2">Qté</th>
-                <th rowspan="2">Trade</th>
                 <th colspan="2" class="align-center">Achat</th>
                 <th colspan="2" class="align-left">Revente</th>
                 <th rowspan="2" class="align-left">Détail</th>
@@ -32,11 +31,10 @@
                         {% endif %}
                     </td>
                     <td>{{ pos.quantity }}</td>
-                    <td>{{ pos.id }}</td>
-                    <td>{{ pos.lvcBuyPrice|number_format(2, ',', ' ') }}</td>
-                    <td>{{ pos.buyPrice|number_format(0, ',', ' ') }}</td>
-                    <td>{{ pos.lvcTargetPrice|number_format(2, ',', ' ') }}</td>
-                    <td>{{ pos.targetPrice|number_format(0, ',', ' ') }}</td>
+                    <td class="text-nowrap">{{ pos.lvcBuyPrice|number_format(2, ',', ' ') }}</td>
+                    <td class="text-nowrap">{{ pos.buyPrice|number_format(0, ',', ' ') }}</td>
+                    <td class="text-nowrap">{{ pos.lvcTargetPrice|number_format(2, ',', ' ') }}</td>
+                    <td class="text-nowrap">{{ pos.targetPrice|number_format(0, ',', ' ') }}</td>
                     <td>
                         <button class="btn btn-sm btn-outline-info"
                                 type="button"

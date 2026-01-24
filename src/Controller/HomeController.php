@@ -7,9 +7,10 @@ namespace App\Controller;
 use App\Entity\User;
 use Doctrine\DBAL\Exception;
 use App\Enum\PositionStatus;
-use App\Dto\MarketData\CacDailyDto;
+use Psr\Log\LoggerInterface;
+use App\Service\PositionManager;
+use App\Service\StrategyManager;
 use App\Repository\PositionRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Repository\MarketData\CacDailyRepository;
@@ -17,6 +18,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 final class HomeController extends AbstractController
 {
+    public function __construct(private readonly LoggerInterface $tradingLogger, private readonly StrategyManager $strategyManager)
+    {
+    }
+
     /**
      * @throws Exception
      */
@@ -24,7 +29,7 @@ final class HomeController extends AbstractController
     public function index(
         CacDailyRepository $cacRepository,
         PositionRepository $positionRepository,
-        EntityManagerInterface $entityManager
+        PositionManager    $positionManager,
     ): Response
     {
         /** @var User $user */
@@ -34,50 +39,63 @@ final class HomeController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
+        // Si l'utilisateur n'a pas configuré son capital, on le redirige vers la page de description de la stratégie.
+        if ($user->getTotalPortfolio() === null) {
+            return $this->redirectToRoute('app_settings');
+        }
+
+        // TODO : est-il utile de faire cette requête, sachant que l'on a la donnée à l'index[0] de CacQuotes ?
         $latestCacDto = $cacRepository->findLast();
 
         // Si le dernier Cac disponible diffère de celui enregistré, on vérifie si les positions ont été touchées.
         if ($latestCacDto && $user->getLastCacUpdatedId() !== $latestCacDto->getId()) {
-
-            $this->checkPositionsTargets($user, $latestCacDto, $entityManager);
+            try {
+                $positionManager->checkAndUpdatePositions($user, $latestCacDto);
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'Les données de marché sont momentanément indisponibles.');
+                $this->tradingLogger->error($e->getMessage(), ['exception' => $e]);
+            }
         }
 
-        $runningPositions = $positionRepository->findByStatusAndUser(PositionStatus::RUNNING, $user);
-        $waitingPositions = $positionRepository->findByStatusAndUser(PositionStatus::WAITING, $user);
-
+        // Récupération des données du cac et du Lvc correspondant.
         $cacQuotes = $cacRepository->findLastQuotesWithLvc();
-        $lastQuote = $cacQuotes[0]->getcacClose();
-        $lastHigh = $user->getUpperRange();
-        $buyLimit = $user->getBuyLimit();
+
+        $currentClose = $cacQuotes[0]->getCacClose();
+        $previousClose = $cacQuotes[1]->getCacClose();
+
+        // Calcule la variation du CAC et ajoute un signe + ou '' en fonction de la valeur. Le moins est déjà présent.
+        $variation = (($currentClose - $previousClose) / $previousClose) * 100;
+        $cacSubtitle = sprintf('%s%.2f %%', ($variation > 0 ? '+' : ''), $variation);
+
+        $cacTrend = match (true) {
+            $currentClose > $previousClose => 'up',
+            $currentClose < $previousClose => 'down',
+            default => 'neutral',
+        };
+
+        $buyLimit = (float)$user->getBuyLimit();
+
+        // Calcul la distance de la buy limit avec le cac actuel.
+        $buyLimitSpread = $this->strategyManager->calculateBuyLimitGap($currentClose, $buyLimit);
+
+        // Calcul la tendance de la buy limit.
+        $buyLimitTrend = $currentClose > $buyLimit ? 'down' : 'up';
+
+        // Récupération de la date à laquelle le dernier entrypoint a été créé (et non pas mis à jour).
+        $lastEntrypoint = $user->getEntrypoints()[count($user->getEntrypoints()) - 1];
 
         return $this->render('home/index.html.twig', [
-            'runningPositions' => $runningPositions,
-            'waitingPositions' => $waitingPositions,
+            'runningPositions' => $positionRepository->findByStatusAndUser(PositionStatus::RUNNING, $user),
+            'waitingPositions' => $positionRepository->findByStatusAndUser(PositionStatus::WAITING, $user),
             'cacQuotes' => $cacQuotes,
-            'lastQuote' => $lastQuote,
-            'lastHigh' => $lastHigh,
-            'buyLimit' => $buyLimit,
+            'lastQuote' => $currentClose,
+            'entrypoint' => $lastEntrypoint->getEntrypoint(),
+            'buyLimit' => $user->getBuyLimit(),
+            'cacTrend' => $cacTrend,
+            'cacSubtitle' => $cacSubtitle,
+            'entrypointCreatedAt' => $lastEntrypoint->getCreatedAt()->format('d/m/y'),
+            'buyLimitSubtitle' => $buyLimitSpread,
+            'buyLimitTrend' => $buyLimitTrend,
         ]);
-    }
-
-    private function checkPositionsTargets(
-        User $user,
-        CacDailyDto $latestCacDto,
-        EntityManagerInterface $entityManager
-    ): void
-    {
-        // On récupère toutes les cotations depuis la dernière visite de l'utilisateur, triées des plus anciennes au plus récentes.
-        // On récupère les positions en cours et les positions en attente de l'utilisateur.
-        // On boucle sur les cotations.
-        // Pour chaque position en cours, triée par rang, on vérifie si la sellTarget est touchée par le plus haut du Cac courant.
-        // Si c'est le cas, on passe la position en closed.
-        // Ensuite, pour chaque position en attente, triée par rang, on vérifie si la buyTarget est touchée par le plus bas du Cac courant.
-        // Si c'est le cas, on passe la position en running.
-        // Si cette position est de rank=1, on crée un nouvel entrypoint pour l'utilisateur et on crée trois nouvelles positions en attente, en supprimant toutes les autres positions en attente.
-        // À voir s'il faut à nouveau boucler sur ces positions nouvellement créées pour vérifier si le plsu bas du Cac les a touchées.
-
-        // On met à jour le Cac de l'utilisateur.
-//        $user->setLastCacUpdatedId($latestCacDto->getId());
-//        $entityManager->flush();
     }
 }

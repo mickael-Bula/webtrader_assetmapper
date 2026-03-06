@@ -674,3 +674,78 @@ input[type=number] {
         overflow-x: scroll;
     }
 }
+
+/* --- Style des boutons d'ajout d'une position en cours ou en attente --- */
+
+/* --- 1. Header de la Carte (Titre + Bouton Ajout) --- */
+.position-card .card-title {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.position-card .card-title .btn-link {
+    text-decoration: none;
+    line-height: 1;
+    transition: transform 0.2s ease;
+    opacity: 0.8;
+}
+
+.position-card .card-title .btn-link:hover {
+    transform: scale(1.2);
+    opacity: 1;
+}
+
+/* --- 2. Conteneurs et Structure du Tableau --- */
+.position-card .card-text {
+    width: 100%;
+    display: block;
+}
+
+.position-card .position-table {
+    width: 100% !important;
+    min-width: 100%;
+    table-layout: auto; /* Préférable pour laisser les colonnes s'ajuster au contenu */
+    border-collapse: separate; /* Nécessaire pour le contrôle précis des bordures et box-shadow */
+    border-spacing: 0;
+}
+
+.position-card .position-table th,
+.position-card .position-table td {
+    white-space: nowrap; /* Empêche le retour à la ligne des dates */
+    vertical-align: middle;
+    padding: 10px 15px !important; /* Padding uniforme */
+}
+
+/* --- 3. Séparations Verticales (Bordures) --- */
+
+/* Séparation Fine INTERNE (Entre LVC et CAC d'un même groupe) */
+.position-card .position-table td:nth-child(4),                          /* CAC Achat */
+.position-card .position-table td:nth-child(6),                          /* CAC Revente */
+.position-card .position-table thead tr:nth-child(2) th:nth-child(2),    /* Header CAC Achat */
+.position-card .position-table thead tr:nth-child(2) th:nth-child(4) {   /* Header CAC Revente */
+    border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Séparation Forte de GROUPE (Entre Achat et Revente) */
+.position-card .position-table td:nth-child(5),                         /* LVC Revente */
+.position-card .position-table thead tr:first-child th:nth-child(4),    /* Header "Revente" */
+.position-card .position-table thead tr:nth-child(2) th:nth-child(3) {  /* Header LVC sous Revente */
+    border-left: 2px solid rgba(255, 255, 255, 0.25) !important;
+    box-shadow: -1px 0 0 rgba(0, 0, 0, 0.5);             /* Effet de profondeur */
+    padding-left: 20px !important;                       /* Plus d'espace pour le groupe Revente */
+}
+
+/* --- 4. Formulaires et Divers --- */
+.position-card .position-table th[colspan="2"] {
+    width: 30%; /* Équilibre les colonnes Achat/Revente */
+}
+
+.offcanvas .form-control:focus {
+    background-color: #2b2b2b;
+    color: white;
+    box-shadow: 0 0 0 0.25rem rgba(0, 137, 123, 0.25);
+    border-color: var(--color-header);
+}

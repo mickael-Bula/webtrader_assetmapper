@@ -1,0 +1,51 @@
+<div class="offcanvas offcanvas-end bg-dark text-white" tabindex="-1" id="{{ id }}" aria-labelledby="{{ id }}Label" style="width: 400px;">
+    <div class="offcanvas-header border-bottom border-secondary">
+        <h5 class="offcanvas-title" id="{{ id }}Label">Nouvelle Position</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form action="{{ path('app_position_create') }}" method="POST">
+
+            <div class="mb-4">
+                <label class="form-label text-secondary small uppercase">Quantité</label>
+                <input type="number" name="quantity" class="form-control bg-secondary text-white border-0" placeholder="Ex: 10" required>
+            </div>
+
+            <hr class="text-secondary">
+
+            <div class="row mb-3">
+                <div class="col">
+                    <label class="form-label text-secondary small">Achat CAC</label>
+                    <input type="number" step="0.01" name="buy_price_cac" class="form-control bg-secondary text-white border-0" placeholder="7400">
+                </div>
+                <div class="col">
+                    <label class="form-label text-secondary small">Achat LVC</label>
+                    <input type="number" step="0.01" name="buy_price_lvc" class="form-control bg-secondary text-white border-0" placeholder="12.50">
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col">
+                    <label class="form-label text-secondary small">Cible CAC</label>
+                    <input type="number" step="0.01" name="target_price_cac" class="form-control bg-secondary text-white border-0" placeholder="7600">
+                </div>
+                <div class="col">
+                    <label class="form-label text-secondary small">Cible LVC</label>
+                    <input type="number" step="0.01" name="target_price_lvc" class="form-control bg-secondary text-white border-0" placeholder="14.20">
+                </div>
+            </div>
+
+            <hr class="text-secondary">
+
+            <div class="mb-4">
+                <label class="form-label text-secondary small uppercase">Date de validité</label>
+                <input type="date" name="validity_date" id="new_pos_date" class="form-control bg-secondary text-white border-0">
+                <div class="form-text text-muted small">Par défaut : fin d'année en cours.</div>
+            </div>
+
+            <div class="d-grid gap-2 mt-5">
+                <button type="submit" class="btn btn-primary">Enregistrer la position</button>
+            </div>
+        </form>
+    </div>
+</div>

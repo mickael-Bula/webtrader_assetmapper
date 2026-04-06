@@ -9,8 +9,6 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\Form\FormEvent;
-use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class PositionType extends AbstractType
@@ -18,6 +16,11 @@ class PositionType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
+            ->add('quantity', IntegerType::class, [
+                'label' => 'Quantité',
+                'required' => false,
+                'attr' => ['placeholder' => 'Ex: 100'],
+            ])
             ->add('buyPrice', NumberType::class, [
                 'label' => 'Prix Achat CAC',
                 'scale' => 2,
@@ -39,21 +42,7 @@ class PositionType extends AbstractType
                 'required' => false,
                 'scale' => 2,
                 'attr' => ['placeholder' => 'Ex: 15.00'],
-            ])
-            ->add('quantity', IntegerType::class, [
-                'label' => 'Quantité',
-                'mapped' => false,
-                'required' => false,
-                'attr' => ['readonly' => 'readonly'],
-            ])
-            ->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) {
-                $position = $event->getData();
-                $form = $event->getForm();
-
-                if ($position instanceof Position) {
-                    $form->get('quantity')->setData($position->getQuantity());
-                }
-            });
+            ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void

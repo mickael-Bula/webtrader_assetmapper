@@ -6,9 +6,9 @@ namespace App\Controller;
 
 use App\Entity\Position;
 use App\Form\PositionType;
-use App\Repository\PositionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -65,11 +65,21 @@ class PositionController extends AbstractController
             $entityManager->flush();
 
             if ($request->isXmlHttpRequest() || $request->headers->get('X-Requested-With') === 'XMLHttpRequest') {
-                $html = $this->renderView('_partials/_position_drawer.html.twig', [
+                $drawerHtml = $this->renderView('_partials/_position_drawer.html.twig', [
                     'position' => $position,
                 ]);
 
-                return new Response($html);
+                return new JsonResponse([
+                    'drawerHtml' => $drawerHtml,
+                    'position' => [
+                        'id' => $position->getId(),
+                        'quantity' => $position->getQuantity(),
+                        'lvcBuyPrice' => $position->getLvcBuyPrice(),
+                        'buyPrice' => $position->getBuyPrice(),
+                        'lvcTargetPrice' => $position->getLvcTargetPrice(),
+                        'targetPrice' => $position->getTargetPrice(),
+                    ],
+                ]);
             }
 
             $this->addFlash('success', 'La position a été modifiée avec succès.');

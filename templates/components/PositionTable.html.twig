@@ -33,7 +33,7 @@
             {% for pos in positions %}
                 <tr>
                     <td class="text-nowrap">{{ this.formattedDate(pos) }}</td>
-                    <td class="text-center">{{ pos.quantity }}</td>
+                    <td class="text-center">{{ pos.quantity ?? "—" }}</td>
                     <td class="text-center">{{ pos.lvcBuyPrice|number_format(2) }}</td>
                     <td class="text-center">{{ pos.buyPrice|number_format(0) }}</td>
                     {# Ce TD aura la bordure gauche via le CSS td:nth-child(5) #}

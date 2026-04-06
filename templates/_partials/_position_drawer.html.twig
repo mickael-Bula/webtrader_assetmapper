@@ -3,8 +3,12 @@
 {# On ne calcule la distance que si la position existe ET qu'on a un cours. Distance contient [points, percent, is_close] #}
 {% set distance = (position is defined and currentCacPrice > 0) ? position.targetDistance(currentCacPrice) : null %}
 
-<div class="offcanvas offcanvas-end bg-dark text-white" tabindex="-1" id="offcanvasPosition{{ position.id }}"
-     style="width: 400px;">
+<div
+    class="offcanvas offcanvas-end bg-dark text-white"
+    tabindex="-1"
+    id="offcanvasPosition{{ position.id }}"
+    style="width: 400px;"
+>
     <div class="offcanvas-header border-bottom border-secondary">
         <h5 class="offcanvas-title">
             Point d'entrée : {{ position.entrypoint.entrypoint|number_format(0, ',', ' ') }} pts - Rang #{{ position.rank }}
@@ -69,7 +73,13 @@
     </div>
 
     <div class="offcanvas-footer p-3 border-top border-secondary d-flex gap-2">
-        <a href="#" class="btn btn-primary w-100">Modifier</a>
+        <button
+            type="button"
+            class="btn btn-primary w-100"
+            data-controller="position-edit"
+            data-position-edit-position-id-value="{{ position.id }}"
+            data-action="click->position-edit#openModal"
+        >Modifier</button>
         <button class="btn btn-danger w-100">Supprimer</button>
     </div>
 </div>

@@ -1,0 +1,62 @@
+<div
+    class="modal fade"
+    id="editPositionModal{{ position.id }}"
+    tabindex="-1"
+    aria-labelledby="editPositionModalLabel{{ position.id }}"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white">
+            {{ form_start(form, {
+                'action': path('app_position_edit', { 'id': position.id }),
+                'attr': {
+                    'class': 'needs-validation',
+                    'novalidate': 'novalidate',
+                }
+            }) }}
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title" id="editPositionModalLabel{{ position.id }}">
+                        Modifier la position #{{ position.id }}
+                    </h5>
+                    <button
+                        type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"
+                        aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        {{ form_row(form.quantity, {
+                            'attr': {'class': 'form-control bg-black text-white border-secondary'}
+                        }) }}
+                    </div>
+                    <hr class="text-secondary">
+                    <div class="mb-3">
+                        {{ form_row(form.buyPrice, {
+                            'attr': {'class': 'form-control bg-black text-white border-secondary'}
+                        }) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form_row(form.targetPrice, {
+                            'attr': {'class': 'form-control bg-black text-white border-secondary'}
+                        }) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form_row(form.lvcBuyPrice, {
+                            'attr': {'class': 'form-control bg-black text-white border-secondary'}
+                        }) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form_row(form.lvcTargetPrice, {
+                            'attr': {'class': 'form-control bg-black text-white border-secondary'}
+                        }) }}
+                    </div>
+                    {{ form_rest(form) }}
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Valider</button>
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>

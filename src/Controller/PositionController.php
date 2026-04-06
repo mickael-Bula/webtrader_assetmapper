@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Entity\Position;
 use App\Form\PositionType;
+use App\Repository\PositionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,7 +22,6 @@ class PositionController extends AbstractController
     #[Route('/position/create', name: 'app_position_create', methods: ['POST'])]
     public function create(Request $request, EntityManagerInterface $entityManager): Response
     {
-        // 1. Récupération des données du formulaire
         $quantity = $request->request->get('quantity');
         $buyPriceCac = $request->request->get('buy_price_cac');
         $buyPriceLvc = $request->request->get('buy_price_lvc');
@@ -29,29 +29,17 @@ class PositionController extends AbstractController
         $targetPriceLvc = $request->request->get('target_price_lvc');
         $validityDate = $request->request->get('validity_date');
 
-        // 2. Création de l'entité
         $position = new Position();
-//        $position->setQuantity((int)$quantity);
         $position->setBuyPrice((string)$buyPriceCac);
         $position->setLvcBuyPrice((string)$buyPriceLvc);
         $position->setTargetPrice((string)$targetPriceCac);
         $position->setLvcTargetPrice((string)$targetPriceLvc);
 
-        // Gestion de la date
-//        if ($validityDate) {
-//            $position->setValidityDate(new \DateTime($validityDate));
-//        }
-
-        // Il faut définir le statut de la position en fonction du type créé
-        // $position->setStatus('waiting');
-
-        // 3. Sauvegarde
         $entityManager->persist($position);
         $entityManager->flush();
 
         $this->addFlash('success', 'La nouvelle position a été enregistrée avec succès.');
 
-        // 4. Redirection vers le dashboard
         return $this->redirectToRoute('app_home');
     }
 
@@ -65,12 +53,7 @@ class PositionController extends AbstractController
             $entityManager->flush();
 
             if ($request->isXmlHttpRequest() || $request->headers->get('X-Requested-With') === 'XMLHttpRequest') {
-                $drawerHtml = $this->renderView('_partials/_position_drawer.html.twig', [
-                    'position' => $position,
-                ]);
-
                 return new JsonResponse([
-                    'drawerHtml' => $drawerHtml,
                     'position' => [
                         'id' => $position->getId(),
                         'quantity' => $position->getQuantity(),

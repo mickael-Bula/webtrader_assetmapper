@@ -3,7 +3,6 @@ import * as bootstrap from 'bootstrap';
 
 export default class extends Controller {
     static values = { positionId: Number };
-    positionIdValue;
 
     async openModal() {
         const positionId = this.positionIdValue;
@@ -35,8 +34,6 @@ export default class extends Controller {
                 const form = modal.querySelector('form');
                 if (form) {
                     const actionUrl = form.getAttribute('action');
-                    const match = actionUrl.match(/\/position\/(\d+)\/edit/);
-                    const extractedId = match ? match[1] : positionId;
 
                     form.addEventListener('submit', async (event) => {
                         event.preventDefault();
@@ -58,28 +55,50 @@ export default class extends Controller {
                             if (submitResponse.ok) {
                                 const data = await submitResponse.json();
 
-                                if (data.drawerHtml) {
-                                    const drawerId = `offcanvasPosition${extractedId}`;
-                                    const drawerEl = document.getElementById(drawerId);
+                                if (data.position) {
+                                    const p = data.position;
 
-                                    if (drawerEl) {
-                                        const offcanvas = bootstrap.Offcanvas.getInstance(drawerEl);
+                                    const drawer = document.getElementById(`offcanvasPosition${positionId}`);
+                                    if (drawer) {
+                                        const offcanvas = bootstrap.Offcanvas.getInstance(drawer);
                                         if (offcanvas) {
                                             offcanvas.hide();
                                         }
-                                        drawerEl.outerHTML = data.drawerHtml;
-                                    }
-                                }
 
-                                if (data.position) {
-                                    const row = document.querySelector(`[data-bs-target="#offcanvasPosition${extractedId}"]`)?.closest('tr');
+                                        const h5 = drawer.querySelector('.offcanvas-title');
+                                        if (h5) {
+                                            const entrypointText = h5.textContent.match(/Point d'entrée : ([\d\s,.]+) pts/);
+                                            const rankText = h5.textContent.match(/Rang #(\d+)/);
+                                            const ep = entrypointText ? entrypointText[1] : '';
+                                            const rank = rankText ? rankText[1] : '';
+                                            h5.textContent = `Point d'entrée : ${ep} pts - Rang #${rank}`;
+                                        }
+
+                                        const statusText = drawer.querySelector('.offcanvas-body .badge');
+                                        if (statusText) {
+                                            const status = statusText.textContent.trim().toLowerCase();
+                                            statusText.className = `badge ${status === 'waiting' ? 'bg-warning text-dark' : 'bg-success'}`;
+                                            statusText.textContent = status.toUpperCase();
+                                        }
+
+                                        const labels = drawer.querySelectorAll('.row .h5, .row .fw-bold');
+                                        if (labels.length >= 5) {
+                                            labels[0].textContent = `${parseFloat(p.buyPrice).toLocaleString('fr-FR', { minimumFractionDigits: 2 })}`;
+                                            labels[1].textContent = `${parseFloat(p.targetPrice).toLocaleString('fr-FR', { minimumFractionDigits: 2 })}`;
+                                            labels[2].textContent = `${parseFloat(p.lvcBuyPrice).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €`;
+                                            labels[3].textContent = `${parseFloat(p.lvcTargetPrice).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €`;
+                                            labels[4].textContent = `${p.quantity ?? '—'} titres`;
+                                        }
+                                    }
+
+                                    const row = document.querySelector(`[data-bs-target="#offcanvasPosition${positionId}"]`)?.closest('tr');
                                     if (row) {
                                         const cells = row.querySelectorAll('td');
-                                        cells[1].textContent = data.position.quantity ?? '—';
-                                        cells[2].textContent = data.position.lvcBuyPrice ? parseFloat(data.position.lvcBuyPrice).toFixed(2) : '—';
-                                        cells[3].textContent = data.position.buyPrice ? parseFloat(data.position.buyPrice).toFixed(0) : '—';
-                                        cells[4].textContent = data.position.lvcTargetPrice ? parseFloat(data.position.lvcTargetPrice).toFixed(2) : '—';
-                                        cells[5].textContent = data.position.targetPrice ? parseFloat(data.position.targetPrice).toFixed(0) : '—';
+                                        cells[1].textContent = p.quantity ?? '—';
+                                        cells[2].textContent = p.lvcBuyPrice ? parseFloat(p.lvcBuyPrice).toFixed(2) : '—';
+                                        cells[3].textContent = p.buyPrice ? parseFloat(p.buyPrice).toFixed(0) : '—';
+                                        cells[4].textContent = p.lvcTargetPrice ? parseFloat(p.lvcTargetPrice).toFixed(2) : '—';
+                                        cells[5].textContent = p.targetPrice ? parseFloat(p.targetPrice).toFixed(0) : '—';
                                     }
                                 }
 

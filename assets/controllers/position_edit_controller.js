@@ -1,6 +1,10 @@
 import { Controller } from '@hotwired/stimulus';
 import * as bootstrap from 'bootstrap';
 
+/**
+ * @property {Number} positionIdValue
+ */
+// noinspection JSUnusedGlobalSymbols
 export default class extends Controller {
     static values = { positionId: Number };
 
@@ -56,6 +60,8 @@ export default class extends Controller {
                                 const data = await submitResponse.json();
 
                                 if (data.position) {
+                                    /**
+                                     * @type {{buyPrice: string, targetPrice: string, lvcBuyPrice: string, lvcTargetPrice: string, quantity: string | null}} */
                                     const p = data.position;
 
                                     const drawer = document.getElementById(`offcanvasPosition${positionId}`);

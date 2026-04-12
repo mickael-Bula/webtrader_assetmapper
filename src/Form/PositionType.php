@@ -16,11 +16,6 @@ class PositionType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('quantity', IntegerType::class, [
-                'label' => 'Quantité',
-                'required' => false,
-                'attr' => ['placeholder' => 'Ex: 100'],
-            ])
             ->add('buyPrice', NumberType::class, [
                 'label' => 'Prix Achat CAC',
                 'scale' => 2,
@@ -42,6 +37,11 @@ class PositionType extends AbstractType
                 'required' => false,
                 'scale' => 2,
                 'attr' => ['placeholder' => 'Ex: 15.00'],
+            ])
+            ->add('quantity', IntegerType::class, [
+                'label' => 'Quantité',
+                'required' => false,
+                'attr' => ['placeholder' => 'Ex: 100'],
             ]);
     }
 

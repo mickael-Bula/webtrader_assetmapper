@@ -84,14 +84,14 @@ readonly class PositionManager
             'new' => $newCacHigh,
         ]);
 
-        // 1. Mise à jour de l'Upper Range (formaté sur 2 décimales).
+        // 1. Mise à jour de l'Upper Range (formaté sur deux décimales).
         $user->setUpperRange(number_format($newCacHigh, 2, '.', ''));
 
         // On met à jour la buy limit de l'utilisateur en appliquant le gap stratégique (par défaut 6 %).
         $buyLimit = $this->strategyManager->calculateBuyLimit($user, $newCacHigh);
         $user->setBuyLimit($buyLimit);
 
-        // On récupère l'Entrypoint en WAITING (celui qui doit être remonté)
+        // On récupère l'Entrypoint en WAITING (celui qui doit être remonté).
         $waitingEntrypoint = $user->getWaitingEntrypoint();
 
         if ($waitingEntrypoint) {

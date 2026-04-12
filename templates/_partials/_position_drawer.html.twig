@@ -1,6 +1,6 @@
 {% set currentCacPrice = app.user.lastCacUpdatedId.close ?? 0 %}
 
-{# On ne calcule la distance que si la position existe ET qu'on a un cours. Distance contient [points, percent, is_close] #}
+{# On ne calcule la distance que si la position existe ET que l'on a un cours. Distance contient [points, percent, is_close] #}
 {% set distance = (position is defined and currentCacPrice > 0) ? position.targetDistance(currentCacPrice) : null %}
 
 <div
@@ -38,7 +38,7 @@
                     {# Affichage de remplacement si le cours est manquant #}
                     <div class="py-3">
                         <i class="mdi mdi-database-off text-secondary d-block h4"></i>
-                        <span class="small text-muted italic">Données boursières indisponibles</span>
+                        <span class="small text-muted italic">Données bursières indisponibles</span>
                     </div>
                 {% endif %}
             </div>
@@ -80,6 +80,38 @@
             data-position-edit-position-id-value="{{ position.id }}"
             data-action="click->position-edit#openModal"
         >Modifier</button>
-        <button class="btn btn-danger w-100">Supprimer</button>
+        <button
+            type="button"
+            class="btn btn-danger w-100"
+            data-position-id="{{ position.id }}"
+            data-position-delete-url="{{ path('app_position_delete', {id: position.id}) }}"
+            data-bs-toggle="modal"
+            data-bs-target="#deletePositionModal"
+            data-action="click->position-delete#confirmDelete"
+        >Supprimer</button>
+    </div>
+</div>
+
+{# Modal de confirmation de suppression #}
+<div class="modal fade" id="deletePositionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Confirmer la suppression</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer cette position ?</p>
+                <p class="text-danger small">Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button
+                    type="button"
+                    class="btn btn-danger"
+                    data-action="click->position-delete#executeDelete"
+                >Supprimer</button>
+            </div>
+        </div>
     </div>
 </div>

@@ -177,6 +177,14 @@ class Position
         return $this->createdAt;
     }
 
+
+    public function setCreatedAt(\DateTimeImmutable $date): static
+    {
+        $this->createdAt = $date;
+
+        return $this;
+    }
+
     public function getTargetDistance(string $currentCacPrice): array
     {
         $current = (float) $currentCacPrice;

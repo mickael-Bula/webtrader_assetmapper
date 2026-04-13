@@ -13,11 +13,27 @@
             </div>
 
             <div class="modal-body py-3 px-4">
-                {# Ligne Quantité (Très compacte) #}
+                {# Ligne Quantité & Date Éditable #}
                 <div class="row align-items-center mb-3 g-2">
-                    <label class="col-4 small text-secondary fw-bold">QUANTITÉ</label>
-                    <div class="col-8">
-                        {{ form_widget(form.quantity, {'attr': {'class': 'form-control form-control-sm bg-black text-white border-0 text-end fw-bold', 'readonly': 'readonly'}}) }}
+                    {# Bloc Quantité (33% de la largeur) #}
+                    <div class="col-6">
+                        <label class="x-small text-secondary fw-bold d-block mb-1">QUANTITÉ</label>
+                        {{ form_widget(form.quantity, {
+                            'attr': {
+                                'class': 'form-control form-control-sm bg-black text-white border-0 fw-bold',
+                                'readonly': 'readonly'
+                            }}) }}
+                    </div>
+
+                    {# Bloc Date de création (66% de la largeur pour laisser de la place au picker) #}
+                    <div class="col-6">
+                        <label class="x-small text-secondary fw-bold d-block mb-1">DATE DE CRÉATION</label>
+                        {{ form_widget(form.createdAt, {
+                            'attr': {
+                                'class': 'form-control form-control-sm bg-black text-white border-secondary',
+                                'style': 'color-scheme: dark;'
+                            }
+                        }) }}
                     </div>
                 </div>
 
@@ -63,7 +79,8 @@
                     type="button"
                     class="btn btn-sm btn-secondary opacity-75 hover-opacity-100"
                     data-bs-dismiss="modal"
-                >Annuler</button>
+                >Annuler
+                </button>
                 <button type="submit" class="btn btn-sm btn-primary px-3">Valider</button>
             </div>
             {{ form_end(form) }}

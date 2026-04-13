@@ -108,7 +108,11 @@ export default class extends Controller {
                                     }
                                 }
 
+                                // 1. Ferme la modal
                                 bsModal.hide();
+
+                                // 2. Recharge la page pour mettre à jour le tableau ET afficher le flash message
+                                window.location.reload();
                             } else {
                                 const errorHtml = await submitResponse.text();
                                 const tempDiv = document.createElement('div');
@@ -130,7 +134,9 @@ export default class extends Controller {
                 bsModal.show();
 
                 modal.addEventListener('hidden.bs.modal', () => {
-                    modalContainer.innerHTML = '';
+                    modalContainer.remove(); // Supprime carrément le container du DOM
+                    // Si un backdrop reste bloqué :
+                    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
                 }, { once: true });
             }
         } catch (error) {

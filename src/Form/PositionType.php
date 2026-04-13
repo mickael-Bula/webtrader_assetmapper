@@ -6,6 +6,7 @@ namespace App\Form;
 
 use App\Entity\Position;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -42,6 +43,11 @@ class PositionType extends AbstractType
                 'label' => 'Quantité',
                 'required' => false,
                 'attr' => ['placeholder' => 'Ex: 100'],
+            ])
+            ->add('createdAt', DateType::class, [
+                'widget' => 'single_text', // Indispensable pour avoir l'input HTML5 date
+                'label' => 'Date de création',
+                'input' => 'datetime_immutable', // Ou 'datetime' selon votre entité
             ]);
     }
 

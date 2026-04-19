@@ -9,7 +9,7 @@ import { Controller } from '@hotwired/stimulus';
  */
 // noinspection JSUnusedGlobalSymbols
 export default class extends Controller {
-    // On définit les cibles (targets) pour retrouver les éléments facilement au moyen des datatsets.
+    // On définit les cibles (targets) pour retrouver les éléments facilement au moyen des datasets.
     static targets = ["portfolio", "positionSize", "ratioVal", "realRatioVal", "warning"];
 
     connect() {

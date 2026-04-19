@@ -68,8 +68,9 @@
                                 </div>
                             </div>
 
-                            <div class="mt-2 small text-webtrader-muted text-end">
-                                <span>Ratio conseillé (1/10e) : <strong id="ratio-val" class="text-success">-- €</strong></span>
+                            <div class="d-flex justify-content-between mt-2 small text-webtrader-muted">
+                                <div>Ratio max (1/10e) : <strong id="ratio-val" class="text-success">-- €</strong></div>
+                                <div>Ratio réel : <strong id="real-ratio-val" class="text-info">-- %</strong></div>
                             </div>
 
                         </div>
@@ -94,26 +95,45 @@
         </div>
     </div>
 
+    {# Déplacer le script dans assets/js #}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const portfolioInput = document.querySelector('[name*="total_portfolio"]');
-            const positionSizeInput = document.querySelector('[name*="position_size"]');
+            const portfolioInput = document.querySelector('[name*="entrypoint[totalPortfolio]"]');
+            const positionSizeInput = document.querySelector('[name*="entrypoint[positionSize]"]');
             const ratioLabel = document.getElementById('ratio-val');
+            const realRatioLabel = document.getElementById('real-ratio-val');
             const warning = document.getElementById('risk-warning');
+
+            {# Sécurité : On s'assure que les éléments existent avant d'ajouter les listeners #}
+            if (!portfolioInput || !positionSizeInput) {
+                console.error('Éléments de formulaire non trouvés');
+                return;
+            }
 
             const checkRisk = () => {
                 const total = parseFloat(portfolioInput.value);
                 const size = parseFloat(positionSizeInput.value);
 
                 if (!isNaN(total) && !isNaN(size) && total > 0) {
-                    const tenPercent = total / 10;
+                    {# 1. Calcul Ratio Max (1/10e) #}
+                    const tenPercent = (total / 10).toFixed(2);
+                    ratioLabel.textContent = tenPercent + ' €';
 
-                    // Affichage de l'avertissement si > 10%
-                    if (size > tenPercent) {
+                    {# 2. Calcul Ratio Réel en % #}
+                    const realRatio = (size / total) * 100;
+                    realRatioLabel.textContent = realRatio.toFixed(2) + ' %';
+
+                    {# Gestion de la couleur si le risque est élevé (> 10%) #}
+                    if (size > (total / 10)) {
                         warning.classList.remove('d-none');
+                        realRatioLabel.classList.replace('text-info', 'text-danger');
                     } else {
                         warning.classList.add('d-none');
+                        realRatioLabel.classList.replace('text-danger', 'text-info');
                     }
+                } else {
+                    ratioLabel.textContent = '-- €';
+                    realRatioLabel.textContent = '-- %';
                 }
             };
 
@@ -127,7 +147,7 @@
                 }
             });
 
-            // On écoute aussi les changements manuels sur la taille de la position
+            {# On écoute aussi les changements manuels sur la taille de la position #}
             positionSizeInput.addEventListener('input', checkRisk);
         });
     </script>

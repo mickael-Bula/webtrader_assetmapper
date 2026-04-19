@@ -309,6 +309,7 @@ readonly class PositionManager
      */
     public function deleteFormerWaitingPositions(User $user): string
     {
+        // TODO : Voir s'il est posible d'utiliser le nouveau champ isActive pour effectuer la mise à jour
         /** @var EntrypointRepository $entrypointRepo */
         $entrypointRepo = $this->entityManager->getRepository(Entrypoint::class);
 

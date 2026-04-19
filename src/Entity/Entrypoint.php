@@ -36,6 +36,9 @@ class Entrypoint
     #[ORM\OneToMany(targetEntity: Position::class, mappedBy: 'entrypoint', orphanRemoval: true)]
     private Collection $positions;
 
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isActive = false;
+
     public function __construct() {
         $this->createdAt = new \DateTimeImmutable();
         $this->positions = new ArrayCollection();
@@ -125,6 +128,18 @@ class Entrypoint
         if ($this->positions->removeElement($position) && $position->getEntrypoint() === $this) {
             $position->setEntrypoint(null);
         }
+
+        return $this;
+    }
+
+    public function getIsActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    public function setIsActive(bool $isActive): self
+    {
+        $this->isActive = $isActive;
 
         return $this;
     }

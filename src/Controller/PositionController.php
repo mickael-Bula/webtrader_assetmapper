@@ -28,12 +28,21 @@ class PositionController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
+        // Récupère le repository des Entrypoints
+        $entrypointRepo = $entityManager->getRepository(Entrypoint::class);
+
         $buyPriceCac = $request->request->get('buy_price_cac');
         $buyPriceLvc = $request->request->get('buy_price_lvc');
         $targetPriceCac = $request->request->get('target_price_cac');
         $targetPriceLvc = $request->request->get('target_price_lvc');
         $quantity = (int)$request->request->get('quantity');
         $validityDate = $request->request->get('validity_date');
+        $isActive = $request->request->getBoolean('is_active');
+
+        if ($isActive) {
+            // On désactive tous les autres entrypoints de l'utilisateur
+            $entrypointRepo->updatePreviousEntrypoints($user);
+        }
 
         // Le statut est transmis depuis le template Twig en utilisant l'id du tableau de positions
         $statusValue = $request->request->get('status', 'waiting');
@@ -46,7 +55,6 @@ class PositionController extends AbstractController
 
         // --- GESTION DE L'ENTRYPOINT ---
         // On cherche si un Entrypoint existe déjà à ce prix pour cet utilisateur
-        $entrypointRepo = $entityManager->getRepository(Entrypoint::class);
         $entrypoint = $entrypointRepo->findOneBy(
             [
                 'entrypoint' => $buyPriceCac,
@@ -57,6 +65,7 @@ class PositionController extends AbstractController
             $entrypoint = new Entrypoint();
             $entrypoint->setEntrypoint($buyPriceCac);
             $entrypoint->setUser($user);
+            $entrypoint->setIsActive($isActive);
             $entrypoint->setCreatedAt(new \DateTimeImmutable());
             $entityManager->persist($entrypoint);
         }

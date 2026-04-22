@@ -1,6 +1,22 @@
 <div class="col-card">
-    <div class="card card-small">
-        <div class="card-title">{{ title }}</div>
+    {# 1. Ajoute "position-relative" ici pour servir d'ancre au bouton #}
+    <div class="card card-small position-relative">
+
+        {# 2. Bouton positionné en absolu #}
+        {% if canCalculate %}
+            <button type="button"
+                    class="btn-calc-compact rounded-circle position-absolute"
+                    style="top: 8px; right: 8px;"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#calculatorOffcanvas"
+                    title="Ouvrir le calculateur">
+                <i class="mdi mdi-calculator" style="font-size: 14px;"></i>
+            </button>
+        {% endif %}
+
+        <div class="card-title">
+            {{ title }}
+        </div>
         <div class="card-text card-metrics">
             <span class="h6 fw-bold text-white">{{ this.formattedValue }}</span>
             {% if trend == 'up' %}

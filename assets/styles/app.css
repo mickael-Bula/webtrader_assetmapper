@@ -749,3 +749,29 @@ input[type=number] {
     box-shadow: 0 0 0 0.25rem rgba(0, 137, 123, 0.25);
     border-color: var(--color-header);
 }
+
+/* --- Bouton calculatrice gris qui devient bleu au survol et sans effet pastille */
+.btn-calc-compact {
+    width: 26px;
+    height: 26px;
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent; /* Bordure fixe */
+    color: #A0A0A0;
+    background: transparent;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    /* On force la suppression des effets Bootstrap */
+    box-shadow: none !important;
+    transform: none !important;
+    margin: 0 !important; /* On supprime la marge */
+}
+
+.btn-calc-compact:hover {
+    background-color: transparent !important;
+    color: #0dcaf0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}

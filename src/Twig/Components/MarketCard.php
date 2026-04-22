@@ -13,6 +13,7 @@ class MarketCard
     public string $title;
     public float $value;
     public string $unit = 'pts';
+    public bool $canCalculate = false;
 
     /** @noinspection PhpUnused */
     public ?string $subtitle = null;

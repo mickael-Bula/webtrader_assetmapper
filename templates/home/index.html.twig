@@ -1,7 +1,10 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-    <div class="dashboard-container">
+    <div class="dashboard-container"
+         data-controller="calculator"
+         data-calculator-last-cac-value="{{ lastQuote }}"
+         data-calculator-last-lvc-value="{{ lastLvcQuote|default(0) }}">
         <div class="notification-area">
             {% for label, messages in app.flashes %}
                 {% for message in messages %}
@@ -36,6 +39,11 @@
                         title="UPPER RANGE"
                         :value="upperRange"
                         :subtitle="entrypointCreatedAt"
+                        :canCalculate="true"
+                        data-calculator-target="trigger"
+                        data-action="click->calculator#prepare"
+                        data-value="{{ upperRange }}"
+                        data-mode="next-cycle"
                     />
                     <twig:MarketCard
                         title="CAC"
@@ -49,6 +57,10 @@
                         :subtitle="buyLimitSubtitle"
                         :trend="buyLimitTrend"
                         :canCalculate="true"
+                        data-calculator-target="trigger"
+                        data-action="click->calculator#prepare"
+                        data-value="{{ buyLimit }}"
+                        data-mode="normal"
                     />
                 </div>
 
@@ -109,6 +121,7 @@
             </div>
         </div>
 
+        {# TODO : faire de ce bout de code un partial ? #}
         {# Offcanvas du calculateur #}
         <div class="offcanvas offcanvas-end bg-dark text-white"
              tabindex="-1"
@@ -116,19 +129,17 @@
              style="width: 450px;">
 
             <div class="offcanvas-header border-bottom border-secondary">
-                <h5 class="offcanvas-title">Calculateur de cycle</h5>
+                <h5 class="offcanvas-title" data-calculator-target="title">Calculateur de cycle</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
             </div>
 
-            <div class="offcanvas-body"
-                 data-controller="calculator"
-                 data-calculator-last-cac-value="{{ lastQuote }}"
-                 data-calculator-last-lvc-value="{{ lastLvcQuote|default(0) }}">
-
-                {# Réutilisation de votre formulaire de calculateur #}
+            <div class="offcanvas-body">
+                {# Réutilisation du formulaire de calculateur #}
                 <div class="mb-4 p-3 bg-black bg-opacity-50 rounded-4 border border-secondary border-opacity-25">
                     <div class="mb-3">
-                        <label class="form-label small text-uppercase fw-bold text-secondary">Seuil d'entrée</label>
+                        <label class="form-label small text-uppercase fw-bold text-secondary" data-calculator-target="inputLabel">
+                            Seuil d'entrée
+                        </label>
                         <input type="number"
                                data-calculator-target="entrypoint"
                                data-action="input->calculator#calculate"

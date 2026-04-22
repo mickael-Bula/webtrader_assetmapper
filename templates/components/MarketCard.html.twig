@@ -1,6 +1,7 @@
 <div class="col-card">
+
     {# 1. Ajoute "position-relative" ici pour servir d'ancre au bouton #}
-    <div class="card card-small position-relative">
+    <div class="card card-small position-relative" {{ attributes }}> {# L'ajout de {{ attributes }} permet de propager les data-attributes #}
 
         {# 2. Bouton positionné en absolu #}
         {% if canCalculate %}
@@ -9,7 +10,10 @@
                     style="top: 8px; right: 8px;"
                     data-bs-toggle="offcanvas"
                     data-bs-target="#calculatorOffcanvas"
-                    title="Ouvrir le calculateur">
+                    data-action="click->calculator#prepare"
+                    data-value="{{ value }}"
+                    data-mode="{{ title == 'UPPER RANGE' ? 'next-cycle' : 'normal' }}"
+                    title="Calculer">
                 <i class="mdi mdi-calculator" style="font-size: 14px;"></i>
             </button>
         {% endif %}

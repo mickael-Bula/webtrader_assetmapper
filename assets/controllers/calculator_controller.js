@@ -27,7 +27,7 @@ export default class extends Controller {
         // On sauvegarde le mode dans le contrôleur ('normal' ou 'next-cycle')
         this.mode = btn.dataset.mode;
 
-        // 2. Mettre à jour l'input
+        // 2. Mise à jour de l'input
         this.entrypointTarget.value = Math.round(baseValue);
 
         // 3. Mise à jour dynamique du titre
@@ -40,7 +40,7 @@ export default class extends Controller {
             ? "POINT HAUT LOCAL"
             : "SEUIL D'ENTRÉE";
 
-        // 5. Lancer le calcul
+        // 5. Lance le calcul
         this.calculate();
     }
 

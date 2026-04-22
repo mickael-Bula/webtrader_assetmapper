@@ -13,7 +13,8 @@
                 </div>
 
                 <div class="card bg-dark text-white border-secondary shadow-lg">
-                    <div class="card-body p-4">
+                    {# On attache le controller Stimulus pour gérer les contrôles dynaimques lors de la saisie #}
+                    <div class="card-body p-4" data-controller="strategy-config">
 
                         {{ form_start(settingsForm, {'attr': {'data-turbo': 'false'}}) }}
 
@@ -24,7 +25,8 @@
                                 <div class="input-group">
                                     {{ form_widget(settingsForm.totalPortfolio, {'attr': {
                                         'class': 'form-control bg-black text-white fs-5',
-                                        'placeholder': '10000.00'
+                                        'data-strategy-config-target': 'portfolio',
+                                        'data-action': 'input->strategy-config#checkRisk'
                                     }}) }}
                                     <span class="input-group-text bg-secondary text-white border-secondary">€</span>
                                 </div>
@@ -57,19 +59,25 @@
                                 <div class="input-group">
                                     {{ form_widget(settingsForm.positionSize, {'attr': {
                                         'class': 'form-control bg-black text-white fs-5',
-                                        'placeholder': 'Ex: 1000.00'
+                                        'data-strategy-config-target': 'positionSize',
+                                        'data-action': 'input->strategy-config#checkRisk'
                                     }}) }}
                                     <span class="input-group-text bg-secondary text-white">€</span>
                                 </div>
 
                                 {# Zone pour l'avertissement #}
-                                <div id="risk-warning" class="mt-2 small text-warning d-none">
+                                <div id="risk-warning" class="mt-2 small text-warning d-none" data-strategy-config-target="warning">
                                     <i class="mdi mdi-alert-outline"></i> Attention : Ce montant dépasse 10% de votre capital total.
                                 </div>
                             </div>
 
-                            <div class="mt-2 small text-webtrader-muted text-end">
-                                <span>Ratio conseillé (1/10e) : <strong id="ratio-val" class="text-success">-- €</strong></span>
+                            <div class="d-flex justify-content-between mt-2 small text-webtrader-muted">
+                                <div>
+                                    Ratio max (1/10e) : <strong class="text-success" data-strategy-config-target="ratioVal">-- €</strong>
+                                </div>
+                                <div>
+                                    Ratio réel : <strong class="text-info" data-strategy-config-target="realRatioVal">-- %</strong>
+                                </div>
                             </div>
 
                         </div>
@@ -93,42 +101,4 @@
             </div>
         </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const portfolioInput = document.querySelector('[name*="total_portfolio"]');
-            const positionSizeInput = document.querySelector('[name*="position_size"]');
-            const ratioLabel = document.getElementById('ratio-val');
-            const warning = document.getElementById('risk-warning');
-
-            const checkRisk = () => {
-                const total = parseFloat(portfolioInput.value);
-                const size = parseFloat(positionSizeInput.value);
-
-                if (!isNaN(total) && !isNaN(size) && total > 0) {
-                    const tenPercent = total / 10;
-
-                    // Affichage de l'avertissement si > 10%
-                    if (size > tenPercent) {
-                        warning.classList.remove('d-none');
-                    } else {
-                        warning.classList.add('d-none');
-                    }
-                }
-            };
-
-            portfolioInput.addEventListener('input', (e) => {
-                const total = parseFloat(e.target.value);
-                if (!isNaN(total) && total > 0) {
-                    const tenPercent = (total / 10).toFixed(2);
-                    ratioLabel.textContent = tenPercent + ' €';
-
-                    checkRisk();
-                }
-            });
-
-            // On écoute aussi les changements manuels sur la taille de la position
-            positionSizeInput.addEventListener('input', checkRisk);
-        });
-    </script>
 {% endblock %}

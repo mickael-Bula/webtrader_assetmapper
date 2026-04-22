@@ -39,6 +39,9 @@ class Position
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     private ?string $lvcTargetPrice = null;
 
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private ?int $quantity = null;
+
     #[ORM\Column(type: 'string', enumType: PositionStatus::class)]
     private PositionStatus $status = PositionStatus::WAITING;
 
@@ -145,6 +148,18 @@ class Position
         return $this;
     }
 
+    public function getQuantity(): ?int
+    {
+        return $this->quantity;
+    }
+
+    public function setQuantity(?int $quantity): static
+    {
+        $this->quantity = $quantity;
+
+        return $this;
+    }
+
     public function getStatus(): PositionStatus
     {
         return $this->status;
@@ -162,28 +177,14 @@ class Position
         return $this->createdAt;
     }
 
-    public function getQuantity(): int
+
+    public function setCreatedAt(\DateTimeImmutable $date): static
     {
-        $user = $this->getEntrypoint()?->getUser();
+        $this->createdAt = $date;
 
-        // Si lvcBuyPrice vaut zéro ou null, on évite la division par zéro en retournant un montant.
-        if (!$user || !$this->lvcBuyPrice) {
-            return 0;
-        }
-
-        $size = (float)$user->getPositionSize();
-        $price = (float)$this->lvcBuyPrice;
-
-        if ($price <= 0) {
-            return 0;
-        }
-
-        return (int) floor($size / $price);
+        return $this;
     }
 
-    /**
-     * Calcule l'écart entre le cours actuel et l'objectif en points et en pourcentage.
-     */
     public function getTargetDistance(string $currentCacPrice): array
     {
         $current = (float) $currentCacPrice;

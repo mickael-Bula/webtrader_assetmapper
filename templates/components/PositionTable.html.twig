@@ -1,40 +1,44 @@
-<div class="card position-card {{ type }}-positions">
+<div class="card position-card {{ type }}-positions d-flex justify-content-between align-items-center">
     <div class="card-title {{ this.headerClass }}">
-        {{ this.displayTitle }}
+        <span>{{ this.displayTitle }}</span>
+        <button class="btn btn-sm btn-link text-white p-0"
+                type="button"
+                data-bs-toggle="offcanvas"
+                data-bs-target="#offcanvasNewPosition{{ type }}"
+                title="Ajouter une position">
+            <i class="mdi mdi-plus-circle fs-4"></i>
+        </button>
     </div>
     <div class="card-divider"></div>
     <div class="card-text pa-0">
         <table class="table table-dark table-hover position-table mb-0">
             <thead>
             <tr class="text-secondary small">
-                <th rowspan="2">{{ this.dateLabel }}</th>
-                <th rowspan="2">Qté</th>
-                <th colspan="2" class="align-center">Achat</th>
-                <th colspan="2" class="align-left">Revente</th>
-                <th rowspan="2" class="align-left">Détail</th>
+                <th rowspan="2" class="text-nowrap">{{ this.dateLabel }}</th>
+                <th rowspan="2" class="text-center">Qté</th>
+                <th colspan="2" class="text-center border-bottom border-secondary">Achat</th>
+                {# Ce TH aura la bordure gauche via le CSS nth-child(4) #}
+                <th colspan="2" class="text-center border-bottom border-secondary">Revente</th>
+                <th rowspan="2" class="text-center">Détail</th>
             </tr>
-            <tr>
-                <th>LVC</th>
-                <th>CAC</th>
-                <th>LVC</th>
-                <th>CAC</th>
+            <tr class="text-secondary small">
+                <th class="text-center">LVC</th>
+                <th class="text-center">CAC</th>
+                {# Ce TH aura la bordure gauche via le CSS tr:nth-child(2) th:nth-child(3) #}
+                <th class="text-center">LVC</th>
+                <th class="text-center">CAC</th>
             </tr>
             </thead>
             <tbody class="text-white">
             {% for pos in positions %}
                 <tr>
-                    {# Si la date de validité d'une position en attente est proche, elle est signalée #}
-                    <td class="{{ this.isExpiringSoon(pos) ? 'text-warning fw-bold' : '' }}">
-                        {{ this.formattedDate(pos) }}
-                        {% if this.isExpiringSoon(pos) %}
-                            <i class="mdi mdi-clock-alert" title="Expire bientôt"></i>
-                        {% endif %}
-                    </td>
-                    <td>{{ pos.quantity }}</td>
-                    <td class="text-nowrap">{{ pos.lvcBuyPrice|number_format(2, ',', ' ') }}</td>
-                    <td class="text-nowrap">{{ pos.buyPrice|number_format(0, ',', ' ') }}</td>
-                    <td class="text-nowrap">{{ pos.lvcTargetPrice|number_format(2, ',', ' ') }}</td>
-                    <td class="text-nowrap">{{ pos.targetPrice|number_format(0, ',', ' ') }}</td>
+                    <td class="text-nowrap">{{ this.formattedDate(pos) }}</td>
+                    <td class="text-center">{{ pos.quantity ?? "—" }}</td>
+                    <td class="text-center">{{ pos.lvcBuyPrice|number_format(2) }}</td>
+                    <td class="text-center">{{ pos.buyPrice|number_format(0) }}</td>
+                    {# Ce TD aura la bordure gauche via le CSS td:nth-child(5) #}
+                    <td class="text-center">{{ pos.lvcTargetPrice|number_format(2) }}</td>
+                    <td class="text-center">{{ pos.targetPrice|number_format(0) }}</td>
                     <td>
                         <button class="btn btn-sm btn-outline-info"
                                 type="button"
@@ -46,14 +50,17 @@
                         {# On inclut le menu latéral ici pour qu'il ait accès à la variable 'pos' #}
                         {{ include('_partials/_position_drawer.html.twig', { 'position': pos }) }}
                     </td>
-
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="{{ type == 'running' ? 8 : 7 }}" class="text-center">Aucune position</td>
+                    <td colspan="7" class="text-center py-5 text-muted">
+                        <i class="mdi mdi-tray-blank fs-4 d-block mb-2"></i>
+                        Aucune position en cours
+                    </td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
     </div>
+    {{ include('_partials/_new_position_drawer.html.twig', { 'id': 'offcanvasNewPosition' ~ type }) }}
 </div>

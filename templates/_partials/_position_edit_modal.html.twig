@@ -1,0 +1,89 @@
+<div class="modal fade" id="editPositionModal{{ position.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"> {# Retour à la taille standard pour gagner de la place #}
+        <div class="modal-content bg-dark text-white border-secondary">
+            {{ form_start(form, {
+                'action': path('app_position_edit', { 'id': position.id }),
+                'attr': { 'class': 'needs-validation', 'novalidate': 'novalidate' }
+            }) }}
+            <div class="modal-header py-2 border-secondary bg-black">
+                <h6 class="modal-title small uppercase fw-bold">
+                    <i class="mdi mdi-pencil small me-1 text-info"></i> Editer #{{ position.id }}
+                </h6>
+                <button type="button" class="btn-close btn-close-white scale-75" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body py-3 px-4">
+                {# Ligne Quantité & Date Éditable #}
+                <div class="row align-items-center mb-3 g-2">
+                    {# Bloc Quantité (33% de la largeur) #}
+                    <div class="col-6">
+                        <label class="x-small text-secondary fw-bold d-block mb-1">QUANTITÉ</label>
+                        {{ form_widget(form.quantity, {
+                            'attr': {
+                                'class': 'form-control form-control-sm bg-black text-white border-0 fw-bold',
+                                'readonly': 'readonly'
+                            }}) }}
+                    </div>
+
+                    {# Bloc Date de création (66% de la largeur pour laisser de la place au picker) #}
+                    <div class="col-6">
+                        <label class="x-small text-secondary fw-bold d-block mb-1">DATE DE CRÉATION</label>
+                        {{ form_widget(form.createdAt, {
+                            'attr': {
+                                'class': 'form-control form-control-sm bg-black text-white border-secondary',
+                                'style': 'color-scheme: dark;'
+                            }
+                        }) }}
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    {# Bloc CAC #}
+                    <div class="col-6">
+                        <div class="d-flex align-items-center mb-2 border-bottom border-secondary pb-1">
+                            <i class="mdi mdi-chart-line text-info me-1 small"></i>
+                            <span class="small fw-bold">CAC 40</span>
+                        </div>
+                        <div class="mb-2">
+                            <label class="x-small text-secondary d-block mb-1">Achat</label>
+                            {{ form_widget(form.buyPrice, {'attr': {'class': 'form-control form-control-sm bg-black text-white border-secondary'}}) }}
+                        </div>
+                        <div>
+                            <label class="x-small text-secondary d-block mb-1">Target</label>
+                            {{ form_widget(form.targetPrice, {'attr': {'class': 'form-control form-control-sm bg-black text-white border-secondary'}}) }}
+                        </div>
+                    </div>
+
+                    {# Bloc LVC #}
+                    <div class="col-6 border-start border-secondary">
+                        <div class="d-flex align-items-center mb-2 border-bottom border-secondary pb-1">
+                            <i class="mdi mdi-rocket-launch text-success me-1 small"></i>
+                            <span class="small fw-bold">LVC (x2)</span>
+                        </div>
+                        <div class="mb-2">
+                            <label class="x-small text-secondary d-block mb-1">Achat €</label>
+                            {{ form_widget(form.lvcBuyPrice, {'attr': {'class': 'form-control form-control-sm bg-black text-white border-secondary'}}) }}
+                        </div>
+                        <div>
+                            <label class="x-small text-secondary d-block mb-1">Target €</label>
+                            {{ form_widget(form.lvcTargetPrice, {'attr': {'class': 'form-control form-control-sm bg-black text-white border-secondary'}}) }}
+                        </div>
+                    </div>
+                </div>
+
+                {{ form_rest(form) }}
+            </div>
+
+            <div class="modal-footer py-2 border-secondary bg-black d-flex justify-content-end">
+                <button
+                    type="button"
+                    class="btn btn-sm btn-secondary opacity-75 hover-opacity-100"
+                    data-bs-dismiss="modal"
+                >Annuler
+                </button>
+                <button type="submit" class="btn btn-sm btn-primary px-3">Valider</button>
+            </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>

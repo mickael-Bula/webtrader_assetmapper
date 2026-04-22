@@ -36,4 +36,26 @@ class EntrypointRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function updatePreviousEntrypoints(User $user): array
+    {
+        return $this->createQueryBuilder('e')
+            ->update()
+            ->set('e.isActive', 'false')
+            ->where('e.user = :user')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->execute();
+    }
+
+    public function getActiveEntrypoint(User $user): Entrypoint
+    {
+        return $this->createQueryBuilder('e')
+            ->where('e.user = :user')
+            ->andWhere('e.isActive = :isActive')
+            ->setParameter('user', $user)
+            ->setParameter('isActive', true)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

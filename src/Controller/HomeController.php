@@ -11,6 +11,7 @@ use Psr\Log\LoggerInterface;
 use App\Service\PositionManager;
 use App\Service\StrategyManager;
 use App\Repository\PositionRepository;
+use App\Repository\EntrypointRepository;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Repository\MarketData\CacDailyRepository;
@@ -29,7 +30,8 @@ final class HomeController extends AbstractController
     public function index(
         CacDailyRepository $cacRepository,
         PositionRepository $positionRepository,
-        PositionManager    $positionManager,
+        EntrypointRepository $entrypointRepository,
+        PositionManager    $positionManager
     ): Response
     {
         /** @var User $user */
@@ -81,19 +83,19 @@ final class HomeController extends AbstractController
         // Calcul la tendance de la buy limit.
         $buyLimitTrend = $currentClose > $buyLimit ? 'down' : 'up';
 
-        // Récupération de la date à laquelle le dernier entrypoint a été créé (et non pas mis à jour).
-        $lastEntrypoint = $user->getEntrypoints()[count($user->getEntrypoints()) - 1];
+        // Récupération de la date de création de l'entrypoint actif
+        $activeEntrypoint = $entrypointRepository->getActiveEntrypoint($user);
 
         return $this->render('home/index.html.twig', [
             'runningPositions' => $positionRepository->findByStatusAndUser(PositionStatus::RUNNING, $user),
             'waitingPositions' => $positionRepository->findByStatusAndUser(PositionStatus::WAITING, $user),
             'cacQuotes' => $cacQuotes,
             'lastQuote' => $currentClose,
-            'entrypoint' => $lastEntrypoint->getEntrypoint(),
+            'upperRange' => $user->getUpperRange(),
             'buyLimit' => $user->getBuyLimit(),
             'cacTrend' => $cacTrend,
             'cacSubtitle' => $cacSubtitle,
-            'entrypointCreatedAt' => $lastEntrypoint->getCreatedAt()->format('d/m/y'),
+            'entrypointCreatedAt' => $activeEntrypoint->getCreatedAt()->format('d/m/y'),
             'buyLimitSubtitle' => $buyLimitSpread,
             'buyLimitTrend' => $buyLimitTrend,
         ]);

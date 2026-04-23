@@ -2,7 +2,8 @@
 
 {% block body %}
     <div class="dashboard-container"
-         data-controller="calculator"
+         data-controller="calculator editor" {# Liaison à deux controllers Stimulus #}
+         data-editor-user-spread-value="{{ userSpread }}"
          data-calculator-last-cac-value="{{ lastQuote }}"
          data-calculator-last-lvc-value="{{ lastLvcQuote|default(0) }}">
         <div class="notification-area">
@@ -123,6 +124,9 @@
 
         {# Appel de l'offcanvas du calculateur #}
         <twig:Calculator lastQuote="{{ lastQuote }}" />
+
+        {# Appel de l'offcanvas d'édition des cards #}
+        <twig:EditorOffcanvas />
 
     </div>
 {% endblock %}

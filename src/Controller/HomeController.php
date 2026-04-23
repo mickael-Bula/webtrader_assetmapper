@@ -95,9 +95,10 @@ final class HomeController extends AbstractController
             'buyLimit' => $user->getBuyLimit(),
             'cacTrend' => $cacTrend,
             'cacSubtitle' => $cacSubtitle,
-            'entrypointCreatedAt' => $activeEntrypoint->getCreatedAt()->format('d/m/y'),
+            'entrypointCreatedAt' => $activeEntrypoint->getCreatedAt()?->format('d/m/y'),
             'buyLimitSubtitle' => $buyLimitSpread,
             'buyLimitTrend' => $buyLimitTrend,
+            'userSpread' => $user->getSpread(),
         ]);
     }
 }

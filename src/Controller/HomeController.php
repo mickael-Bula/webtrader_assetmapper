@@ -101,6 +101,7 @@ final class HomeController extends AbstractController
             'buyLimitSubtitle' => $buyLimitSpread,
             'buyLimitTrend' => $buyLimitTrend,
             'userSpread' => $user->getSpread(),
+            'positionSize' => $user->getPositionSize(), // TODO : à remplacer au besoin par une taille dynamique de 5% du PF
         ]);
     }
 }

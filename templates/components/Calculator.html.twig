@@ -12,18 +12,20 @@
         {# Réutilisation du formulaire de calculateur #}
         <div class="mb-4 p-3 bg-black bg-opacity-50 rounded-4 border border-secondary border-opacity-25">
             <div class="mb-3">
-                <label class="form-label small text-uppercase fw-bold text-secondary" data-calculator-target="inputLabel">
+                <label for="entrypoint" class="form-label small text-uppercase fw-bold text-secondary" data-calculator-target="inputLabel">
                     Seuil d'entrée
                 </label>
-                <input type="number"
+                <input id="entrypoint"
+                       type="number"
                        data-calculator-target="entrypoint"
                        data-action="input->calculator#calculate"
                        value="{{ lastQuote|round }}"
                        class="form-control bg-dark text-white border-secondary">
             </div>
             <div>
-                <label class="form-label small text-uppercase fw-bold text-secondary">Spread</label>
-                <select data-calculator-target="spread"
+                <label for="spread" class="form-label small text-uppercase fw-bold text-secondary">Spread</label>
+                <select id="spread"
+                        data-calculator-target="spread"
                         data-action="change->calculator#calculate"
                         class="form-select bg-dark text-white border-secondary">
                     <option value="0.01">1%</option>
@@ -36,7 +38,7 @@
         <table class="table table-dark table-hover mb-0">
             <thead>
             <tr class="text-muted small">
-                <th class="ps-3">RANG</th><th>STATUT</th><th>ACHAT</th><th>REVENTE</th>
+                <th class="ps-3">RANG</th><th>QUANTITÉ</th><th>ACHAT</th><th>REVENTE</th>
             </tr>
             </thead>
             <tbody data-calculator-target="simulationBody"></tbody>

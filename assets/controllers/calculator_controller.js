@@ -10,11 +10,12 @@ import { Controller } from '@hotwired/stimulus';
  * @property {String} cycleLabelTarget
  * @property {String} titleTarget
  * @property {String} inputLabelTarget
+ * @property {Number} positionSizeValue
  */
 // noinspection JSUnusedGlobalSymbols
 export default class extends Controller {
     static targets = ["entrypoint", "spread", "simulationBody", "nextCycle", "cycleLabel", "title", "inputLabel"];
-    static values = { lastCac: Number, lastLvc: Number };
+    static values = { lastCac: Number, lastLvc: Number, positionSize: Number };
 
     connect() {
         this.calculate();
@@ -67,13 +68,15 @@ export default class extends Controller {
             const variationLvc = varCac * 2;
             const lvcPrice = this.lastLvcValue * (1 + variationLvc);
 
+            // Calcul de la quantité de LVC
+            // On divise la positionSize par le prix du LVC, avec une sécurité pour éviter la division par zéro
+            const quantity = (lvcPrice > 0) ? Math.round(this.positionSizeValue / lvcPrice) : 0;
+
             html += `
                 <tr class="border-bottom border-secondary border-opacity-25 text-center align-middle">
                     <td class="ps-3 py-3 text-start text-success fw-bold">#${i + 1}</td>
                     <td class="text-center">
-                        <span class="badge bg-secondary bg-opacity-25 text-webtrader-muted border-0 small" style="width: 100px;">
-                        En attente
-                        </span>
+                        <span class="text-white fw-bold">${quantity} LVC</span>
                     </td>
                     <td class=" text-center py-3">
                         <div class="text-white fw-bold">${Math.round(cacTarget)} pts</div>

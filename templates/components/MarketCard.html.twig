@@ -8,16 +8,18 @@
 
         <div class="position-absolute d-flex align-items-center" style="top: 8px; right: 8px; gap: 2px; z-index: 10;">
 
-            {# Bouton Édition #}
-            <button type="button"
-                    class="btn-calc-compact rounded-circle d-flex align-items-center justify-content-center"
-                    style="width: 12px; height: 32px; padding: 0;"
-                    data-action="click->editor#open"
-                    data-value="{{ value }}"
-                    data-type="{{ cardType }}"
-                    title="Éditer">
-                <i class="mdi mdi-pencil" style="font-size: 14px;"></i>
-            </button>
+            {# Bouton Édition - N'apparaît que si cardType est défini (donc pas pour le CAC) #}
+            {% if cardType %}
+                <button type="button"
+                        class="btn-calc-compact rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 12px; height: 32px; padding: 0;"
+                        data-action="click->editor#open"
+                        data-value="{{ value }}"
+                        data-type="{{ cardType }}"
+                        title="Éditer">
+                    <i class="mdi mdi-pencil" style="font-size: 14px;"></i>
+                </button>
+            {% endif %}
 
             {# Bouton Calculateur #}
             {% if canCalculate %}

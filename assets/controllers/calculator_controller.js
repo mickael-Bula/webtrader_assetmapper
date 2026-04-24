@@ -49,7 +49,7 @@ export default class extends Controller {
         const startCac = parseFloat(this.entrypointTarget.value);
         const spread = parseFloat(this.spreadTarget.value);
 
-        // Déterminer le décalage (shift) : si next-cycle, on décale de 3 rangs (0, 2, 4 -> 6, 8, 10...), sinon, on commence à 0.
+        // Déterminer le décalage (shift) : si next-cycle, on décale de 3 rangs (0, 2, 4 → 6, 8, 10), sinon, on commence à 0.
         const shift = (this.mode === 'next-cycle') ? 3 : 0;
 
         let html = ''; // Nettoyage de l'ancien contenu
@@ -80,11 +80,11 @@ export default class extends Controller {
                     </td>
                     <td class=" text-center py-3">
                         <div class="text-white fw-bold">${Math.round(cacTarget)} pts</div>
-                        <div class="text-webtrader-muted small">${lvcPrice.toFixed(2)} €</div>
+                        <div class="text-webtrader-muted small">${this.formatNumber(lvcPrice)} €</div>
                     </td>
                     <td class=" text-end pe-3 py-3">
                         <div class="text-info fw-bold">${cacExit} pts</div>
-                        <div class="text-webtrader-muted small">${(lvcPrice * 1.20).toFixed(2)} €</div>
+                        <div class="text-webtrader-muted small">${(this.formatNumber(lvcPrice * 1.20))} €</div>
                     </td>
                 </tr>`;
         }
@@ -98,5 +98,12 @@ export default class extends Controller {
 
         // On convertit le facteur en pourcentage (ex: 0.06 -> "- 6%")
         this.cycleLabelTarget.textContent = ` (-${(nextCycleFactor * 100).toFixed(0)} %)`;
+    }
+
+    formatNumber(number) {
+        return new Intl.NumberFormat('fr-FR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(number);
     }
 }

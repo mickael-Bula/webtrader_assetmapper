@@ -51,7 +51,7 @@ class StrategyManager
     {
         $spread = $this->calculateSpread($position->getEntrypoint());
 
-        // Rang 1 : Entrypoint, rang 2 : Entrypoint - 2%, rang 3 : Entrypoint - 4%
+        // Pour un spread de 2%, rang 1 : Entrypoint, rang 2 : Entrypoint - 2%, rang 3 : Entrypoint - 4%
         $offset = ($position->getRank() - 1) * $spread;
 
         return round($entrypointValue * (1 - $offset), 2);

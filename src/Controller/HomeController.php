@@ -64,6 +64,7 @@ final class HomeController extends AbstractController
 
         $currentClose = $cacQuotes[0]->getCacClose();
         $previousClose = $cacQuotes[1]->getCacClose();
+        $lastLvcPrice = $cacQuotes[0]->getLvcClose();
 
         // Calcule la variation du CAC et ajoute un signe + ou '' en fonction de la valeur. Le moins est déjà présent.
         $variation = (($currentClose - $previousClose) / $previousClose) * 100;
@@ -91,13 +92,16 @@ final class HomeController extends AbstractController
             'waitingPositions' => $positionRepository->findByStatusAndUser(PositionStatus::WAITING, $user),
             'cacQuotes' => $cacQuotes,
             'lastQuote' => $currentClose,
+            'lastLvcPrice' => $lastLvcPrice,
             'upperRange' => $user->getUpperRange(),
             'buyLimit' => $user->getBuyLimit(),
             'cacTrend' => $cacTrend,
             'cacSubtitle' => $cacSubtitle,
-            'entrypointCreatedAt' => $activeEntrypoint->getCreatedAt()->format('d/m/y'),
+            'entrypointCreatedAt' => $activeEntrypoint->getCreatedAt()?->format('d/m/y'),
             'buyLimitSubtitle' => $buyLimitSpread,
             'buyLimitTrend' => $buyLimitTrend,
+            'userSpread' => $user->getSpread(),
+            'positionSize' => $user->getPositionSize(), // TODO : à remplacer au besoin par une taille dynamique de 5% du PF
         ]);
     }
 }

@@ -1,7 +1,12 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-    <div class="dashboard-container">
+    <div class="dashboard-container"
+         data-controller="calculator editor" {# Liaison à deux controllers Stimulus #}
+         data-editor-user-spread-value="{{ userSpread }}"
+         data-calculator-last-cac-value="{{ lastQuote }}"
+         data-calculator-last-lvc-value="{{ lastLvcPrice }}"
+         data-calculator-position-size-value="{{ positionSize }}">
         <div class="notification-area">
             {% for label, messages in app.flashes %}
                 {% for message in messages %}
@@ -36,6 +41,11 @@
                         title="UPPER RANGE"
                         :value="upperRange"
                         :subtitle="entrypointCreatedAt"
+                        :canCalculate="true"
+                        data-calculator-target="trigger"
+                        data-action="click->calculator#prepare"
+                        data-value="{{ upperRange }}"
+                        data-mode="next-cycle"
                     />
                     <twig:MarketCard
                         title="CAC"
@@ -48,6 +58,11 @@
                         :value="buyLimit"
                         :subtitle="buyLimitSubtitle"
                         :trend="buyLimitTrend"
+                        :canCalculate="true"
+                        data-calculator-target="trigger"
+                        data-action="click->calculator#prepare"
+                        data-value="{{ buyLimit }}"
+                        data-mode="normal"
                     />
                 </div>
 
@@ -107,6 +122,12 @@
 
             </div>
         </div>
+
+        {# Appel de l'offcanvas du calculateur #}
+        <twig:Calculator lastQuote="{{ lastQuote }}" />
+
+        {# Appel de l'offcanvas d'édition des cards #}
+        <twig:EditorOffcanvas />
 
     </div>
 {% endblock %}

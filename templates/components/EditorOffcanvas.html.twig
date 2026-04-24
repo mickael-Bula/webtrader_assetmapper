@@ -1,0 +1,53 @@
+<div class="offcanvas offcanvas-end bg-dark text-white"
+     tabindex="-1"
+     id="editorOffcanvas"
+     style="width: 450px;">
+    <div class="offcanvas-header border-bottom border-secondary">
+        <h5 class="offcanvas-title">
+            Édition des niveaux
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+
+    <div class="offcanvas-body d-flex flex-column flex-grow-1n">
+        <div class="mb-3">
+            <label for="mainLabel" data-editor-target="mainLabel" class="form-label small fw-bold text-secondary">VALEUR</label>
+            <input
+                id="mainLabel"
+                type="number"
+                data-editor-target="mainInput"
+                data-action="input->editor#calculatePreview"
+                class="form-control bg-dark text-white border-secondary">
+        </div>
+        <div class="mb-3">
+            <label for="linkedInput" data-editor-target="linkedLabel" class="form-label small fw-bold text-secondary">COMPLÉMENT</label>
+            <input
+                id="linkedInput"
+                type="number"
+                data-editor-target="linkedInput"
+                readonly
+                class="form-control bg-secondary text-white border-secondary">
+        </div>
+        <div class="mb-3">
+            <label for="spread" class="form-label small fw-bold text-secondary">SPREAD (%)</label>
+            <input
+                id="spread"
+                type="number"
+                data-editor-target="spreadInput"
+                data-action="input->editor#calculatePreview"
+                class="form-control bg-dark text-white border-secondary">
+        </div>
+
+        {# Le conteneur du message #}
+        <div class="my-auto mx-3 p-2 bg-dark bg-opacity-50 border border-info rounded d-flex flex-column align-items-center justify-content-center text-center">
+            <small data-editor-target="explanation" class="text-info fst-italic">
+                {# Le texte sera injecté ici par Stimulus #}
+            </small>
+        </div>
+    </div>
+
+    <div class="offcanvas-footer p-3 border-top border-secondary d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="offcanvas">Annuler</button>
+        <button type="button" class="btn btn-primary" data-action="click->editor#validate">Valider</button>
+    </div>
+</div>

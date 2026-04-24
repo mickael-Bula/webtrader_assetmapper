@@ -15,6 +15,9 @@ class MarketCard
     public string $unit = 'pts';
 
     /** @noinspection PhpUnused */
+    public bool $canCalculate = false;
+
+    /** @noinspection PhpUnused */
     public ?string $subtitle = null;
 
     /** @noinspection PhpUnused */

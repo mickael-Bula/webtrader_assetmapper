@@ -1,6 +1,45 @@
-<div class="col-card">
-    <div class="card card-small">
-        <div class="card-title">{{ title }}</div>
+{# On assigne cardType uniquement aux cards upper_range et buy_limit, sans modifier Cac #}
+{% set cardType = (title == 'UPPER RANGE') ? 'upper' : (title == 'BUY LIMIT' ? 'buy' : null) %}
+
+<div class="col-card" {% if cardType %}data-card-type="{{ cardType }}"{% endif %}>
+
+    {# Ajoute "position-relative" ici pour servir d'ancre au bouton #}
+    <div class="card card-small position-relative" {{ attributes }}> {# L'ajout de {{ attributes }} permet de propager les data-attributes #}
+
+        <div class="position-absolute d-flex align-items-center" style="top: 8px; right: 8px; gap: 2px; z-index: 10;">
+
+            {# Bouton Édition - N'apparaît que si cardType est défini (donc pas pour le CAC) #}
+            {% if cardType %}
+                <button type="button"
+                        class="btn-calc-compact rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 12px; height: 32px; padding: 0;"
+                        data-action="click->editor#open"
+                        data-value="{{ value }}"
+                        data-type="{{ cardType }}"
+                        title="Éditer">
+                    <i class="mdi mdi-pencil" style="font-size: 14px;"></i>
+                </button>
+            {% endif %}
+
+            {# Bouton Calculateur #}
+            {% if canCalculate %}
+                <button type="button"
+                        class="btn-calc-compact rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 32px; height: 32px; padding: 0;"
+                        data-bs-toggle="offcanvas"
+                        data-bs-target="#calculatorOffcanvas"
+                        data-action="click->calculator#prepare"
+                        data-value="{{ value }}"
+                        data-mode="{{ title == 'UPPER RANGE' ? 'next-cycle' : 'normal' }}"
+                        title="Calculer">
+                    <i class="mdi mdi-calculator" style="font-size: 14px;"></i>
+                </button>
+            {% endif %}
+        </div>
+
+        <div class="card-title">
+            {{ title }}
+        </div>
         <div class="card-text card-metrics">
             <span class="h6 fw-bold text-white">{{ this.formattedValue }}</span>
             {% if trend == 'up' %}

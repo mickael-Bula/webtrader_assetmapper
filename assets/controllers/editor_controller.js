@@ -7,13 +7,14 @@ import {Offcanvas} from 'bootstrap';
  * @property {HTMLInputElement} mainLabelTarget
  * @property {HTMLInputElement} linkedLabelTarget
  * @property {HTMLInputElement} linkedInputTarget
+ * @property {HTMLInputElement} explanationTarget
  * @property {boolean} hasMainInputTarget
  * @property {string} userSpreadValue
  */
 //noinspection JSUnusedGlobalSymbols
 export default class extends Controller {
     static values = { userSpread: Number };
-    static targets = ["mainInput", "spreadInput", "linkedInput", "mainLabel", "linkedLabel"];
+    static targets = ["mainInput", "spreadInput", "linkedInput", "mainLabel", "linkedLabel", "explanation"];
 
     connect() {
         // On récupère l'instance de l'offcanvas une seule fois
@@ -49,10 +50,34 @@ export default class extends Controller {
         // Calcul initial pour le preview dans le drawer
         this.calculatePreview();
 
+        // Calcul du facteur total (Spread * 3)
+        const val = parseFloat(this.mainInputTarget.value);
+        const spread = this.userSpreadValue;
+        const factor = 3 * (spread / 100);
+        const totalFactorPercentage = (factor * 100).toFixed(0); // Ex: 6 %
+
+        let result;
+
+        if (this.activeType === 'upper') {
+            result = Math.round(val * (1 - factor));
+        } else {
+            result = Math.round(val / (1 - factor));
+        }
+
+        // Calcul de l'écart réel (en pourcentage) entre la valeur initiale et le résultat
+        // Math.abs garantit un nombre positif quel que soit le sens
+        const actualDiff = Math.abs(((result - val) / val) * 100);
+
+        // Mise à jour du lien
+        this.linkedInputTarget.value = result.toString();
+
+        // Mise à jour du message avec l'écart réel calculé
+        this.updateExplanation(actualDiff);
+
         this.offcanvas.show();
     }
 
-    // Calcul en temps réel dans le drawer (optionnel mais recommandé pour l'UX)
+    // Calcul en temps réel dans le drawer (optionnel, mais recommandé pour l'UX)
     calculatePreview() {
         // Récupération sécurisée
         const val = parseFloat(this.mainInputTarget.value);
@@ -90,7 +115,9 @@ export default class extends Controller {
 
     updateCardDisplay(type, value) {
         const card = document.querySelector(`[data-card-type="${type}"]`);
-        if (!card) return;
+        if (!card) {
+            return;
+        }
 
         const display = card.querySelector('.h6');
         if (display) {
@@ -101,5 +128,18 @@ export default class extends Controller {
         if (btn) {
             btn.dataset.value = value;
         }
+    }
+
+    /**
+     * Met à jour le message explicatif dynamiquement
+     */
+    updateExplanation(actualDiff) {
+        const direction = (this.activeType === 'upper')
+            ? "de Upper Range vers Buy Limit"
+            : "de Buy Limit vers Upper Range";
+
+        this.explanationTarget.textContent =
+            `L'écart appliqué ${direction} représente une variation de ${actualDiff.toFixed(2)} % ` +
+            `pour un spread utilisateur de ${this.userSpreadValue} %.`;
     }
 }

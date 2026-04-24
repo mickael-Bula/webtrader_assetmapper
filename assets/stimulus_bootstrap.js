@@ -1,5 +1,6 @@
 import { startStimulusApp } from '@symfony/stimulus-bundle';
 
-const app = startStimulusApp();
-// register any custom, 3rd party controllers here
-// app.register('some_controller_name', SomeImportedController);
+// Exporte la variable app pour activer l'extension Stimulus Dev Tools.
+export const app = startStimulusApp();
+
+window.Stimulus = app;

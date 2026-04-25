@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use Doctrine\DBAL\Exception;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -17,6 +18,15 @@ final class StrategyDescriptionController extends AbstractController
     #[Route('/strategy/description', name: 'app_strategy_description')]
     public function index(CacDailyRepository $cacRepo, LvcDailyRepository $lvcRepo): Response
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if (!$user) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $positionSize = $user->getPositionSize();
+
         $lastCacPrice = $cacRepo->findLast()?->getClose();
 
         $lastLvcPrice = $lvcRepo->findLast()?->getClose();
@@ -24,6 +34,7 @@ final class StrategyDescriptionController extends AbstractController
         return $this->render('strategy_description/index.html.twig', [
             'lastCacPrice' => $lastCacPrice,
             'lastLvcPrice' => $lastLvcPrice,
+            'positionSize' => $positionSize,
         ]);
     }
 }

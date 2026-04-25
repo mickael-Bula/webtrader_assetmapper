@@ -203,22 +203,26 @@
                     <div class="row g-4">
                         {% set phases = [
                             {
-                                'title': 'Investissement ',
+                                'title': 'Investissement',
+                                'subtitle': 'Pas de revente',
                                 'description': 'Investir 25 % du portefeuille sur repli en suivant la stratégie décrite. Les lignes sont conservées sans limite de temps.',
                                 'color': '#0dcaf0', 'val': 25
                             },
                             {
                                 'title': 'Accumulation',
+                                'subtitle': 'Revente de la quantité',
                                 'description': 'Achat identique à la phase 1, cible de revente à +10 % CAC (+20 % LVC). On revend uniquement le capital, les plus-values restent investies.',
                                 'color': '#198754', 'val': 25
                             },
                             {
                                 'title': 'Récupération',
+                                'subtitle': 'Revente du capital investi sur la ligne',
                                 'description': 'Modèle d\'investissement précédent, mais à la revente c\'est toute la ligne qui est soldée, plus-values comprises.',
                                 'color': '#ffc107', 'val': 25
                             },
                             {
                                 'title': 'Allègement',
+                                'subtitle': 'Revente pour revenir sous 75 % du PF',
                                 'description': 'Procédure d\'achat identique, mais revente agressive : dès que la cible est atteinte, on vend pour ramener l\'investissement sous 75 % ou on solde toute la ligne.',
                                 'color': '#dc3545', 'val': 25
                             }
@@ -273,6 +277,9 @@
                                     <div class="card bg-dark border-secondary bg-opacity-25 h-100">
                                         <div class="card-body">
                                             <h6 class="text-info fw-bold mb-2">{{ phase.title }}</h6>
+                                            <p class="small text-info mb-1">
+                                                {{ phase.subtitle }}
+                                            </p>
                                             <p class="small text-secondary m-0">
                                                 {{ phase.description }}
                                             </p>
@@ -290,7 +297,8 @@
                         class="glass-effect rounded-4 p-4 p-md-5 border border-secondary border-opacity-25 shadow-sm"
                         data-controller="calculator"
                         data-calculator-last-cac-value="{{ lastCacPrice|default(0) }}"
-                        data-calculator-last-lvc-value="{{ lastLvcPrice|default(0) }}">
+                        data-calculator-last-lvc-value="{{ lastLvcPrice|default(0) }}"
+                        data-calculator-position-size-value="{{ positionSize|default(0) }}">
 
                         <div class="row g-4">
                             {# COLONNE DE GAUCHE : CONTRÔLES #}
@@ -353,7 +361,7 @@
                                                 <thead>
                                                 <tr class="text-muted small border-bottom border-secondary">
                                                     <th class="text-start ps-3" style="width: 15%;">RANG</th>
-                                                    <th class="text-center" style="width: 25%;">STATUT</th>
+                                                    <th class="text-center" style="width: 25%;">QUANTITÉ</th>
                                                     <th class="text-center" style="width: 30%;">ACHAT</th>
                                                     <th class="text-end pe-3" style="width: 30%;">REVENTE</th>
                                                 </tr>

@@ -11,11 +11,29 @@ import { Controller } from '@hotwired/stimulus';
  * @property {String} titleTarget
  * @property {String} inputLabelTarget
  * @property {Number} positionSizeValue
+ * @property {Number} leverageValue
  */
 // noinspection JSUnusedGlobalSymbols
 export default class extends Controller {
-    static targets = ["entrypoint", "spread", "simulationBody", "nextCycle", "cycleLabel", "title", "inputLabel"];
-    static values = { lastCac: Number, lastLvc: Number, positionSize: Number };
+    static targets = [
+        "entrypoint",
+        "spread",
+        "simulationBody",
+        "nextCycle",
+        "cycleLabel",
+        "title",
+        "inputLabel"
+    ];
+
+    static values = {
+        lastCac: Number,
+        lastLvc: Number,
+        positionSize: Number,
+        leverage: {
+            type: Number,
+            default: 2
+        }
+    };
 
     connect() {
         this.calculate();
@@ -64,12 +82,10 @@ export default class extends Controller {
             const cacExit = Math.round(cacTarget * 1.10);
 
             // Calcul LVC avec levier 2
-            const varCac = (cacTarget / startCac) - 1;
-            const variationLvc = varCac * 2;
-            const lvcPrice = this.lastLvcValue * (1 + variationLvc);
+            const variationCac = (cacTarget - this.lastCacValue) / this.lastCacValue;
+            const lvcPrice = this.lastLvcValue * (1 + (variationCac * this.leverageValue));
 
-            // Calcul de la quantité de LVC
-            // On divise la positionSize par le prix du LVC, avec une sécurité pour éviter la division par zéro
+            // Calcul de la quantité de LVC. On divise la positionSize par le prix du LVC, avec une sécurité pour éviter la division par zéro
             const quantity = (lvcPrice > 0) ? Math.round(this.positionSizeValue / lvcPrice) : 0;
 
             html += `

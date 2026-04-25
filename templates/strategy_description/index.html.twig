@@ -110,7 +110,8 @@
                                 <span class="small text-secondary">Seuil d'achat (BuyLimit) non touché.</span>
                             </div>
                             <div class="d-flex align-items-center gap-3 p-2 rounded bg-dark bg-opacity-25">
-                                <span class="badge bg-primary text-uppercase d-inline-block" style="width: 110px;">En cours</span>
+                            <span class="badge bg-primary text-uppercase d-inline-block"
+                                  style="width: 110px;">En cours</span>
                                 <span class="small text-secondary">Achat actif, objectif de revente surveillé.</span>
                             </div>
                             <div class="d-flex align-items-center gap-3 p-2 rounded bg-dark bg-opacity-25">
@@ -225,15 +226,38 @@
 
                         {# 1. La Ligne des Graphiques #}
                         <div class="row g-4 mb-5">
-                            {% for phase in phases %}
+                            {# On définit votre couleur de base unique #}
+                            {% set base_blue = '#0dcaf0' %}
+
+                            {% for i, phase in phases %}
+                                {% set values = [] %}
+                                {% set colors = [] %}
+
+                                {# On ajoute les segments (phases passées + active) #}
+                                {% for j in 0..i %}
+                                    {% set values = values|merge([25]) %}
+
+                                    {# Si c'est la phase en cours (j==i), on prend la couleur pleine, sinon on ajoute '66' pour l'opacité #}
+                                    {% set color = (j == i) ? base_blue : base_blue ~ '66' %}
+                                    {% set colors = colors|merge([color]) %}
+                                {% endfor %}
+
+                                {# On ajoute le segment vide restant pour compléter le cercle #}
+                                {% set remaining = 100 - ((i + 1) * 25) %}
+                                {% if remaining > 0 %}
+                                    {% set values = values|merge([remaining]) %}
+                                    {% set colors = colors|merge(['#334155']) %}
+                                {% endif %}
+
                                 <div class="col-md-3 col-sm-6">
-                                    <div class="bg-webtrader-card p-3 rounded-4 h-100 border border-secondary border-opacity-10 text-center">
+                                    <div
+                                        class="bg-webtrader-card p-3 rounded-4 h-100 border border-secondary border-opacity-10 text-center">
                                         <div style="height: 120px; position: relative;">
                                             <canvas
                                                 data-controller="doughnut"
-                                                data-doughnut-color-value="{{ phase.color }}"
-                                                data-doughnut-percentage-value="{{ phase.val }}"
-                                                data-doughnut-rotation-value="{{ loop.index0 * 90 }}">
+                                                data-doughnut-values-value="{{ values|json_encode }}"
+                                                data-doughnut-colors-value="{{ colors|json_encode }}"
+                                                data-doughnut-rotation-value="0">
                                             </canvas>
                                         </div>
                                         <h6 class="text-white mt-3 mb-0">{{ phase.title }}</h6>
@@ -278,7 +302,8 @@
                                     <div>
                                         <h2 class="h3 text-white mb-1">Simulateur de Cycle</h2>
                                         <p class="text-webtrader-muted small">
-                                            Saisissez un seuil d'entrée et un spread pour visualiser l'étagement de vos positions
+                                            Saisissez un seuil d'entrée et un spread pour visualiser l'étagement de vos
+                                            positions
                                         </p>
                                     </div>
                                 </div>
@@ -286,9 +311,11 @@
                                 <div
                                     class="p-4 bg-black bg-opacity-50 rounded-4 border border-secondary border-opacity-25">
                                     <div class="mb-3">
-                                        <label class="form-label text-webtrader-muted small text-uppercase fw-bold">Seuil
+                                        <label for="entrypoint"
+                                               class="form-label text-webtrader-muted small text-uppercase fw-bold">Seuil
                                             d'entrée</label>
-                                        <input type="number"
+                                        <input id="entrypoint"
+                                               type="number"
                                                data-calculator-target="entrypoint"
                                                data-action="input->calculator#calculate"
                                                value="{{ lastCacPrice|default(0)|round }}"
@@ -296,10 +323,12 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label text-webtrader-muted small text-uppercase fw-bold">
+                                        <label for="spread"
+                                               class="form-label text-webtrader-muted small text-uppercase fw-bold">
                                             Spread par palier
                                         </label>
-                                        <select data-calculator-target="spread"
+                                        <select id="spread"
+                                                data-calculator-target="spread"
                                                 data-action="change->calculator#calculate"
                                                 class="form-select bg-dark text-white border-secondary">
                                             <option value="0.01">1 %</option>
@@ -348,6 +377,7 @@
                             </div>
                         </div>
                     </section>
+                </div>
 
                 {# SECTION : PERFORMANCE #}
                 <div class="col-12">

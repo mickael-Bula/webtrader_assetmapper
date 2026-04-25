@@ -5,21 +5,27 @@ import { Chart, DoughnutController, ArcElement, Tooltip, Legend } from 'chart.js
 Chart.register(DoughnutController, ArcElement, Tooltip, Legend);
 
 /**
- * @property {String} colorValue
+ * @property {Array} colorsValue
+ * @property {Array} valuesValue
  * @property {Number} percentageValue
  * @property {Number} rotationValue
+ * @property {Chart} chart
  */
 // noinspection JSUnusedGlobalSymbols
 export default class extends Controller {
-    static values = { color: String, percentage: Number, rotation: Number };
+    static values = {
+        values: Array,  // ex: [25, 25, 0, 0, 50]
+        colors: Array,  // ex: ["#0dcaf0", "#198754", "#ffc107", "#dc3545", "#334155"]
+        rotation: Number
+    };
 
     connect() {
         new Chart(this.element, {
             type: 'doughnut',
             data: {
                 datasets: [{
-                    data: [this.percentageValue, 100 - this.percentageValue],
-                    backgroundColor: [this.colorValue, '#334155'],
+                    data: this.valuesValue,
+                    backgroundColor: this.colorsValue,
                     borderWidth: 0,
                     circumference: 360,
                     cutout: '75%',
@@ -40,5 +46,11 @@ export default class extends Controller {
                 }
             }
         });
+    }
+
+    disconnect() {
+        if (this.chart) {
+            this.chart.destroy();
+        }
     }
 }

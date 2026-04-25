@@ -186,6 +186,80 @@
                     </div>
                 </div>
 
+                {# SECTION : MONEY MANAGEMENT #}
+                <div class="col-12 mt-5">
+                    <div class="d-flex align-items-center mb-4">
+                        <h3 class="h4 text-white mb-0">
+                            <i class="mdi mdi-chart-donut me-2 text-info"></i> Répartition du Money Management
+                        </h3>
+                        <hr class="flex-grow-1 ms-3 border-secondary">
+                    </div>
+
+                    <p class="text-white mb-4">
+                        Le <strong>Money Management</strong> se déroule en quatre phases successives.
+                    </p>
+
+                    <div class="row g-4">
+                        {% set phases = [
+                            {
+                                'title': 'Investissement ',
+                                'description': 'Investir 25 % du portefeuille sur repli en suivant la stratégie décrite. Les lignes sont conservées sans limite de temps.',
+                                'color': '#0dcaf0', 'val': 25
+                            },
+                            {
+                                'title': 'Accumulation',
+                                'description': 'Achat identique à la phase 1, cible de revente à +10 % CAC (+20 % LVC). On revend uniquement le capital, les plus-values restent investies.',
+                                'color': '#198754', 'val': 25
+                            },
+                            {
+                                'title': 'Récupération',
+                                'description': 'Modèle d\'investissement précédent, mais à la revente c\'est toute la ligne qui est soldée, plus-values comprises.',
+                                'color': '#ffc107', 'val': 25
+                            },
+                            {
+                                'title': 'Allègement',
+                                'description': 'Procédure d\'achat identique, mais revente agressive : dès que la cible est atteinte, on vend pour ramener l\'investissement sous 75 % ou on solde toute la ligne.',
+                                'color': '#dc3545', 'val': 25
+                            }
+                        ] %}
+
+                        {# 1. La Ligne des Graphiques #}
+                        <div class="row g-4 mb-5">
+                            {% for phase in phases %}
+                                <div class="col-md-3 col-sm-6">
+                                    <div class="bg-webtrader-card p-3 rounded-4 h-100 border border-secondary border-opacity-10 text-center">
+                                        <div style="height: 120px; position: relative;">
+                                            <canvas
+                                                data-controller="doughnut"
+                                                data-doughnut-color-value="{{ phase.color }}"
+                                                data-doughnut-percentage-value="{{ phase.val }}"
+                                                data-doughnut-rotation-value="{{ loop.index0 * 90 }}">
+                                            </canvas>
+                                        </div>
+                                        <h6 class="text-white mt-3 mb-0">{{ phase.title }}</h6>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        {# 2. La Ligne des Descriptions (sous les cards) #}
+                        <div class="row g-4">
+                            {% for phase in phases %}
+                                <div class="col-md-3 col-sm-6">
+                                    <div class="card bg-dark border-secondary bg-opacity-25 h-100">
+                                        <div class="card-body">
+                                            <h6 class="text-info fw-bold mb-2">{{ phase.title }}</h6>
+                                            <p class="small text-secondary m-0">
+                                                {{ phase.description }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
                 {# SECTION : SIMULATEUR #}
                 <div class="col-12">
                     <section

@@ -5,21 +5,23 @@
 {% block body %}
     <div class="bg-webtrader-dark text-light min-vh-100 pb-5">
 
-        <header class="hero-gradient py-5 mb-5 border-bottom border-secondary border-opacity-25 relative">
+        <header class="hero-gradient py-5 mb-4 border-bottom border-secondary border-opacity-25 relative">
             <div class="container py-4">
                 <div class="row">
-                    <div class="col-lg-8">
-                        <div
-                            class="d-inline-flex align-items-center justify-content-center p-3 bg-success bg-opacity-10 border border-green-web rounded-4 mb-4">
-                            <svg class="text-success" width="32" height="32" fill="none" stroke="currentColor"
-                                 viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
-                            </svg>
+                    <div class="col-lg-12">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div
+                                class="d-inline-flex align-items-center justify-content-center p-3 bg-success bg-opacity-10 border border-green-web rounded-4 mb-4">
+                                <svg class="text-success" width="32" height="32" fill="none" stroke="currentColor"
+                                     viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                                </svg>
+                            </div>
+                            <h1 class="display-4 fw-bold text-white">
+                                Description de la <span class="text-green-web">Stratégie</span>
+                            </h1>
                         </div>
-                        <h1 class="display-4 fw-bold text-white">
-                            Description de la <span class="text-green-web">Stratégie</span>
-                        </h1>
                         <p class="lead text-secondary mt-3">
                             Optimisation des entrées sur repli via le tracker LVC (levier x2) et une gestion rigoureuse
                             des plus hauts locaux.
@@ -110,7 +112,8 @@
                                 <span class="small text-secondary">Seuil d'achat (BuyLimit) non touché.</span>
                             </div>
                             <div class="d-flex align-items-center gap-3 p-2 rounded bg-dark bg-opacity-25">
-                                <span class="badge bg-primary text-uppercase d-inline-block" style="width: 110px;">En cours</span>
+                            <span class="badge bg-primary text-uppercase d-inline-block"
+                                  style="width: 110px;">En cours</span>
                                 <span class="small text-secondary">Achat actif, objectif de revente surveillé.</span>
                             </div>
                             <div class="d-flex align-items-center gap-3 p-2 rounded bg-dark bg-opacity-25">
@@ -186,13 +189,118 @@
                     </div>
                 </div>
 
+                {# SECTION : MONEY MANAGEMENT #}
+                <div class="col-12 mt-5">
+                    <div class="d-flex align-items-center mb-4">
+                        <h3 class="h4 text-white mb-0">
+                            <i class="mdi mdi-chart-donut me-2 text-info"></i> Répartition du Money Management
+                        </h3>
+                        <hr class="flex-grow-1 ms-3 border-secondary">
+                    </div>
+
+                    <p class="text-white mb-4">
+                        Le <strong>Money Management</strong> se déroule en quatre phases successives.
+                    </p>
+
+                    <div class="row g-4">
+                        {% set phases = [
+                            {
+                                'title': 'Investissement',
+                                'subtitle': 'Pas de revente',
+                                'description': 'Investir 25 % du portefeuille sur repli en suivant la stratégie décrite. Les lignes sont conservées sans limite de temps.',
+                                'color': '#0dcaf0', 'val': 25
+                            },
+                            {
+                                'title': 'Accumulation',
+                                'subtitle': 'Revente de la quantité',
+                                'description': 'Achat identique à la phase 1, cible de revente à +10 % CAC (+20 % LVC). On revend uniquement le capital, les plus-values restent investies.',
+                                'color': '#198754', 'val': 25
+                            },
+                            {
+                                'title': 'Récupération',
+                                'subtitle': 'Revente du capital investi sur la ligne',
+                                'description': 'Modèle d\'investissement précédent, mais à la revente c\'est toute la ligne qui est soldée, plus-values comprises.',
+                                'color': '#ffc107', 'val': 25
+                            },
+                            {
+                                'title': 'Allègement',
+                                'subtitle': 'Revente pour revenir sous 75 % du PF',
+                                'description': 'Procédure d\'achat identique, mais revente agressive : dès que la cible est atteinte, on vend pour ramener l\'investissement sous 75 % ou on solde toute la ligne.',
+                                'color': '#dc3545', 'val': 25
+                            }
+                        ] %}
+
+                        {# 1. La Ligne des Graphiques #}
+                        <div class="row g-4 mb-5">
+                            {# On définit votre couleur de base unique #}
+                            {% set base_blue = '#0dcaf0' %}
+
+                            {% for i, phase in phases %}
+                                {% set values = [] %}
+                                {% set colors = [] %}
+
+                                {# On ajoute les segments (phases passées + active) #}
+                                {% for j in 0..i %}
+                                    {% set values = values|merge([25]) %}
+
+                                    {# Si c'est la phase en cours (j==i), on prend la couleur pleine, sinon on ajoute '66' pour l'opacité #}
+                                    {% set color = (j == i) ? base_blue : base_blue ~ '66' %}
+                                    {% set colors = colors|merge([color]) %}
+                                {% endfor %}
+
+                                {# On ajoute le segment vide restant pour compléter le cercle #}
+                                {% set remaining = 100 - ((i + 1) * 25) %}
+                                {% if remaining > 0 %}
+                                    {% set values = values|merge([remaining]) %}
+                                    {% set colors = colors|merge(['#334155']) %}
+                                {% endif %}
+
+                                <div class="col-md-3 col-sm-6">
+                                    <div
+                                        class="bg-webtrader-card p-3 rounded-4 h-100 border border-secondary border-opacity-10 text-center">
+                                        <div style="height: 120px; position: relative;">
+                                            <canvas
+                                                data-controller="doughnut"
+                                                data-doughnut-values-value="{{ values|json_encode }}"
+                                                data-doughnut-colors-value="{{ colors|json_encode }}"
+                                                data-doughnut-rotation-value="0">
+                                            </canvas>
+                                        </div>
+                                        <h6 class="text-white mt-3 mb-0">{{ phase.title }}</h6>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        {# 2. La Ligne des Descriptions (sous les cards) #}
+                        <div class="row g-4">
+                            {% for phase in phases %}
+                                <div class="col-md-3 col-sm-6">
+                                    <div class="card bg-dark border-secondary bg-opacity-25 h-100">
+                                        <div class="card-body">
+                                            <h6 class="text-info fw-bold mb-2">{{ phase.title }}</h6>
+                                            <p class="small text-info mb-1">
+                                                {{ phase.subtitle }}
+                                            </p>
+                                            <p class="small text-secondary m-0">
+                                                {{ phase.description }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
                 {# SECTION : SIMULATEUR #}
                 <div class="col-12">
                     <section
                         class="glass-effect rounded-4 p-4 p-md-5 border border-secondary border-opacity-25 shadow-sm"
                         data-controller="calculator"
                         data-calculator-last-cac-value="{{ lastCacPrice|default(0) }}"
-                        data-calculator-last-lvc-value="{{ lastLvcPrice|default(0) }}">
+                        data-calculator-last-lvc-value="{{ lastLvcPrice|default(0) }}"
+                        data-calculator-position-size-value="{{ positionSize|default(0) }}">
 
                         <div class="row g-4">
                             {# COLONNE DE GAUCHE : CONTRÔLES #}
@@ -204,7 +312,8 @@
                                     <div>
                                         <h2 class="h3 text-white mb-1">Simulateur de Cycle</h2>
                                         <p class="text-webtrader-muted small">
-                                            Saisissez un seuil d'entrée et un spread pour visualiser l'étagement de vos positions
+                                            Saisissez un seuil d'entrée et un spread pour visualiser l'étagement de vos
+                                            positions
                                         </p>
                                     </div>
                                 </div>
@@ -212,9 +321,11 @@
                                 <div
                                     class="p-4 bg-black bg-opacity-50 rounded-4 border border-secondary border-opacity-25">
                                     <div class="mb-3">
-                                        <label class="form-label text-webtrader-muted small text-uppercase fw-bold">Seuil
+                                        <label for="entrypoint"
+                                               class="form-label text-webtrader-muted small text-uppercase fw-bold">Seuil
                                             d'entrée</label>
-                                        <input type="number"
+                                        <input id="entrypoint"
+                                               type="number"
                                                data-calculator-target="entrypoint"
                                                data-action="input->calculator#calculate"
                                                value="{{ lastCacPrice|default(0)|round }}"
@@ -222,10 +333,12 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label text-webtrader-muted small text-uppercase fw-bold">
+                                        <label for="spread"
+                                               class="form-label text-webtrader-muted small text-uppercase fw-bold">
                                             Spread par palier
                                         </label>
-                                        <select data-calculator-target="spread"
+                                        <select id="spread"
+                                                data-calculator-target="spread"
                                                 data-action="change->calculator#calculate"
                                                 class="form-select bg-dark text-white border-secondary">
                                             <option value="0.01">1 %</option>
@@ -250,7 +363,7 @@
                                                 <thead>
                                                 <tr class="text-muted small border-bottom border-secondary">
                                                     <th class="text-start ps-3" style="width: 15%;">RANG</th>
-                                                    <th class="text-center" style="width: 25%;">STATUT</th>
+                                                    <th class="text-center" style="width: 25%;">QUANTITÉ</th>
                                                     <th class="text-center" style="width: 30%;">ACHAT</th>
                                                     <th class="text-end pe-3" style="width: 30%;">REVENTE</th>
                                                 </tr>
@@ -274,6 +387,7 @@
                             </div>
                         </div>
                     </section>
+                </div>
 
                 {# SECTION : PERFORMANCE #}
                 <div class="col-12">

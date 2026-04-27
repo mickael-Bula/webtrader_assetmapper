@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\LogOrigin;
 use App\Repository\LogEntryRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -20,7 +21,10 @@ class LogEntry
     private ?string $actionType = null;
 
     #[ORM\Column(nullable: true)]
-    private ?\DateTimeImmutable $createdAt = null;
+    private ?\DateTimeImmutable $createdAt;
+
+    #[ORM\Column(type: 'string', length: 20, enumType: LogOrigin::class)]
+    private LogOrigin $origin = LogOrigin::WORKFLOW;
 
     public function __construct() {
         $this->createdAt = new \DateTimeImmutable();
@@ -63,6 +67,18 @@ class LogEntry
     public function setCreatedAt(?\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function getOrigin(): LogOrigin
+    {
+        return $this->origin;
+    }
+
+    public function setOrigin(LogOrigin $origin): static
+    {
+        $this->origin = $origin;
 
         return $this;
     }

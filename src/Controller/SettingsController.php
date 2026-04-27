@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Enum\LogOrigin;
 use App\Entity\Entrypoint;
+use App\Service\LogManager;
 use App\Form\EntrypointType;
 use App\Enum\PositionStatus;
 use Doctrine\DBAL\Exception;
-use Psr\Log\LoggerInterface;
 use App\Service\PositionManager;
 use App\Service\StrategyManager;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,6 +23,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 final class SettingsController extends AbstractController
 {
+    public function __construct(private readonly LogManager $logManager) {}
+
     /**
      * @throws Exception
      */
@@ -32,8 +35,7 @@ final class SettingsController extends AbstractController
         CacDailyRepository     $cacRepo,
         LvcDailyRepository     $lvcRepo,
         PositionManager        $positionManager,
-        StrategyManager        $strategyManager,
-        LoggerInterface        $tradingLogger
+        StrategyManager        $strategyManager
     ): Response
     {
         /** @var User $user */
@@ -61,6 +63,17 @@ final class SettingsController extends AbstractController
             $user->setPositionSize((string)$form->get('positionSize')->getData());
             $user->setSpread($form->get('spread')->getData());
 
+            // Log des modifications de configuration
+            $this->logManager->log(
+                sprintf('Paramètres mis à jour : Portefeuille %.2f€, Size %.2f€, Spread %.2f',
+                        $user->getTotalPortfolio(),
+                        $user->getPositionSize(),
+                        $user->getSpread()
+                ),
+                'update',
+                LogOrigin::USER
+            );
+
             // 2. On lie l'entrypoint à son user
             $entrypoint->setUser($user);
 
@@ -81,12 +94,14 @@ final class SettingsController extends AbstractController
 
                 return $this->redirectToRoute('app_settings');
             }
-            // TODO : afficher le message uniquement si des positions ont été supprimées
             // 5. On s'assure de ne pas dupliquer les positions pour ne pas être surexposé.
-            $message = $positionManager->deleteFormerWaitingPositions($user);
+            $deleteMessage = $positionManager->deleteFormerWaitingPositions($user);
             // TODO : Voir s'il est possible d'afficher les flash messages successivement
             // On trace l'information.
-            $tradingLogger->info(sprintf('Entrypoint %d : %s', $entrypoint->getId(), $message));
+            $message = sprintf('Entrypoint %d : %s', $entrypoint->getId(), $deleteMessage);
+            if (str_contains($deleteMessage, 'Les anciens ordres en attente ont été supprimés.')) {
+                $this->logManager->log($message, 'delete');
+            }
             $this->addFlash('success', $message);
 
             // 6. Lie l'utilisateur et initialise
@@ -106,9 +121,15 @@ final class SettingsController extends AbstractController
             $em->flush();
 
             // 8. On trace l'initialisation des positions en attente dans le journal.
-            $message = 'Stratégie activée. Trois positions en attente créées.';
-            $tradingLogger->info(sprintf('Entrypoint %d : %s', $entrypoint->getId(), $message));
-            $this->addFlash('success', $message);
+            $strategyMessage = sprintf(
+                'Stratégie activée (Entrypoint: %.2f). Initialisation de 3 positions.',
+                $entrypoint->getEntrypoint()
+            );
+            $this->logManager->log(
+                $strategyMessage,
+                'create'
+            );
+            $this->addFlash('success', $strategyMessage);
 
             return $this->redirectToRoute('app_home');
         }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Enum\LogOrigin;
 use App\Entity\Position;
 use App\Form\PositionType;
 use App\Entity\Entrypoint;
@@ -94,11 +95,11 @@ class PositionController extends AbstractController
         $entityManager->persist($position);
         $entityManager->flush();
 
-        // TODO : ajouter une propriété pour distinguer entre les actions automatiques et manuelles
         // Ajout du log de création
         $this->logManager->log(
             "Position #{$position->getRank()} de l'entrypoint {$position->getEntrypoint()?->getEntrypoint()} créée à {$buyPriceCac} pts",
-            'create'
+            'create',
+            LogOrigin::USER
         );
 
         $this->addFlash('success', 'Position enregistrée avec succès.');
@@ -123,7 +124,8 @@ class PositionController extends AbstractController
                 // Ajout du log de modification
                 $this->logManager->log(
                     "Position #{$position->getRank()} de l'entrypoint {$position->getEntrypoint()?->getEntrypoint()} modifiée à {$position->getBuyPrice()} pts",
-                    'edit'
+                    'edit',
+                    LogOrigin::USER
                 );
 
                 $this->addFlash('success', 'La position a été modifiée avec succès.');
@@ -181,7 +183,8 @@ class PositionController extends AbstractController
         // Ajout du log de suppression
         $this->logManager->log(
             "Position #{$position->getRank()} de l'entrypoint {$position->getEntrypoint()?->getEntrypoint()} supprimée",
-            'delete'
+            'delete',
+            LogOrigin::USER
         );
 
         if ($request->isXmlHttpRequest() || $request->headers->get('X-Requested-With') === 'XMLHttpRequest') {

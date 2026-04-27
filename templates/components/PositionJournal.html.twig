@@ -1,0 +1,20 @@
+<div data-controller="journal"
+     id="position-journal"
+     class="card bg-dark border-secondary p-3">
+    <h6 class="text-white small fw-bold mb-3">
+        <i class="mdi mdi-history me-1"></i> Journal des événements
+    </h6>
+
+    {# Mapping pour les classes CSS correspondant au journal_controller.js #}
+    {% set styles = {'create': 'text-success', 'update': 'text-info', 'delete': 'text-danger', 'default': 'text-muted'} %}
+
+    {# Liste des entrées #}
+    <ul class="list-unstyled mb-0" data-journal-target="list">
+        {% for log in logs %}
+            {% set color = styles[log.actionType] ?? styles['default'] %}
+            <li class="small {{ color }} mb-1 border-bottom border-secondary border-opacity-25 pb-1">
+                [{{ log.createdAt|date('H:i:s') }}] {{ log.message }}
+            </li>
+        {% endfor %}
+    </ul>
+</div>

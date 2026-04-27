@@ -19,7 +19,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 final class HomeController extends AbstractController
 {
-    public function __construct(private readonly LoggerInterface $tradingLogger, private readonly StrategyManager $strategyManager)
+    public function __construct(
+        private readonly LoggerInterface $tradingLogger,
+        private readonly StrategyManager $strategyManager
+    )
     {
     }
 

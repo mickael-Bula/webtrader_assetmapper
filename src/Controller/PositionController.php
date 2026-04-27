@@ -8,17 +8,22 @@ use App\Entity\User;
 use App\Entity\Position;
 use App\Form\PositionType;
 use App\Entity\Entrypoint;
+use App\Service\LogManager;
 use App\Enum\PositionStatus;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class PositionController extends AbstractController
 {
+    public function __construct(private readonly LogManager $logManager)
+    {
+    }
+
     /**
      * @throws \Exception
      */
@@ -89,6 +94,13 @@ class PositionController extends AbstractController
         $entityManager->persist($position);
         $entityManager->flush();
 
+        // TODO : ajouter une propriété pour distinguer entre les actions automatiques et manuelles
+        // Ajout du log de création
+        $this->logManager->log(
+            "Position #{$position->getRank()} de l'entrypoint {$position->getEntrypoint()?->getEntrypoint()} créée à {$buyPriceCac} pts",
+            'create'
+        );
+
         $this->addFlash('success', 'Position enregistrée avec succès.');
         return $this->redirectToRoute('app_home');
     }
@@ -104,23 +116,30 @@ class PositionController extends AbstractController
             // Validation métier manuelle avant le flush
             if ($position->getLvcTargetPrice() <= $position->getLvcBuyPrice()) {
                 $this->addFlash('error', 'L’objectif LVC doit être supérieur au prix d’achat.');
-                // En cas d'erreur AJAX, on pourrait renvoyer une erreur 400
+                // En cas d'erreur AJAX, on pourrait renvoyer une erreur '400'
             } else {
                 $entityManager->flush();
+
+                // Ajout du log de modification
+                $this->logManager->log(
+                    "Position #{$position->getRank()} de l'entrypoint {$position->getEntrypoint()?->getEntrypoint()} modifiée à {$position->getBuyPrice()} pts",
+                    'edit'
+                );
+
                 $this->addFlash('success', 'La position a été modifiée avec succès.');
             }
 
             if ($request->isXmlHttpRequest() || $request->headers->get('X-Requested-With') === 'XMLHttpRequest') {
                 return new JsonResponse([
-                    'position' => [
-                        'id' => $position->getId(),
-                        'quantity' => $position->getQuantity(),
-                        'lvcBuyPrice' => $position->getLvcBuyPrice(),
-                        'buyPrice' => $position->getBuyPrice(),
-                        'lvcTargetPrice' => $position->getLvcTargetPrice(),
-                        'targetPrice' => $position->getTargetPrice(),
-                    ],
-                ]);
+                                            'position' => [
+                                                'id' => $position->getId(),
+                                                'quantity' => $position->getQuantity(),
+                                                'lvcBuyPrice' => $position->getLvcBuyPrice(),
+                                                'buyPrice' => $position->getBuyPrice(),
+                                                'lvcTargetPrice' => $position->getLvcTargetPrice(),
+                                                'targetPrice' => $position->getTargetPrice(),
+                                            ],
+                                        ]);
             }
 
             $this->addFlash('success', 'La position a été modifiée avec succès.');
@@ -145,11 +164,12 @@ class PositionController extends AbstractController
 
     #[Route('/position/{id}/delete', name: 'app_position_delete', methods: ['DELETE'])]
     public function delete(
-        Position $position,
-        Request $request,
-        EntityManagerInterface $entityManager,
+        Position                  $position,
+        Request                   $request,
+        EntityManagerInterface    $entityManager,
         CsrfTokenManagerInterface $csrfTokenManager
-    ): Response {
+    ): Response
+    {
         // Ici la gestion du token CSRF est nécessaire par l'appel de la route est fait en AJAX
         if (!$this->isCsrfTokenValid('delete_position_' . $position->getId(), $request->headers->get('X-CSRF-TOKEN'))) {
             return new JsonResponse(['error' => 'Action non autorisée'], 403);
@@ -157,6 +177,12 @@ class PositionController extends AbstractController
 
         $entityManager->remove($position);
         $entityManager->flush();
+
+        // Ajout du log de suppression
+        $this->logManager->log(
+            "Position #{$position->getRank()} de l'entrypoint {$position->getEntrypoint()?->getEntrypoint()} supprimée",
+            'delete'
+        );
 
         if ($request->isXmlHttpRequest() || $request->headers->get('X-Requested-With') === 'XMLHttpRequest') {
             return new JsonResponse(['success' => true, 'id' => $position->getId()]);

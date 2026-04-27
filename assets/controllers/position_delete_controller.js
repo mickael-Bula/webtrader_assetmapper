@@ -1,6 +1,10 @@
 import { Controller } from '@hotwired/stimulus';
 import * as bootstrap from 'bootstrap';
 
+/**
+ * @property {String} button.dataset.positionDeleteUrl
+ */
+// noinspection JSUnusedGlobalSymbols
 export default class extends Controller {
     static targets = ['button'];
 
@@ -12,7 +16,9 @@ export default class extends Controller {
     }
 
     async executeDelete(event) {
-        if (!this.deleteUrl) return;
+        if (!this.deleteUrl) {
+            return;
+        }
 
         const modal = event.target.closest('.modal');
         const confirmButton = event.target;

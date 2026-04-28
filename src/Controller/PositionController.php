@@ -11,6 +11,7 @@ use App\Form\PositionType;
 use App\Entity\Entrypoint;
 use App\Service\LogManager;
 use App\Enum\PositionStatus;
+use App\Service\PositionManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,7 +22,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class PositionController extends AbstractController
 {
-    public function __construct(private readonly LogManager $logManager)
+    public function __construct(private readonly LogManager $logManager, private readonly PositionManager $positionManager)
     {
     }
 
@@ -53,6 +54,8 @@ class PositionController extends AbstractController
         // Le statut est transmis depuis le template Twig en utilisant l'id du tableau de positions
         $statusValue = $request->request->get('status', 'waiting');
         $status = PositionStatus::tryFrom($statusValue) ?? PositionStatus::WAITING;
+
+        $meta = $this->positionManager->getLogMetadata($status);
 
         if ($targetPriceLvc <= $buyPriceLvc || $targetPriceCac <= $buyPriceCac) {
             $this->addFlash('error', 'La cible de revente doit être supérieure au prix d’achat.');
@@ -97,9 +100,11 @@ class PositionController extends AbstractController
 
         // Ajout du log de création
         $this->logManager->log(
-            "Entrypoint #{$position->getEntrypoint()?->getId()} ({$position->getEntrypoint()?->getEntrypoint()} pts) : position #{$position->getRank()} achetée à {$buyPriceCac} pts",
+            "Entrypoint #{$position->getEntrypoint()?->getId()} : "
+                ."position #{$position->getRank()} {$meta['verb']} à {$buyPriceCac} pts",
             'create',
-            LogOrigin::USER
+            LogOrigin::USER,
+            $meta['label']
         );
 
         $this->addFlash('success', 'Position enregistrée avec succès.');
@@ -113,6 +118,8 @@ class PositionController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $meta = $this->positionManager->getLogMetadata($position->getStatus());
+
             // TODO : Il faudrait ici ajouter une validation des données avant enregistrement.
             // Validation métier manuelle avant le flush
             if ($position->getLvcTargetPrice() <= $position->getLvcBuyPrice()) {
@@ -123,9 +130,11 @@ class PositionController extends AbstractController
 
                 // Ajout du log de modification
                 $this->logManager->log(
-                    "Entrypoint #{$position->getEntrypoint()?->getId()} ({$position->getEntrypoint()?->getEntrypoint()} pts) : position #{$position->getRank()} modifiée à {$position->getBuyPrice()} pts",
-                    'create',
-                    LogOrigin::USER
+                    "Entrypoint #{$position->getEntrypoint()?->getId()} : position #{$position->getRank()} "
+                    ."modifiée à {$position->getBuyPrice()} pts",
+                    'update',
+                    LogOrigin::USER,
+                    $meta['label']
                 );
 
                 $this->addFlash('success', 'La position a été modifiée avec succès.');
@@ -177,15 +186,18 @@ class PositionController extends AbstractController
             return new JsonResponse(['error' => 'Action non autorisée'], 403);
         }
 
-        $entityManager->remove($position);
-        $entityManager->flush();
+        $meta = $this->positionManager->getLogMetadata($position->getStatus());
 
         // Ajout du log de suppression
         $this->logManager->log(
-            "Entrypoint #{$position->getEntrypoint()?->getId()} ({$position->getEntrypoint()?->getEntrypoint()} pts) : position #{$position->getRank()} supprimée",
+            "Entrypoint #{$position->getEntrypoint()?->getId()} : position #{$position->getRank()} supprimée",
             'delete',
-            LogOrigin::USER
+            LogOrigin::USER,
+            $meta['label']
         );
+
+        $entityManager->remove($position);
+        $entityManager->flush();
 
         if ($request->isXmlHttpRequest() || $request->headers->get('X-Requested-With') === 'XMLHttpRequest') {
             return new JsonResponse(['success' => true, 'id' => $position->getId()]);

@@ -14,12 +14,17 @@ readonly class LogManager
     {
     }
 
-    public function log(string $message, string $actionType, LogOrigin $origin = LogOrigin::WORKFLOW): void
-    {
+    public function log(
+        string $message,
+        string $actionType,
+        LogOrigin $origin = LogOrigin::WORKFLOW,
+        string $contextLabel = 'en attente'
+    ): void {
         $log = new LogEntry();
         $log->setMessage($message);
         $log->setActionType($actionType);
         $log->setOrigin($origin);
+        $log->setContextLabel($contextLabel);
 
         $this->em->persist($log);
         $this->em->flush();

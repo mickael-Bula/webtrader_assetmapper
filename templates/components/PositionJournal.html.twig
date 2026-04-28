@@ -14,7 +14,11 @@
         {% for log in logs %}
             {% set color = styles[log.actionType] ?? styles['default'] %}
             <li class="small {{ color }} mb-1 border-bottom border-secondary border-opacity-25 pb-1">
-                [{{ log.createdAt|date('d/m/y H:i') }}] {{ log.message }}
+                [{{ log.createdAt|date('d/m/y') }}]
+                {% if log.contextLabel %}
+                    <span class="fw-bold">[{{ log.contextLabel }}]</span>
+                {% endif %}
+                {{ log.message }}
             </li>
         {% else %}
             {# Cette partie s'affiche uniquement si la liste est vide #}

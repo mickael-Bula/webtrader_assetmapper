@@ -3,8 +3,8 @@
 namespace App\Entity;
 
 use App\Enum\LogOrigin;
-use App\Repository\LogEntryRepository;
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\LogEntryRepository;
 
 #[ORM\Entity(repositoryClass: LogEntryRepository::class)]
 class LogEntry
@@ -26,7 +26,11 @@ class LogEntry
     #[ORM\Column(type: 'string', length: 20, enumType: LogOrigin::class)]
     private LogOrigin $origin = LogOrigin::WORKFLOW;
 
-    public function __construct() {
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $contextLabel = null;
+
+    public function __construct()
+    {
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -80,6 +84,17 @@ class LogEntry
     {
         $this->origin = $origin;
 
+        return $this;
+    }
+
+    public function getContextLabel(): ?string
+    {
+        return $this->contextLabel;
+    }
+
+    public function setContextLabel(?string $contextLabel): self
+    {
+        $this->contextLabel = $contextLabel;
         return $this;
     }
 }

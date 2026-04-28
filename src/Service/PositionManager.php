@@ -342,4 +342,18 @@ readonly class PositionManager
 
         return $startMessage . 'Les anciens ordres en attente ont été supprimés.';
     }
+
+    /**
+     * Méthode pour adapter les messages de log en fonction du statut de la position.
+     */
+    public function getLogMetadata(PositionStatus $status): array
+    {
+        // On définit le verbe et le type de log selon le statut
+        $isWaiting = ($status === PositionStatus::WAITING);
+
+        return [
+            'verb' => $isWaiting ? 'placée' : 'achetée',
+            'label' => $isWaiting ? 'en attente' : 'en cours'
+        ];
+    }
 }

@@ -97,7 +97,7 @@ class PositionController extends AbstractController
 
         // Ajout du log de création
         $this->logManager->log(
-            "Position #{$position->getRank()} de l'entrypoint {$position->getEntrypoint()?->getEntrypoint()} créée à {$buyPriceCac} pts",
+            "Entrypoint #{$position->getEntrypoint()?->getId()} ({$position->getEntrypoint()?->getEntrypoint()} pts) : position #{$position->getRank()} achetée à {$buyPriceCac} pts",
             'create',
             LogOrigin::USER
         );
@@ -123,8 +123,8 @@ class PositionController extends AbstractController
 
                 // Ajout du log de modification
                 $this->logManager->log(
-                    "Position #{$position->getRank()} de l'entrypoint {$position->getEntrypoint()?->getEntrypoint()} modifiée à {$position->getBuyPrice()} pts",
-                    'edit',
+                    "Entrypoint #{$position->getEntrypoint()?->getId()} ({$position->getEntrypoint()?->getEntrypoint()} pts) : position #{$position->getRank()} modifiée à {$position->getBuyPrice()} pts",
+                    'create',
                     LogOrigin::USER
                 );
 
@@ -182,8 +182,8 @@ class PositionController extends AbstractController
 
         // Ajout du log de suppression
         $this->logManager->log(
-            "Position #{$position->getRank()} de l'entrypoint {$position->getEntrypoint()?->getEntrypoint()} supprimée",
-            'delete',
+            "Entrypoint #{$position->getEntrypoint()?->getId()} ({$position->getEntrypoint()?->getEntrypoint()} pts) : position #{$position->getRank()} supprimée",
+            'create',
             LogOrigin::USER
         );
 

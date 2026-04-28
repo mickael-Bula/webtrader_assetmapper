@@ -15,14 +15,12 @@
             <div class="modal-body py-3 px-4">
                 {# Ligne Quantité & Date Éditable #}
                 <div class="row align-items-center mb-3 g-2">
-                    {# Bloc Quantité (33% de la largeur) #}
+                    {# Bloc Quantité #}
                     <div class="col-6">
                         <label class="x-small text-secondary fw-bold d-block mb-1">QUANTITÉ</label>
                         {{ form_widget(form.quantity, {
-                            'attr': {
-                                'class': 'form-control form-control-sm bg-black text-white border-0 fw-bold',
-                                'readonly': 'readonly'
-                            }}) }}
+                            'attr': {'class': 'form-control form-control-sm bg-black text-white border-0 fw-bold'}
+                        }) }}
                     </div>
 
                     {# Bloc Date de création (66% de la largeur pour laisser de la place au picker) #}

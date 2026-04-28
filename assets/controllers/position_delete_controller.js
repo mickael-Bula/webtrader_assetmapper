@@ -1,36 +1,37 @@
 import { Controller } from '@hotwired/stimulus';
 import * as bootstrap from 'bootstrap';
 
-/**
- * @property {String} button.dataset.positionDeleteUrl
- */
 // noinspection JSUnusedGlobalSymbols
 export default class extends Controller {
-    static targets = ['button'];
+    // 1. Appelée au clic sur le bouton dans l'Offcanvas
+    prepareDelete(event) {
+        const triggerButton = event.currentTarget;
+        const modalElement = document.getElementById('deletePositionModal');
+        const confirmButton = modalElement.querySelector('#confirmDeleteModalBtn');
 
-    confirmDelete(event) {
-        // Le data-position-id est sur le bouton qui a déclenché l'événement
-        const button = event.target.closest('[data-position-delete-url]');
-        this.positionId = button?.dataset.positionId;
-        this.deleteUrl = button?.dataset.positionDeleteUrl;
+        // On injecte les infos dans le bouton de confirmation de la modale
+        confirmButton.dataset.url = triggerButton.dataset.url;
+        confirmButton.dataset.id = triggerButton.dataset.id;
+        confirmButton.dataset.token = triggerButton.dataset.token;
     }
 
+    // 2. Appelée au clic sur le bouton de la modale
     async executeDelete(event) {
-        if (!this.deleteUrl) {
+        const confirmButton = event.currentTarget; // C'est le bouton de la modale
+        const deleteUrl = confirmButton.dataset.url;
+        const positionId = confirmButton.dataset.id;
+        const csrfToken = confirmButton.dataset.token;
+
+        if (!deleteUrl) {
+            console.error("URL de suppression manquante !");
             return;
         }
 
-        const modal = event.target.closest('.modal');
-        const confirmButton = event.target;
-
-        // Désactiver le bouton pendant la requête
         confirmButton.disabled = true;
         confirmButton.textContent = 'Suppression...';
 
         try {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-
-            const response = await fetch(this.deleteUrl, {
+            const response = await fetch(deleteUrl, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken,
@@ -40,18 +41,13 @@ export default class extends Controller {
             });
 
             if (response.ok) {
-                // Fermer le modal
-                const bsModal = bootstrap.Modal.getInstance(modal);
-                bsModal.hide();
+                // Fermeture
+                const modalElement = document.getElementById('deletePositionModal');
+                bootstrap.Modal.getInstance(modalElement)?.hide();
 
-                // Fermer le drawer de la position
-                const drawer = document.querySelector(`#offcanvasPosition${this.positionId}`);
-                if (drawer) {
-                    const bsOffcanvas = bootstrap.Offcanvas.getInstance(drawer);
-                    bsOffcanvas?.hide();
-                }
+                const drawer = document.querySelector(`#offcanvasPosition${positionId}`);
+                bootstrap.Offcanvas.getInstance(drawer)?.hide();
 
-                // Recharger la page pour mettre à jour l'affichage
                 window.location.reload();
             } else {
                 const data = await response.json();
@@ -59,7 +55,7 @@ export default class extends Controller {
             }
         } catch (error) {
             console.error('Erreur:', error);
-            alert('Une erreur est survenue lors de la suppression');
+            alert('Une erreur est survenue');
         } finally {
             confirmButton.disabled = false;
             confirmButton.textContent = 'Supprimer';

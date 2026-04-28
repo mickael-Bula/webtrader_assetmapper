@@ -172,7 +172,7 @@ class PositionController extends AbstractController
         CsrfTokenManagerInterface $csrfTokenManager
     ): Response
     {
-        // Ici la gestion du token CSRF est nécessaire par l'appel de la route est fait en AJAX
+        // Ici la gestion du token CSRF est nécessaire, car l'appel de la route est fait en AJAX
         if (!$this->isCsrfTokenValid('delete_position_' . $position->getId(), $request->headers->get('X-CSRF-TOKEN'))) {
             return new JsonResponse(['error' => 'Action non autorisée'], 403);
         }
@@ -183,7 +183,7 @@ class PositionController extends AbstractController
         // Ajout du log de suppression
         $this->logManager->log(
             "Entrypoint #{$position->getEntrypoint()?->getId()} ({$position->getEntrypoint()?->getEntrypoint()} pts) : position #{$position->getRank()} supprimée",
-            'create',
+            'delete',
             LogOrigin::USER
         );
 

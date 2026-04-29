@@ -3,6 +3,7 @@
 {% block body %}
     <div class="dashboard-container"
          data-controller="calculator editor" {# Liaison à deux controllers Stimulus #}
+         data-calculator-journal-outlet="#position-journal" {# Déclare la dépendance entre calculator et journal #}
          data-editor-user-spread-value="{{ userSpread }}"
          data-calculator-last-cac-value="{{ lastQuote }}"
          data-calculator-last-lvc-value="{{ lastLvcPrice }}"
@@ -107,14 +108,23 @@
                 <div class="row-positions-spacer d-flex">
                     <div class="col-positions-wrap">
                         <div class="col-positions">
+
+                            {# POSITIONS EN COURS #}
                             <twig:PositionTable
                                 type="running"
                                 :positions="runningPositions"
+                                :form="formRunning"
                             />
+
+                            {# POSITIONS EN ATTENTE #}
                             <twig:PositionTable
                                 type="waiting"
                                 :positions="waitingPositions"
+                                :form="formWaiting"
                             />
+
+                            {# 3. JOURNAL DE SUIVI #}
+                            <twig:PositionJournal />
                         </div>
                     </div>
                     <div class="col-spacer"></div>

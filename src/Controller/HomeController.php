@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Entity\Position;
+use App\Form\PositionType;
 use Doctrine\DBAL\Exception;
 use App\Enum\PositionStatus;
 use Psr\Log\LoggerInterface;
@@ -19,7 +21,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 final class HomeController extends AbstractController
 {
-    public function __construct(private readonly LoggerInterface $tradingLogger, private readonly StrategyManager $strategyManager)
+    public function __construct(
+        private readonly LoggerInterface $tradingLogger,
+        private readonly StrategyManager $strategyManager
+    )
     {
     }
 
@@ -87,6 +92,14 @@ final class HomeController extends AbstractController
         // Récupération de la date de création de l'entrypoint actif
         $activeEntrypoint = $entrypointRepository->getActiveEntrypoint($user);
 
+        // Transmission des formulaires de création et de modification de position.
+        $newPosition = new Position(); // On crée une instance vierge de Position pour le formulaire de création
+
+        $form = $this->createForm(PositionType::class, $newPosition, [
+            'stimulus_controller' => 'position-calculator',
+            'action' => $this->generateUrl('app_position_create'), // Centralise l'URL d'action
+        ]);
+
         return $this->render('home/index.html.twig', [
             'runningPositions' => $positionRepository->findByStatusAndUser(PositionStatus::RUNNING, $user),
             'waitingPositions' => $positionRepository->findByStatusAndUser(PositionStatus::WAITING, $user),
@@ -102,6 +115,9 @@ final class HomeController extends AbstractController
             'buyLimitTrend' => $buyLimitTrend,
             'userSpread' => $user->getSpread(),
             'positionSize' => $user->getPositionSize(), // TODO : à remplacer au besoin par une taille dynamique de 5% du PF
+            // On passe deux vues distinctes pour chacune des instances du composant PositionTable
+            'formRunning' => $form->createView(),
+            'formWaiting' => $form->createView(),
         ]);
     }
 }

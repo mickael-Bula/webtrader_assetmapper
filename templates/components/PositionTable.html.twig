@@ -34,11 +34,11 @@
                 <tr>
                     <td class="text-nowrap">{{ this.formattedDate(pos) }}</td>
                     <td class="text-center">{{ pos.quantity ?? "—" }}</td>
-                    <td class="text-center">{{ pos.lvcBuyPrice|number_format(2) }}</td>
-                    <td class="text-center">{{ pos.buyPrice|number_format(0) }}</td>
+                    <td class="text-center">{{ pos.lvcBuyPrice|number_format(2, ',', ' ') }}</td>
+                    <td class="text-center">{{ pos.buyPrice|number_format(0, ',', ' ') }}</td>
                     {# Ce TD aura la bordure gauche via le CSS td:nth-child(5) #}
-                    <td class="text-center">{{ pos.lvcTargetPrice|number_format(2) }}</td>
-                    <td class="text-center">{{ pos.targetPrice|number_format(0) }}</td>
+                    <td class="text-center">{{ pos.lvcTargetPrice|number_format(2, ',', ' ') }}</td>
+                    <td class="text-center">{{ pos.targetPrice|number_format(0, ',', ' ') }}</td>
                     <td>
                         <button class="btn btn-sm btn-outline-info"
                                 type="button"
@@ -62,5 +62,9 @@
             </tbody>
         </table>
     </div>
-    {{ include('_partials/_new_position_drawer.html.twig', { 'id': 'offcanvasNewPosition' ~ type }) }}
+    {# On transmet le formulaire global reçu du HomeController #}
+    {{ include('_partials/_new_position_drawer.html.twig', {
+        'id': 'offcanvasNewPosition' ~ type,
+        'form': form
+    }) }}
 </div>

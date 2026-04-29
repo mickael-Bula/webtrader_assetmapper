@@ -1,0 +1,30 @@
+{# Template du composant PositionJournal.php qui gère l'affichage des logs #}
+<div data-controller="journal"
+     id="position-journal"
+     class="card bg-dark p-3">
+    <h6 class="text-white small fw-bold mb-3">
+        <i class="mdi mdi-history me-1"></i> Journal des événements
+    </h6>
+
+    {# Mapping pour les classes CSS correspondant au journal_controller.js #}
+    {% set styles = {'create': 'text-success', 'update': 'text-info', 'delete': 'text-danger', 'default': 'text-muted'} %}
+
+    {# Liste des entrées #}
+    <ul class="list-unstyled mb-0" data-journal-target="list">
+        {% for log in logs %}
+            {% set color = styles[log.actionType] ?? styles['default'] %}
+            <li class="small {{ color }} mb-1 border-bottom border-secondary border-opacity-25 pb-1">
+                [{{ log.createdAt|date('d/m/y') }}]
+                {% if log.contextLabel %}
+                    <span class="fw-bold">[{{ log.contextLabel }}]</span>
+                {% endif %}
+                {{ log.message }}
+            </li>
+        {% else %}
+            {# Cette partie s'affiche uniquement si la liste est vide #}
+            <li class="text-info small fst-italic py-2">
+                Aucun événement enregistré pour le moment.
+            </li>
+        {% endfor %}
+    </ul>
+</div>

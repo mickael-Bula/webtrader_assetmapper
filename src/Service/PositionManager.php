@@ -8,7 +8,6 @@ use App\Entity\User;
 use App\Entity\Position;
 use App\Entity\Entrypoint;
 use App\Enum\PositionStatus;
-use Psr\Log\LoggerInterface;
 use App\Dto\MarketData\CacDailyDto;
 use App\Repository\PositionRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,8 +21,8 @@ readonly class PositionManager
         private PositionRepository     $positionRepository,
         private CacDailyRepository     $cacRepository,
         private EntityManagerInterface $entityManager,
-        private LoggerInterface        $tradingLogger,
-        private StrategyManager        $strategyManager
+        private StrategyManager        $strategyManager,
+        private LogManager             $logManager,
     )
     {
     }
@@ -61,7 +60,10 @@ readonly class PositionManager
         foreach ($runningPositions as $pos) {
             if ($day->getHigh() >= (float)$pos->getTargetPrice()) {
                 $pos->setStatus(PositionStatus::CLOSED);
-                $this->tradingLogger->notice("Position clôturée", ['id' => $pos->getId(), 'exit' => $day->getHigh()]);
+                $this->logManager->log(
+                    sprintf("Position clôturée : id #%s le %s", $pos->getId(), $day->getHigh()),
+                    'info'
+                );
             }
         }
 
@@ -79,10 +81,13 @@ readonly class PositionManager
         $newCacHigh = $day->getHigh();
         $newLvcHigh = $day->getLvcHigh();
 
-        $this->tradingLogger->info("Trailing : Remontée de l'upper range", [
-            'old' => $user->getUpperRange(),
-            'new' => $newCacHigh,
-        ]);
+        $this->logManager->log(
+            sprintf(
+                "Trailing : Remontée de l'upper range (précédent %s, nouveau %s",
+                $user->getUpperRange(),
+                $newCacHigh
+            ),
+            'info');
 
         // 1. Mise à jour de l'Upper Range (formaté sur deux décimales).
         $user->setUpperRange(number_format($newCacHigh, 2, '.', ''));
@@ -102,9 +107,12 @@ readonly class PositionManager
             $positions = $this->handleWaitingPositions($waitingEntrypoint->getPositions(), $newCacHigh, $newLvcHigh);
 
             // On logue la mise à jour de positions en attente.
-            $this->tradingLogger->info(sprintf(
-                                           "Les positions en attente de l'entrypoint %d ont été mises à jour",
-                                           $positions[0]->getEntrypoint()->getId())
+            $this->logManager->log(
+                sprintf(
+                    "Les positions en attente de l'entrypoint %d ont été mises à jour",
+                    $positions[0]->getEntrypoint()->getId()
+                ),
+                'info'
             );
         }
         $this->entityManager->flush();
@@ -122,7 +130,10 @@ readonly class PositionManager
         foreach ($waitingPositions as $pos) {
             if ($day->getLow() <= (float)$pos->getBuyPrice()) {
                 $pos->setStatus(PositionStatus::RUNNING);
-                $this->tradingLogger->info("Position ouverte", ['id' => $pos->getId(), 'entry' => $day->getLow()]);
+                $this->logManager->log(
+                    sprintf("Position ouverte : id #%s le %s", $pos->getId(), $day->getLow()),
+                    "info"
+                );
 
                 if ($pos->getRank() === 1) {
                     $this->handleRankOneTrigger($user, $pos->getEntrypoint(), $pos, $day);
@@ -150,62 +161,73 @@ readonly class PositionManager
         CacDailyDto $day
     ): void
     {
-        $newCacHigh = $day->getHigh();
-        $newLvcHigh = $day->getLvcHigh();
-
-        // On passe l'entrypoint en RUNNING.
+        // 1. On passe l'entrypoint en RUNNING.
         $currentEntrypoint->setStatus(PositionStatus::RUNNING);
 
-        // TODO : Créer une méthode pour y placer la logique de récupération et de suppression des positions en attente.
+        // 2. Nettoyage des anciennes positions
+        $this->cleanupWaitingPositions($user, $currentEntrypoint->getId());
+
+        // 3. Création du nouvel Entrypoint
+        $newEntrypoint = $this->createNewEntrypoint($user, $currentPosition);
+
+        // 4. Mise à jour de l'utilisateur (État global)
+        // Le point d'entrée de l'entrypoint en RUNNING devient le nouvel upperRange.
+        $user->setUpperRange($currentEntrypoint->getEntrypoint());
+
+        // La buy limit correspond au point d'entrée du nouvel entrypoint (statut WAITING).
+        $user->setBuyLimit($newEntrypoint->getEntrypoint());
+
+        // 5. Génération des positions liées
+        // Les cibles d'achat CAC et LVC sont à 0, -2 %, -4 % du nouvel entrypoint. Les valeurs sont doublées pour le LVC.
+        // Génération des nouvelles positions à partir des cibles d'achat.
+        $this->createWaitingPositionsForInitialEntrypoint($newEntrypoint, $day->getHigh(), $day->getLvcHigh());
+
+        // On enregistre le log de création des positions en attente du nouvel entrypoint.
+        $this->logManager->log(
+            sprintf('Les positions en attente du nouvel entrypoint %d ont été créées', $newEntrypoint->getId()),
+            'create'
+        );
+
+        // On enregistre les nouvelles positions.
+        $this->entityManager->flush();
+    }
+
+    /**
+     * Méthode supprimant les positions en attente d'un cycle précédent.
+     * On exclut les positions en attente de l'entrypoint courant.
+     */
+    private function cleanupWaitingPositions(User $user, int $currentEntrypointId): void
+    {
         // On récupère les positions en attente n'appartenant pas à l'entrypoint courant.
         $positionsToRemove = $this->positionRepository->findByStatusAndUser(
             PositionStatus::WAITING,
             $user,
-            $currentEntrypoint->getId()
+            $currentEntrypointId
         );
 
         // On supprime ces positions en attente appartenant à l'entrypoint courant.
         foreach ($positionsToRemove as $position) {
             $this->entityManager->remove($position);
         }
+    }
 
-        $this->entityManager->flush();
-
-        // TODO : créer une méthode pour la logique de création du nouvel entrypoint.
+    /**
+     * Méthode générant un nouvel entrypoint.
+     */
+    private function createNewEntrypoint(User $user, Position $currentPosition): Entrypoint
+    {
         // On crée un nouvel entrypoint pour l'utilisateur, avec le statut WAITING.
         $newEntrypoint = new Entrypoint();
         $newEntrypoint->setStatus(PositionStatus::WAITING);
+        $newEntrypoint->setUser($user);
 
         // On calcule le point d'entrée du nouvel entrypoint, par défaut -6 % sous la position courante.
         $nextPrice = $this->strategyManager->calculateBuyLimit($user, (float)$currentPosition->getBuyPrice());
         $newEntrypoint->setEntrypoint($nextPrice);
 
-        // On rattache la stratégie à l'utilisateur.
-        $newEntrypoint->setUser($user);
-
-        // Le point d'entrée de l'entrypoint en RUNNING devient le nouvel upperRange.
-        $user->setUpperRange($currentEntrypoint->getEntrypoint());
-
-        // La buy limit correspond au point d'entrée du nouvel entrypoint (statut WAITING).
-        $user->setBuyLimit($nextPrice);
-
         $this->entityManager->persist($newEntrypoint);
 
-        // Les cibles d'achat CAC et LVC sont à 0, -2 %, -4 % du nouvel entrypoint. Les valeurs sont doublées pour le LVC.
-        // Génération des nouvelles positions à partir des cibles d'achat.
-        $this->createWaitingPositionsForInitialEntrypoint($newEntrypoint, $newCacHigh, $newLvcHigh);
-
-        // Récupère les positions en attente du nouvel entrypoint.
-        $positions = $this->getPositionsByEntrypointAndStatus($newEntrypoint, PositionStatus::WAITING);
-
-        // On logue la création des positions en attente du nouvel entrypoint.
-        $this->tradingLogger->info(sprintf(
-                                       'Les positions en attente du nouvel entrypoint %d ont été créées',
-                                       $positions[0]->getEntrypoint()?->getId())
-        );
-
-        // On enregistre les nouvelles positions.
-        $this->entityManager->flush();
+        return $newEntrypoint;
     }
 
     /**
@@ -214,7 +236,7 @@ readonly class PositionManager
      */
     public function createWaitingPositionsForInitialEntrypoint(Entrypoint $entrypoint, float $cac, float $lvc): void
     {
-        // Il faut créer 3 positions relativement à l'entrypoint->getEntrypoint() pour chaque rang : 1 => 0, 2 => -2 et 3 => -4.
+        // Il faut créer trois positions relativement à l'entrypoint->getEntrypoint() pour chaque rang : 1 → 0, 2 → -2 et 3 → -4.
         for ($rank = 1; $rank <= 3; $rank++) {
             $position = new Position();
             $position->setEntrypoint($entrypoint);
@@ -240,40 +262,16 @@ readonly class PositionManager
             $entrypoint->addPosition($position);
 
             $this->entityManager->persist($position);
-        }
-    }
 
-    /**
-     * Création des trois positions en attente pour un nouvel entrypoint.
-     */
-    public function createWaitingPositionsForEntrypoint(Entrypoint $entrypoint, float $cac, float $lvc): void
-    {
-        // Il faut créer 3 positions relativement à l'entrypoint->getEntrypoint() pour chaque rang : 1 => 0, 2 => -2 et 3 => -4.
-        for ($rank = 1; $rank <= 3; $rank++) {
-            $position = new Position();
-            $position->setEntrypoint($entrypoint);
-            $position->setRank($rank);
-            $position->setStatus(PositionStatus::WAITING);
-
-            // Calcule du palier CAC.
-            $cacTarget = $this->strategyManager->calculateInitialCacTargetForPosition(
-                $position,
-                (float)$entrypoint->getEntrypoint()
+            // Enregistrement du trade en base
+            $this->logManager->log(
+                sprintf(
+                    "Stratégie activée pour l'Entrypoint #%d : 3 positions en attente créées (Base CAC: %.2f)",
+                    $entrypoint->getId(),
+                    $entrypoint->getEntrypoint()
+                ),
+                'create'
             );
-            $position->setBuyPrice((string)$cacTarget);
-
-            // Calcule du palier LVC.
-            $lvcTarget = $this->strategyManager->calculateInitialLvcTargetForPosition($position, $cac, $lvc);
-            $position->setLvcBuyPrice((string)$lvcTarget);
-
-            // Calcule des cibles de vente : CAC +10 % et LVC +20 %.
-            $position->setTargetPrice((string)($cacTarget * 1.1));
-            $position->setLvcTargetPrice((string)($lvcTarget * 1.2));
-
-            // On enregistre la position dans la collection de l'entrypoint, ce qui la rend immédiatement accessible.
-            $entrypoint->addPosition($position);
-
-            $this->entityManager->persist($position);
         }
     }
 
@@ -346,21 +344,16 @@ readonly class PositionManager
     }
 
     /**
-     * Retourne les positions d'un entrypoint, filtrées par leur statut.
-     *
-     * @param Entrypoint $entrypoint
-     * @param PositionStatus $status
-     * @return array<int, Position>
+     * Méthode pour adapter les messages de log en fonction du statut de la position.
      */
-    public function getPositionsByEntrypointAndStatus(Entrypoint $entrypoint, PositionStatus $status): array
+    public function getLogMetadata(PositionStatus $status): array
     {
-        $positions = [];
-        foreach ($entrypoint->getPositions() as $position) {
-            if ($position->getStatus() === $status) {
-                $positions[] = $position;
-            }
-        }
+        // On définit le verbe et le type de log selon le statut
+        $isWaiting = ($status === PositionStatus::WAITING);
 
-        return $positions;
+        return [
+            'verb' => $isWaiting ? 'placée' : 'achetée',
+            'label' => $isWaiting ? 'en attente' : 'en cours'
+        ];
     }
 }

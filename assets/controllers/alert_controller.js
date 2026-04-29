@@ -3,9 +3,14 @@ import * as bootstrap from "bootstrap";
 
 // noinspection JSUnusedGlobalSymbols
 export default class extends Controller {
+
+    /**
+     * Cette méthode s'exécute dès que l'élément apparaît dans le DOM
+     */
     connect() {
-        // Cette méthode s'exécute dès que l'élément apparaît dans le DOM
-        if (!this.element.classList.contains('alert-danger')) {
+        /** @type {HTMLElement} */
+        const element = this.element;
+        if (!element.classList.contains('alert-danger')) {
             setTimeout(() => {
                 this.close();
             }, 5000);

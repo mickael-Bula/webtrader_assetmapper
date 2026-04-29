@@ -20,14 +20,33 @@ export default class extends Controller {
     };
 
     connect() {
-        new Chart(this.element, {
+        // 1. Initialiser l'Observer
+        this.observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                // Si l'élément est visible à l'écran
+                if (entry.isIntersecting) {
+                    this.renderChart();
+                    // Une fois affiché, on arrête d'observer pour économiser des ressources
+                    this.observer.unobserve(this.element);
+                }
+            });
+        }, {
+            threshold: 0.1 // Déclenche quand 10% de l'élément est visible
+        });
+
+        // 2. Démarrer l'observation
+        this.observer.observe(this.element);
+    }
+
+    renderChart() {
+        // Stocker l'instance dans this.chart pour pouvoir la détruire plus tard
+        this.chart = new Chart(this.element, {
             type: 'doughnut',
             data: {
                 datasets: [{
                     data: this.valuesValue,
                     backgroundColor: this.colorsValue,
                     borderWidth: 0,
-                    circumference: 360,
                     cutout: '75%',
                 }]
             },
@@ -36,7 +55,6 @@ export default class extends Controller {
                 plugins: { legend: { display: false }, tooltip: { enabled: false } },
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '75%',
                 animation: {
                     animateRotate: true,
                     animateScale: false,
@@ -49,6 +67,10 @@ export default class extends Controller {
     }
 
     disconnect() {
+        // Arrête l'observer et détruit le graphique
+        if (this.observer) {
+            this.observer.disconnect();
+        }
         if (this.chart) {
             this.chart.destroy();
         }

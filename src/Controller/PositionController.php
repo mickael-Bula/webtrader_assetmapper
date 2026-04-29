@@ -5,20 +5,27 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Enum\LogOrigin;
 use App\Entity\Position;
 use App\Form\PositionType;
 use App\Entity\Entrypoint;
+use App\Service\LogManager;
 use App\Enum\PositionStatus;
+use App\Service\PositionManager;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class PositionController extends AbstractController
 {
+    public function __construct(private readonly LogManager $logManager, private readonly PositionManager $positionManager)
+    {
+    }
+
     /**
      * @throws \Exception
      */
@@ -47,6 +54,8 @@ class PositionController extends AbstractController
         // Le statut est transmis depuis le template Twig en utilisant l'id du tableau de positions
         $statusValue = $request->request->get('status', 'waiting');
         $status = PositionStatus::tryFrom($statusValue) ?? PositionStatus::WAITING;
+
+        $meta = $this->positionManager->getLogMetadata($status);
 
         if ($targetPriceLvc <= $buyPriceLvc || $targetPriceCac <= $buyPriceCac) {
             $this->addFlash('error', 'La cible de revente doit être supérieure au prix d’achat.');
@@ -89,6 +98,15 @@ class PositionController extends AbstractController
         $entityManager->persist($position);
         $entityManager->flush();
 
+        // Ajout du log de création
+        $this->logManager->log(
+            "Entrypoint #{$position->getEntrypoint()?->getId()} : "
+                ."position #{$position->getRank()} {$meta['verb']} à {$buyPriceCac} pts",
+            'create',
+            LogOrigin::USER,
+            $meta['label']
+        );
+
         $this->addFlash('success', 'Position enregistrée avec succès.');
         return $this->redirectToRoute('app_home');
     }
@@ -100,60 +118,70 @@ class PositionController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // TODO : Il faudrait ici ajouter une validation des données avant enregistrement.
-            // Validation métier manuelle avant le flush
-            if ($position->getLvcTargetPrice() <= $position->getLvcBuyPrice()) {
-                $this->addFlash('error', 'L’objectif LVC doit être supérieur au prix d’achat.');
-                // En cas d'erreur AJAX, on pourrait renvoyer une erreur 400
-            } else {
-                $entityManager->flush();
-                $this->addFlash('success', 'La position a été modifiée avec succès.');
+            $entityManager->flush();
+
+            // 1. Logique métier post-save
+            $meta = $this->positionManager->getLogMetadata($position->getStatus());
+            $this->logManager->log(
+                "Entrypoint #{$position->getEntrypoint()?->getId()} : "
+                    ."position #{$position->getRank()} modifiée à {$position->getBuyPrice()} pts",
+                'update',
+                LogOrigin::USER,
+                $meta['label']
+            );
+
+            // 2. Gestion AJAX (Succès)
+            if ($request->isXmlHttpRequest()) {
+                return new JsonResponse(['success' => true]);
             }
 
-            if ($request->isXmlHttpRequest() || $request->headers->get('X-Requested-With') === 'XMLHttpRequest') {
-                return new JsonResponse([
-                    'position' => [
-                        'id' => $position->getId(),
-                        'quantity' => $position->getQuantity(),
-                        'lvcBuyPrice' => $position->getLvcBuyPrice(),
-                        'buyPrice' => $position->getBuyPrice(),
-                        'lvcTargetPrice' => $position->getLvcTargetPrice(),
-                        'targetPrice' => $position->getTargetPrice(),
-                    ],
-                ]);
-            }
-
+            // 3. Gestion Classique (Succès)
             $this->addFlash('success', 'La position a été modifiée avec succès.');
 
             return $this->redirectToRoute('app_home');
         }
 
-        if ($request->isXmlHttpRequest() || $request->headers->get('X-Requested-With') === 'XMLHttpRequest') {
+        // --- Si on arrive ici, soit le formulaire n'est pas soumis, soit il est invalide ---
+        // On détermine le status HTTP : 400 si soumis, mais invalide, sinon 200
+        $status = ($form->isSubmitted() && !$form->isValid()) ? 400 : 200;
+
+        if ($request->isXmlHttpRequest()) {
             $html = $this->renderView('_partials/_position_edit_modal.html.twig', [
                 'position' => $position,
                 'form' => $form->createView(),
             ]);
 
-            return new Response($html);
+            return new Response($html, $status);
         }
 
         return $this->render('_partials/_position_edit_modal.html.twig', [
             'position' => $position,
-            'form' => $form,
+            'form' => $form->createView(),
         ]);
     }
 
     #[Route('/position/{id}/delete', name: 'app_position_delete', methods: ['DELETE'])]
     public function delete(
-        Position $position,
-        Request $request,
-        EntityManagerInterface $entityManager,
+        Position                  $position,
+        Request                   $request,
+        EntityManagerInterface    $entityManager,
         CsrfTokenManagerInterface $csrfTokenManager
-    ): Response {
-        // Ici la gestion du token CSRF est nécessaire par l'appel de la route est fait en AJAX
+    ): Response
+    {
+        // Ici la gestion du token CSRF est nécessaire, car l'appel de la route est fait en AJAX
         if (!$this->isCsrfTokenValid('delete_position_' . $position->getId(), $request->headers->get('X-CSRF-TOKEN'))) {
             return new JsonResponse(['error' => 'Action non autorisée'], 403);
         }
+
+        $meta = $this->positionManager->getLogMetadata($position->getStatus());
+
+        // Ajout du log de suppression
+        $this->logManager->log(
+            "Entrypoint #{$position->getEntrypoint()?->getId()} : position #{$position->getRank()} supprimée",
+            'delete',
+            LogOrigin::USER,
+            $meta['label']
+        );
 
         $entityManager->remove($position);
         $entityManager->flush();

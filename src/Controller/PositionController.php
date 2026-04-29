@@ -118,58 +118,45 @@ class PositionController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+
+            // 1. Logique métier post-save
             $meta = $this->positionManager->getLogMetadata($position->getStatus());
+            $this->logManager->log(
+                "Entrypoint #{$position->getEntrypoint()?->getId()} : "
+                    ."position #{$position->getRank()} modifiée à {$position->getBuyPrice()} pts",
+                'update',
+                LogOrigin::USER,
+                $meta['label']
+            );
 
-            // TODO : Il faudrait ici ajouter une validation des données avant enregistrement.
-            // Validation métier manuelle avant le flush
-            if ($position->getLvcTargetPrice() <= $position->getLvcBuyPrice()) {
-                $this->addFlash('error', 'L’objectif LVC doit être supérieur au prix d’achat.');
-                // En cas d'erreur AJAX, on pourrait renvoyer une erreur '400'
-            } else {
-                $entityManager->flush();
-
-                // Ajout du log de modification
-                $this->logManager->log(
-                    "Entrypoint #{$position->getEntrypoint()?->getId()} : position #{$position->getRank()} "
-                    ."modifiée à {$position->getBuyPrice()} pts",
-                    'update',
-                    LogOrigin::USER,
-                    $meta['label']
-                );
-
-                $this->addFlash('success', 'La position a été modifiée avec succès.');
+            // 2. Gestion AJAX (Succès)
+            if ($request->isXmlHttpRequest()) {
+                return new JsonResponse(['success' => true]);
             }
 
-            if ($request->isXmlHttpRequest() || $request->headers->get('X-Requested-With') === 'XMLHttpRequest') {
-                return new JsonResponse([
-                                            'position' => [
-                                                'id' => $position->getId(),
-                                                'quantity' => $position->getQuantity(),
-                                                'lvcBuyPrice' => $position->getLvcBuyPrice(),
-                                                'buyPrice' => $position->getBuyPrice(),
-                                                'lvcTargetPrice' => $position->getLvcTargetPrice(),
-                                                'targetPrice' => $position->getTargetPrice(),
-                                            ],
-                                        ]);
-            }
-
+            // 3. Gestion Classique (Succès)
             $this->addFlash('success', 'La position a été modifiée avec succès.');
 
             return $this->redirectToRoute('app_home');
         }
 
-        if ($request->isXmlHttpRequest() || $request->headers->get('X-Requested-With') === 'XMLHttpRequest') {
+        // --- Si on arrive ici, soit le formulaire n'est pas soumis, soit il est invalide ---
+        // On détermine le status HTTP : 400 si soumis, mais invalide, sinon 200
+        $status = ($form->isSubmitted() && !$form->isValid()) ? 400 : 200;
+
+        if ($request->isXmlHttpRequest()) {
             $html = $this->renderView('_partials/_position_edit_modal.html.twig', [
                 'position' => $position,
                 'form' => $form->createView(),
             ]);
 
-            return new Response($html);
+            return new Response($html, $status);
         }
 
         return $this->render('_partials/_position_edit_modal.html.twig', [
             'position' => $position,
-            'form' => $form,
+            'form' => $form->createView(),
         ]);
     }
 

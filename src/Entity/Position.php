@@ -9,11 +9,30 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\PositionRepository;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity(repositoryClass: PositionRepository::class)]
 #[ORM\Table(name: 'position')]
+#[Assert\Callback('validatePrices')]
 class Position
 {
+    public function validatePrices(ExecutionContextInterface $context): void
+    {
+        // 1. Validation CAC
+        if ($this->getTargetPrice() <= $this->getBuyPrice()) {
+            $context->buildViolation("Le prix cible CAC doit être supérieur au prix d'achat CAC.")
+                ->atPath('targetPrice') // C'est ici que l'erreur est envoyée sur le champ
+                ->addViolation();
+        }
+
+        // 2. Validation LVC
+        if ($this->getLvcTargetPrice() <= $this->getLvcBuyPrice()) {
+            $context->buildViolation("Le prix cible LVC doit être supérieur au prix d'achat LVC.")
+                ->atPath('lvcTargetPrice') // Erreur ciblée
+                ->addViolation();
+        }
+    }
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

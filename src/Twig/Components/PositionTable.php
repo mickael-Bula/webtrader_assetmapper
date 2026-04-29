@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Twig\Components;
 
 use App\Entity\Position;
+use Symfony\Component\Form\FormView;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 
 /**
@@ -14,6 +15,7 @@ use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 class PositionTable
 {
     public string $type; // 'running' (en cours) ou 'waiting' (en attente)
+    public ?FormView $form = null; // Le formulaire de position
 
     /**
      * @var array<Position> Un tableau des données de trading

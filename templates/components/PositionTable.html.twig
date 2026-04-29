@@ -62,5 +62,9 @@
             </tbody>
         </table>
     </div>
-    {{ include('_partials/_new_position_drawer.html.twig', { 'id': 'offcanvasNewPosition' ~ type }) }}
+    {# On transmet le formulaire global reçu du HomeController #}
+    {{ include('_partials/_new_position_drawer.html.twig', {
+        'id': 'offcanvasNewPosition' ~ type,
+        'form': form
+    }) }}
 </div>

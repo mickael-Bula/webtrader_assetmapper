@@ -10,6 +10,9 @@ enum PositionStatus: string
     case RUNNING = 'running';
     case CLOSED = 'closed';
 
+    /**
+     * @noinspection PhpUnused
+     */
     public function getLabel(): string
     {
         return match ($this) {

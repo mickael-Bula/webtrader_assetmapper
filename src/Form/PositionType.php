@@ -20,19 +20,22 @@ class PositionType extends AbstractType
         $inputClass = 'form-control form-control-sm bg-black text-white border-secondary';
         $labelClass = 'x-small text-secondary d-block mb-1';
 
+        // On récupère le contrôleur s'il est défini
+        $controller = $options['stimulus_controller'] ?? null;
+
         $builder
             ->add('buyPrice', NumberType::class, [
                 'label' => 'Prix Achat CAC',
                 'scale' => 2,
                 'label_attr' => ['class' => $labelClass],
-                'attr' => ['class' => $inputClass, 'placeholder' => '7200.00'],
+                'attr' => $this->getAttr($controller, ['class' => $inputClass, 'placeholder' => '7200.00'], 'buyCac', true),
                 'row_attr' => ['class' => 'mb-2'],
             ])
             ->add('targetPrice', NumberType::class, [
                 'label' => 'Objectif CAC',
                 'scale' => 2,
                 'label_attr' => ['class' => $labelClass],
-                'attr' => ['class' => $inputClass, 'placeholder' => '7920.00'],
+                'attr' => $this->getAttr($controller, ['class' => $inputClass, 'placeholder' => '7920.00'], 'targetCac'),
                 'row_attr' => ['class' => 'mb-2'],
             ])
             ->add('lvcBuyPrice', NumberType::class, [
@@ -40,7 +43,7 @@ class PositionType extends AbstractType
                 'required' => false,
                 'scale' => 2,
                 'label_attr' => ['class' => $labelClass],
-                'attr' => ['class' => $inputClass, 'placeholder' => '12.50'],
+                'attr' => $this->getAttr($controller, ['class' => $inputClass, 'placeholder' => '12.50'], 'buyLvc', true),
                 'row_attr' => ['class' => 'mb-2'],
             ])
             ->add('lvcTargetPrice', NumberType::class, [
@@ -48,17 +51,17 @@ class PositionType extends AbstractType
                 'required' => false,
                 'scale' => 2,
                 'label_attr' => ['class' => $labelClass],
-                'attr' => ['class' => $inputClass, 'placeholder' => '15.00'],
+                'attr' => $this->getAttr($controller, ['class' => $inputClass, 'placeholder' => '15.00'], 'targetLvc'),
                 'row_attr' => ['class' => 'mb-2'],
             ])
             ->add('quantity', IntegerType::class, [
                 'label' => 'Quantité',
                 'required' => false,
                 'label_attr' => ['class' => 'x-small text-secondary fw-bold d-block mb-1'],
-                'attr' => [
+                'attr' => $this->getAttr($controller, [
                     'class' => 'form-control form-control-sm bg-black text-white border-0 fw-bold',
                     'placeholder' => 'Ex: 100'
-                ],
+                ], 'quantity'),
                 'row_attr' => ['class' => 'mb-3'],
             ])
             ->add('createdAt', DateType::class, [
@@ -66,12 +69,27 @@ class PositionType extends AbstractType
                 'label' => 'Date de création',
                 'input' => 'datetime_immutable', // Ou 'datetime' selon votre entité
                 'label_attr' => ['class' => 'x-small text-secondary fw-bold d-block mb-1'],
-                'attr' => [
+                'attr' => $this->getAttr($controller, [
                     'class' => $inputClass,
                     'style' => 'color-scheme: dark;'
-                ],
+                ], 'validityDate'),
                 'row_attr' => ['class' => 'mb-3'],
             ]);
+    }
+
+    /**
+     * Méthode utilitaire pour injecter les attributs Stimulus proprement
+     */
+    private function getAttr(?string $controller, array $defaultAttr, ?string $target = null, bool $withAction = false): array
+    {
+        if ($controller && $target) {
+            $defaultAttr['data-position-calculator-target'] = $target;
+            if ($withAction) {
+                $defaultAttr['data-action'] = "input->$controller#calculate";
+            }
+        }
+
+        return $defaultAttr;
     }
 
     public function configureOptions(OptionsResolver $resolver): void
@@ -83,7 +101,9 @@ class PositionType extends AbstractType
             'error_mapping' => [
                 'targetPrice' => 'targetPrice',
                 'lvcTargetPrice' => 'lvcTargetPrice',
-            ]
+            ],
+            'stimulus_controller' => 'position-calculator', // Valeur par défaut
         ]);
+        $resolver->setAllowedTypes('stimulus_controller', ['null', 'string']);
     }
 }

@@ -130,6 +130,8 @@ final class HomeController extends AbstractController
             'formWaiting' => $form->createView(),
             'exposureChart' => $exposure['chart'],
             'exposurePercentage' => $exposure['percentage'],
+            'exposureUsed' => $exposure['used'],
+            'exposureRemaining' => $exposure['remaining'],
         ]);
     }
 }

@@ -13,4 +13,6 @@ final class ExposureCard
 {
     public Chart $chart;
     public int $percentage;
+    public float $used;
+    public float $remaining;
 }

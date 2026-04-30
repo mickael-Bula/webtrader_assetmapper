@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Entity\User;
-use Symfony\UX\Chartjs\Model\Chart;
 use Symfony\UX\Chartjs\Builder\ChartBuilderInterface;
+use Symfony\UX\Chartjs\Model\Chart;
 
 readonly class PortfolioService
 {
@@ -62,9 +62,12 @@ readonly class PortfolioService
                                'maintainAspectRatio' => false, // Crucial pour contrôler la taille en CSS
                                'plugins' => [
                                    'legend' => ['display' => false],
-                                   'tooltip' => ['enabled' => true],
+                                   'tooltip' => ['enabled' => false],
                                ],
-                               'cutout' => '85%', // Un anneau plus fin fait paraître le graphique plus petit/élégant
+                               'interaction' => [
+                                   'intersect' => true,
+                               ],
+                               'cutout' => '80%', // Un anneau plus fin fait paraître le graphique plus petit/élégant
                            ]);
 
         return $chart;

@@ -37,6 +37,7 @@
         "symfony/string": "7.4.*",
         "symfony/translation": "7.4.*",
         "symfony/twig-bundle": "7.4.*",
+        "symfony/ux-chartjs": "^2.35",
         "symfony/ux-icons": "^2.31",
         "symfony/ux-turbo": "^2.31",
         "symfony/ux-twig-component": "^2.31",

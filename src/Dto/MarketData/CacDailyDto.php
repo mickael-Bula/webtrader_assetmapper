@@ -24,7 +24,7 @@ final readonly class CacDailyDto
     }
 
     public
-    function getDate(): \DateTimeImmutable
+    function getDate(): \DateTimeInterface
     {
         return $this->date;
     }

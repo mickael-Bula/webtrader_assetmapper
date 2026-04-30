@@ -37,7 +37,7 @@
 
             <div class="col-left">
 
-                <div class="row-header d-flex align-start">
+                <div class="row-header d-flex align-items-center">
                     <twig:MarketCard
                         title="UPPER RANGE"
                         :value="upperRange"
@@ -64,6 +64,11 @@
                         data-action="click->calculator#prepare"
                         data-value="{{ buyLimit }}"
                         data-mode="normal"
+                    />
+                    {# Le composant indiquant le capital exposé #}
+                    <twig:ExposureCard
+                        :chart="exposureChart"
+                        :percentage="exposurePercentage"
                     />
                 </div>
 

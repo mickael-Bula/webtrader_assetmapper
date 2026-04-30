@@ -1,0 +1,81 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="container mt-4">
+        <h1 class="mb-4 text-white">Détail du portefeuille</h1>
+
+        <div class="row g-3 mb-4">
+            {# Carte Valeur Totale #}
+            <div class="col-md-4">
+                <div class="card bg-dark text-white border-secondary h-100">
+                    <div class="card-body">
+                        <h6 class="text-secondary text-uppercase small">Valeur Totale (Equity)</h6>
+                        <h2 class="display-6 fw-bold">{{ stats.total_equity|number_format(2, ',', ' ') }} €</h2>
+                        {% if perf.is_calculable %}
+                            <div class="{% if perf.diff >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                <i class="bi {{ perf.diff >= 0 ? 'bi-caret-up-fill' : 'bi-caret-down-fill' }}"></i>
+                                {{ perf.diff >= 0 ? '+' : '' }}{{ perf.diff|number_format(2, ',', ' ') }} €
+                                ({{ perf.percent|number_format(2) }}%)
+                                <span class="text-secondary fw-normal small">depuis hier</span>
+                            </div>
+                        {% else %}
+                            <div class="text-muted small">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Analyse de performance disponible demain
+                            </div>
+                        {% endif %}
+                        <div class="{% if daily_diff >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                            {{ daily_diff >= 0 ? '+' : '' }}{{ daily_diff|number_format(2) }} €
+                            ({{ daily_percent|number_format(2) }}%) aujourd'hui
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Carte Exposition #}
+            <div class="col-md-4">
+                <div class="card bg-dark text-white border-secondary h-100">
+                    <div class="card-body">
+                        <h6 class="text-secondary text-uppercase small">Exposition</h6>
+                        <h2 class="display-6 fw-bold">{{ ((stats.total_equity - stats.cash_amount) / stats.total_equity * 100)|round(1) }}
+                            %</h2>
+                        <div class="progress mt-2" style="height: 6px; background: #222;">
+                            {% set exp_percent = ((stats.total_equity - stats.cash_amount) / stats.total_equity * 100) %}
+                            <div class="progress-bar bg-info" style="width: {{ exp_percent }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Carte Cash #}
+            <div class="col-md-4">
+                <div class="card bg-dark text-white border-secondary h-100">
+                    <div class="card-body">
+                        <h6 class="text-secondary text-uppercase small">Cash disponible</h6>
+                        <h2 class="display-6 fw-bold text-info">{{ stats.cash_amount|number_format(2, ',', ' ') }}
+                            €</h2>
+                        <span class="text-secondary small">Prêt pour de nouveaux signaux</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Zone Graphique #}
+        <div class="card bg-dark border-secondary">
+            <div class="card-header border-secondary d-flex justify-content-between align-items-center">
+                <span class="text-white fw-bold">Évolution du capital (30j)</span>
+                <span class="badge bg-primary">Equity Curve</span>
+            </div>
+            <div class="card-body" style="height: 350px;">
+                {% if history|length > 1 %}
+                    {{ render_chart(chart) }}
+                {% else %}
+                    <div class="d-flex flex-column align-items-center justify-content-center h-100">
+                        <i class="bi bi-graph-up text-secondary mb-2" style="font-size: 2rem;"></i>
+                        <p class="text-muted small">Données insuffisantes pour tracer la courbe (min. 2 jours).</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

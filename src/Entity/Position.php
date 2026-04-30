@@ -67,6 +67,9 @@ class Position
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    private ?string $lvcCurrentPrice = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -202,6 +205,25 @@ class Position
         $this->createdAt = $date;
 
         return $this;
+    }
+
+    public function getLvcCurrentPrice(): ?string
+    {
+        return $this->lvcCurrentPrice;
+    }
+
+    public function setLvcCurrentPrice(?string $lvcCurrentPrice): static
+    {
+        $this->lvcCurrentPrice = $lvcCurrentPrice;
+        return $this;
+    }
+
+    /**
+     * Retourne le prix actuel sous forme de float pour les calculs
+     */
+    public function getCurrentPrice(): float
+    {
+        return (float) ($this->lvcCurrentPrice ?? 0.0);
     }
 
     public function getTargetDistance(string $currentCacPrice): array

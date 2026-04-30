@@ -61,9 +61,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Entrypoint::class, mappedBy: 'user', orphanRemoval: true)]
     private Collection $entrypoints;
 
+    /**
+     * @var Collection<int, PortfolioSnapshot>
+     */
+    #[ORM\OneToMany(targetEntity: PortfolioSnapshot::class, mappedBy: 'owner', orphanRemoval: true)]
+    private Collection $portfolioSnapshots;
+
     public function __construct()
     {
         $this->entrypoints = new ArrayCollection();
+        $this->portfolioSnapshots = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -250,5 +257,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         return null;
+    }
+
+    /**
+     * @return Collection<int, PortfolioSnapshot>
+     */
+    public function getPortfolioSnapshots(): Collection
+    {
+        return $this->portfolioSnapshots;
+    }
+
+    public function addPortfolioSnapshot(PortfolioSnapshot $portfolioSnapshot): static
+    {
+        if (!$this->portfolioSnapshots->contains($portfolioSnapshot)) {
+            $this->portfolioSnapshots->add($portfolioSnapshot);
+            $portfolioSnapshot->setOwner($this);
+        }
+
+        return $this;
+    }
+
+    public function removePortfolioSnapshot(PortfolioSnapshot $portfolioSnapshot): static
+    {
+        if ($this->portfolioSnapshots->removeElement($portfolioSnapshot)) {
+            // set the owning side to null (unless already changed)
+            if ($portfolioSnapshot->getOwner() === $this) {
+                $portfolioSnapshot->setOwner(null);
+            }
+        }
+
+        return $this;
     }
 }

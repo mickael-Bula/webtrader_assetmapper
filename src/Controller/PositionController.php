@@ -20,7 +20,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-class PositionController extends AbstractController
+final class PositionController extends AbstractController
 {
     public function __construct(private readonly LogManager $logManager, private readonly PositionManager $positionManager)
     {

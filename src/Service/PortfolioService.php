@@ -163,4 +163,47 @@ readonly class PortfolioService
 
         return $grouped;
     }
+
+    /**
+     * Calcule les statistiques de base pour le core.
+     */
+    public function getCoreStats(User $user): array
+    {
+        // 1. Récupérer toutes les positions marquées 'isCore'
+//        $corePositions = $this->positionRepository->findByStatusUserAndCore(
+//            PositionStatus::RUNNING,
+//            $user,
+//            true
+//        );
+
+        // TODO : méthode utilisée avant insertion du champ is_core
+        $corePositions = $this->positionRepository->findByStatusAndUser(
+            PositionStatus::RUNNING,
+            $user,
+        );
+
+        $totalValue = 0.0;
+        $totalCost = 0.0;
+        $totalQty = 0;
+
+        foreach ($corePositions as $pos) {
+            $qty = (float)$pos->getQuantity();
+            $totalQty += $qty;
+            $totalCost += ($qty * (float)$pos->getLvcBuyPrice());
+            $totalValue += ($qty * (float)$pos->getCurrentPrice());
+        }
+
+        // 2. Calculer l'objectif dynamique (25% de l'Equity totale)
+        $currentSnapshot = $this->calculateCurrentSnapshot($user);
+        $totalEquity = $currentSnapshot['total_equity'];
+        $targetValue = $totalEquity * 0.25;
+
+        return [
+            'current_value' => $totalValue,
+            'target_value' => $targetValue,
+            'pru' => $totalQty > 0 ? ($totalCost / $totalQty) : 0,
+            'total_quantitty' => $totalQty,
+            'progress_percent' => $targetValue > 0 ? min(100, ($totalValue / $targetValue) * 100) : 0,
+        ];
+    }
 }

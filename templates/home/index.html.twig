@@ -112,6 +112,15 @@
                     </div>
                 </div>
 
+                {# CoreCard occupant la même largeur que le graphique #}
+                <twig:CoreCard
+                    :totalQuantity="55"
+                    :targetValue="3750"
+                    :currentValue="2400"
+                    :pru="coreStats.pru"
+                    :progressPercent="12"
+                />
+
                 <div class="row-positions-spacer d-flex">
                     <div class="col-positions-wrap">
                         <div class="col-positions">

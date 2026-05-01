@@ -51,6 +51,27 @@ class PositionRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return Position[]
+     */
+    public function findByStatusUserAndCore(
+        PositionStatus $status,
+        User $user,
+        bool $isCore
+    ): array {
+        return $this->createQueryBuilder('p')
+            ->innerJoin('p.entrypoint', 'e')
+            ->where('e.user = :user')
+            ->andWhere('p.status = :status')
+            ->andWhere('p.isCore = :isCore')
+            ->setParameter('user', $user)
+            ->setParameter('status', $status)
+            ->setParameter('isCore', $isCore)
+            ->orderBy('p.createdAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Retourne les positions en attente de l'utilisateur.
      * On trie par prix décroissant : on traite les targets les plus hautes d'abord
      */

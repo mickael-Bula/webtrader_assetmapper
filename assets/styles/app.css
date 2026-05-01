@@ -289,7 +289,6 @@ body.menu-open .app-main::before {
 .row-positions-spacer {
     /* Ligne 2 : Positions (2/3) + Espace vide (1/3) */
     width: 100%;
-    gap: 20px;
     flex-grow: 1; /* Permet à cette ligne d'occuper l'espace vertical restant */
 }
 
@@ -452,7 +451,6 @@ body.menu-open .app-main::before {
 /* -------------------------------------- */
 
 .position-card {
-    margin-bottom: 20px;
     width: 100%;
 }
 

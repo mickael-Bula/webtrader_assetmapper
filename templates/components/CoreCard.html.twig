@@ -1,0 +1,62 @@
+<div class="card bg-dark border-secondary shadow-sm" style="border-left: 4px solid #36a2eb;">
+    <div class="card-body py-2 px-3">
+        <div class="row align-items-center text-nowrap">
+
+            <!-- 1. Progression Valeur (25% PF) -->
+            <div class="col-md-4">
+                <div class="text-secondary small text-uppercase fw-bold mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                    Objectif Core (25% PF)
+                </div>
+                <div class="text-white fw-bold mb-1">
+                    <span style="font-size: 1.1rem;">{{ currentValue|number_format(0, ',', ' ') }} €</span>
+                    <span class="text-secondary fw-normal small">/ {{ targetValue|number_format(0, ',', ' ') }} €</span>
+                </div>
+                <div class="progress" style="height: 6px; background-color: #1a1a1a;">
+                    <div class="progress-bar bg-info" role="progressbar" style="width: {{ progressPercent }}%"></div>
+                </div>
+            </div>
+
+            <!-- 2. Quantité Accumulée (Mise en valeur) -->
+            <div class="col-md-2 border-start border-secondary border-opacity-25">
+                <div class="ps-3">
+                    <div class="text-secondary small text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                        Quantité
+                    </div>
+                    <div class="text-info fw-bold" style="font-size: 1.2rem;">
+                        {{ totalQuantity }} <span class="small fw-normal text-secondary">LVC</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. PRU Moyen -->
+            <div class="col-md-3 border-start border-secondary border-opacity-25">
+                <div class="ps-3">
+                    <div class="text-secondary small text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                        PRU Moyen
+                    </div>
+                    <div class="text-white fw-bold" style="font-size: 1.1rem;">
+                        {{ pru|number_format(3, ',', ' ') }} <span class="small fw-normal text-secondary">€</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Reste à investir -->
+            <div class="col-md-3 border-start border-secondary border-opacity-25 text-end">
+                {% set remaining = targetValue - currentValue %}
+                {% if remaining > 0 %}
+                    <div class="text-secondary small text-uppercase fw-bold" style="font-size: 0.65rem;">
+                        Reste à investir
+                    </div>
+                    <div class="text-warning fw-bold" style="font-size: 1.1rem;">
+                        {{ remaining|number_format(0, ',', ' ') }} €
+                    </div>
+                {% else %}
+                    <span class="badge bg-success-soft text-success px-2 py-1">
+                        <i class="mdi mdi-check-decagram"></i> CORE REMPLI
+                    </span>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>

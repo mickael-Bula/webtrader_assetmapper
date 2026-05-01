@@ -24,7 +24,7 @@ final class HomeController extends AbstractController
 {
     public function __construct(
         private readonly LoggerInterface $tradingLogger,
-        private readonly StrategyManager $strategyManager
+        private readonly StrategyManager $strategyManager, private readonly PositionRepository $positionRepository
     )
     {
     }
@@ -103,9 +103,22 @@ final class HomeController extends AbstractController
             'action' => $this->generateUrl('app_position_create'), // Centralise l'URL d'action
         ]);
 
-        // Récupération des positions
-        $runningPositions = $positionRepository->findByStatusAndUser(PositionStatus::RUNNING, $user);
-        $waitingPositions = $positionRepository->findByStatusAndUser(PositionStatus::WAITING, $user);
+        // Récupération des statistiques du Core
+        $coreStats = $portfolioService->getCoreStats($user);
+
+        // Récupération des positions de trading en cours
+        $runningPositions = $this->positionRepository->findByStatusUserAndCore(
+            PositionStatus::RUNNING,
+            $user,
+            false
+        );
+
+        // Récupération des positions de trading en attente
+        $waitingPositions = $this->positionRepository->findByStatusUserAndCore(
+            PositionStatus::WAITING,
+            $user,
+            false
+        );
 
         // Récupération des données d'exposition via le service
         $exposure = $portfolioService->getExposureData($user, $runningPositions);

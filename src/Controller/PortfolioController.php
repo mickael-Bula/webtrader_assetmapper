@@ -110,6 +110,7 @@ final class PortfolioController extends AbstractController
             'daily_percent' => $dailyPercent,
             // On récupère les 30 derniers jours pour le graphique
             'history' => $snapshotRepo->findBy(['owner' => $user], ['createdAt' => 'ASC'], 30),
+            'grouped_positions' => $portfolioService->getGroupedPositions($user),
         ]);
     }
 }

@@ -10,7 +10,7 @@
                 <div class="card bg-dark text-white border-secondary h-100">
                     <div class="card-body">
                         <h6 class="text-secondary text-uppercase small">Valeur Totale (Equity)</h6>
-                        <h2 class="display-6 fw-bold">{{ stats.total_equity|number_format(2, ',', ' ') }} €</h2>
+                        <h2 class="display-12 fw-bold">{{ stats.total_equity|number_format(2, ',', ' ') }} €</h2>
                         {% if perf.is_calculable %}
                             <div class="{% if perf.diff >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
                                 <i class="bi {{ perf.diff >= 0 ? 'bi-caret-up-fill' : 'bi-caret-down-fill' }}"></i>
@@ -37,7 +37,7 @@
                 <div class="card bg-dark text-white border-secondary h-100">
                     <div class="card-body">
                         <h6 class="text-secondary text-uppercase small">Exposition</h6>
-                        <h2 class="display-6 fw-bold">{{ ((stats.total_equity - stats.cash_amount) / stats.total_equity * 100)|round(1)|number_format(1, ',', ' ') }}
+                        <h2 class="display-12 fw-bold">{{ ((stats.total_equity - stats.cash_amount) / stats.total_equity * 100)|round(1)|number_format(1, ',', ' ') }}
                             %</h2>
                         <div class="progress mt-2" style="height: 6px; background: #222;">
                             {% set exp_percent = ((stats.total_equity - stats.cash_amount) / stats.total_equity * 100) %}
@@ -52,11 +52,53 @@
                 <div class="card bg-dark text-white border-secondary h-100">
                     <div class="card-body">
                         <h6 class="text-secondary text-uppercase small">Cash disponible</h6>
-                        <h2 class="display-6 fw-bold text-info">{{ stats.cash_amount|number_format(2, ',', ' ') }}
+                        <h2 class="display-12 fw-bold text-info">{{ stats.cash_amount|number_format(2, ',', ' ') }}
                             €</h2>
                         <span class="text-secondary small">Prêt pour de nouveaux signaux</span>
-                    </div>
+                    </  div>
                 </div>
+            </div>
+        </div>
+
+        {# Détail des assets #}
+        <div class="card bg-dark border-secondary mt-4">
+            <div class="card-header border-secondary text-white fw-bold">
+                Détail des actifs
+            </div>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0">
+                    <thead>
+                    <tr class="text-secondary small text-uppercase">
+                        <th>Actif</th>
+                        <th class="text-end">Quantité</th>
+                        <th class="text-end">PRU</th>
+                        <th class="text-end">Cours</th>
+                        <th class="text-end">Valeur</th>
+                        <th class="text-end">+/-values</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for asset in grouped_positions %}
+                        <tr class="align-middle">
+                            <td class="fw-bold text-info">{{ asset.name }}</td>
+                            <td class="text-end text-info">{{ asset.total_quantity }}</td>
+                            <td class="text-end text-info">{{ asset.pru|number_format(2, ',', ' ') }} €</td>
+                            <td class="text-end text-info">{{ asset.current_price|number_format(2, ',', ' ') }} €</td>
+                            <td class="text-end text-info fw-bold">{{ asset.total_current_value|number_format(2, ',', ' ') }} €</td>
+                            <td class="text-end text-info">
+                            <span class="badge {% if asset.pnl_euro >= 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ asset.pnl_euro >= 0 ? '+' : '' }}{{ asset.pnl_euro|number_format(2, ',', ' ') }} €
+                                ({{ asset.pnl_euro >= 0 ? '+' : '' }}{{ asset.pnl_percent|number_format(2, ',', '') }} %)
+                            </span>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">Aucune position ouverte actuellement.</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
 

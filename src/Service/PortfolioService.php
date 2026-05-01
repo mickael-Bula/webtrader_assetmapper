@@ -27,8 +27,7 @@ readonly class PortfolioService
             $user
         );
 
-        // TODO : getTotalPortfolio ne récupère que le capital de base, sans les profits réalisés
-        $totalCapital = (float)$user->getTotalPortfolio(); // capital de base + profits réalisés
+        $totalCapital = (float)$user->getTotalPortfolio();
         $unrealizedPnl = 0;
 
         foreach ($runningPositions as $pos) {
@@ -93,9 +92,10 @@ readonly class PortfolioService
     {
         // Logique de couleur dynamique
         $color = match (true) {
-            $percentage >= 90 => '#ff4b5c', // Rouge (Alerte)
-            $percentage >= 70 => '#ffa502', // Orange (Prudence)
-            default => '#36a2eb',           // Bleu (Normal)
+            $percentage >= 75 => '#ff4b5c', // Rouge
+            $percentage >= 50 => '#ffa502', // Orange
+            $percentage >= 25 => '#198754', // Vert
+            default => '#36a2eb',           // Bleu
         };
 
         $chart = $this->chartBuilder->createChart(Chart::TYPE_DOUGHNUT);
@@ -123,5 +123,44 @@ readonly class PortfolioService
                            ]);
 
         return $chart;
+    }
+
+    /**
+     * Regroupe les positions pour un affichage par ligne, présentant la quantité et le PRU de chaque position.
+     */
+    public function getGroupedPositions(User $user): array
+    {
+        $positions = $this->positionRepository->findByStatusAndUser(PositionStatus::RUNNING, $user);
+        $grouped = [];
+
+        foreach ($positions as $position) {
+            $name = 'LVC';
+
+            if (!isset($grouped[$name])) {
+                $grouped[$name] = [
+                    'name' => $name,
+                    'total_quantity' => 0,
+                    'total_cost' => 0,
+                    'current_price' => (float)$position->getCurrentPrice(),
+                    'total_current_value' => 0,
+                ];
+            }
+
+            $quantity = (float)$position->getQuantity();
+            $buyPrice = (float)$position->getLvcBuyPrice();
+
+            $grouped[$name]['total_quantity'] += $quantity;
+            $grouped[$name]['total_cost'] += ($quantity * $buyPrice);
+            $grouped[$name]['total_current_value'] += ($quantity * (float)$position->getCurrentPrice());
+        }
+
+        // Calcul final du PRU et de la performance pour chaque groupe
+        foreach ($grouped as $name => &$data) {
+            $data['pru'] = $data['total_cost'] / $data['total_quantity'];
+            $data['pnl_euro'] = $data['total_current_value'] - $data['total_cost'];
+            $data['pnl_percent'] = ($data['pnl_euro'] / $data['total_cost']) * 100;
+        }
+
+        return $grouped;
     }
 }

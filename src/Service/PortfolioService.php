@@ -27,9 +27,9 @@ readonly class PortfolioService
             $user
         );
 
+        // TODO : getTotalPortfolio ne récupère que le capital de base, sans les profits réalisés
         $totalCapital = (float)$user->getTotalPortfolio(); // capital de base + profits réalisés
         $unrealizedPnl = 0;
-        $currentPositionsValue = 0;
 
         foreach ($runningPositions as $pos) {
             // La valeur actuelle en bourse de la position
@@ -37,7 +37,6 @@ readonly class PortfolioService
             $buyVal = $pos->getQuantity() * $pos->getLvcBuyPrice();
 
             $unrealizedPnl += ($currentVal - $buyVal);
-            $currentPositionsValue += $currentVal;
         }
 
         // L'equity est le capital théorique si on vendait tout

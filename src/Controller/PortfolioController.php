@@ -29,8 +29,6 @@ final class PortfolioController extends AbstractController
         $lastSnapshot = $snapshotRepo->findOneBy(
             ['owner' => $user],
             ['createdAt' => 'DESC'],
-            1, // On saute le snapshot d'aujourd'hui s'il vient d'être créé
-            1  // On prend le deuxième plus récent
         );
 
         // Alternative plus robuste pour trouver le snapshot de comparaison :

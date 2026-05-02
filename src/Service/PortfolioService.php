@@ -178,16 +178,20 @@ readonly class PortfolioService
 
         $totalValue = 0.0;
         $totalCost = 0.0;
-        $totalQty = 0;
+        $totalQuantity = 0;
 
         foreach ($corePositions as $pos) {
-            $qty = (float)$pos->getQuantity();
-            $totalQty += $qty;
-            $totalCost += ($qty * (float)$pos->getLvcBuyPrice());
-            $totalValue += ($qty * $pos->getCurrentPrice());
+            $quantity = (float)$pos->getQuantity();
+            $totalQuantity += $quantity;
+            $totalCost += ($quantity * (float)$pos->getLvcBuyPrice());
+            $totalValue += ($quantity * $pos->getCurrentPrice());
         }
 
-        // 2. Calculer l'objectif dynamique (25% de l'Equity totale)
+        // 2. Calcul de la performance latente
+        $performanceValue = $totalValue - $totalCost;
+        $performancePercent = $totalCost > 0 ? ($performanceValue / $totalCost) * 100 : 0;
+
+        // 3. Calculer l'objectif dynamique (25% de l'Equity totale)
         $currentSnapshot = $this->calculateCurrentSnapshot($user);
         $totalEquity = $currentSnapshot['total_equity'];
         $targetValue = $totalEquity * 0.25;
@@ -195,8 +199,9 @@ readonly class PortfolioService
         return [
             'current_value' => $totalValue,
             'target_value' => $targetValue,
-            'pru' => $totalQty > 0 ? ($totalCost / $totalQty) : 0,
-            'total_quantity' => $totalQty,
+            'pru' => $totalQuantity > 0 ? ($totalCost / $totalQuantity) : 0,
+            'performance_percent' => $performancePercent,
+            'total_quantity' => $totalQuantity,
             'progress_percent' => $targetValue > 0 ? min(100, ($totalValue / $targetValue) * 100) : 0,
         ];
     }

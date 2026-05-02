@@ -15,4 +15,5 @@ final class CoreCard
     public float $pru;
     public float $currentValue;
     public float $progressPercent;
+    public float $performancePercent;
 }

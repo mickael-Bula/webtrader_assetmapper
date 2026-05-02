@@ -120,8 +120,11 @@ final class HomeController extends AbstractController
             false
         );
 
+        // Récupération de toutes les positions (core et trading)
+        $allPositions = $this->positionRepository->findByStatusAndUser(PositionStatus::RUNNING, $user);
+
         // Récupération des données d'exposition via le service
-        $exposure = $portfolioService->getExposureData($user, $runningPositions);
+        $exposure = $portfolioService->getExposureData($user, $allPositions);
 
         return $this->render('home/index.html.twig', [
             'runningPositions' => $runningPositions,

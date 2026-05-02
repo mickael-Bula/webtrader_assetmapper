@@ -40,11 +40,15 @@ readonly class PortfolioService
 
         // L'equity est le capital théorique si on vendait tout
         $totalEquity = $totalCapital + $unrealizedPnl;
+        $cashAmount = $totalCapital - $this->getEngagedCapital($runningPositions);
+        $exposurePercent = $totalEquity > 0 ? (($totalEquity - $cashAmount) / $totalEquity) * 100 : 0;
 
         return [
             'total_equity' => $totalEquity,
             'cash_amount' => $totalCapital - $this->getEngagedCapital($runningPositions),
-            'unrealized_pnl' => $unrealizedPnl
+            'unrealized_pnl' => $unrealizedPnl,
+            'exposure_percent' => $exposurePercent,
+            'exposure_color' => $this->getExposureColor($exposurePercent)
         ];
     }
 
@@ -67,18 +71,20 @@ readonly class PortfolioService
         return $totalEngaged;
     }
 
-    public function getExposureData(User $user, array $runningPositions): array
+    /**
+     * Calcule le pourcentage d'exposition actuel du portefeuille.
+     * Se base sur le snapshot enregistré en base et qui fait autorité.
+     */
+    public function getExposureData(User $user): array
     {
-        $totalCapital = (float)$user->getTotalPortfolio();
-        $usedCapital = 0;
+        // On récupère le snapshot qui fait autorité (PRU, Cash, Equity)
+        $snapshot = $this->calculateCurrentSnapshot($user);
 
-        foreach ($runningPositions as $pos) {
-            // Calcul de la valeur engagée (Quantité * Prix d'achat LVC)
-            $usedCapital += ($pos->getQuantity() * $pos->getLvcBuyPrice());
-        }
+        $totalCapital = $snapshot['total_equity'];
+        $usedCapital = $totalCapital - $snapshot['cash_amount']; // Valeur actuelle des actifs
 
-        $remainingCapital = max(0, $totalCapital - $usedCapital);
         $percentage = $totalCapital > 0 ? round(($usedCapital / $totalCapital) * 100) : 0;
+        $remainingCapital = $snapshot['cash_amount'];
 
         return [
             'chart' => $this->createExposureChart($usedCapital, $remainingCapital, $percentage),
@@ -88,15 +94,21 @@ readonly class PortfolioService
         ];
     }
 
-    private function createExposureChart(float $used, float $remaining, float $percentage): Chart
+    public function getExposureColor(float $percentage): string
     {
         // Logique de couleur dynamique
-        $color = match (true) {
+        return match (true) {
             $percentage >= 75 => '#ff4b5c', // Rouge
             $percentage >= 50 => '#ffa502', // Orange
             $percentage >= 25 => '#198754', // Vert
             default => '#36a2eb',           // Bleu
         };
+    }
+
+    private function createExposureChart(float $used, float $remaining, float $percentage): Chart
+    {
+        // Récupère la couleur correspondant au pourcentage
+        $color = $this->getExposureColor($percentage);
 
         $chart = $this->chartBuilder->createChart(Chart::TYPE_DOUGHNUT);
         $chart->setData([

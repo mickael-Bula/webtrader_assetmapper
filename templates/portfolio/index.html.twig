@@ -41,7 +41,11 @@
                             %</h2>
                         <div class="progress mt-2" style="height: 6px; background: #222;">
                             {% set exp_percent = ((stats.total_equity - stats.cash_amount) / stats.total_equity * 100) %}
-                            <div class="progress-bar bg-info" style="width: {{ exp_percent }}%"></div>
+                            <div
+                                class="progress-bar"
+                                role="progressbar"
+                                style="width: {{ stats.exposure_percent|number_format(2, '.') }}%; background-color: {{ stats.exposure_color }} !important;"
+                            ></div>
                         </div>
                     </div>
                 </div>

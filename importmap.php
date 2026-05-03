@@ -44,4 +44,8 @@ return [
     '@symfony/ux-chartjs' => [
         'version' => '2.35.0',
     ],
+    'bootstrap-icons/font/bootstrap-icons.css' => [
+        'version' => '1.13.1',
+        'type' => 'css',
+    ],
 ];

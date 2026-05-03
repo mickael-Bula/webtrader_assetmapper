@@ -1,12 +1,21 @@
-<div class="exposure-wrapper"
-     style="cursor: help;"
-     title="Utilisé : {{ used|round }}€ | Libre : {{ remaining|round }}€">
+<div class="d-flex flex-column align-items-center" style="width: 70px;">
+    {# Wrapper du Doughnut (60px) #}
+    <div class="exposure-wrapper mb-2"
+         style="cursor: help;"
+         title="Utilisé : {{ used|round }}€ | Libre : {{ remaining|round }}€">
 
-    <div style="position: relative; width: 60px; height: 60px;">
-        {{ render_chart(chart) }}
+        <div style="position: relative; width: 60px; height: 60px;">
+            {{ render_chart(chart) }}
 
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;">
-            <span class="fw-bold text-white" style="font-size: 0.8rem;">{{ percentage }} %</span>
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;">
+                <span class="fw-bold text-white" style="font-size: 0.7rem;">{{ percentage }}%</span>
+            </div>
         </div>
     </div>
+
+    {# Le Badge de Statut #}
+    <span class="badge w-100"
+          style="background-color: {{ color }}; color: #000; font-size: 0.6rem; padding: 2px 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+        {{ status }}
+    </span>
 </div>

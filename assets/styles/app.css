@@ -773,3 +773,21 @@ input[type=number] {
     box-shadow: none !important;
     transform: none !important;
 }
+
+/* --- Animation de la barre de progression --- */
+@keyframes progress-fill {
+    from { width: 0; }
+}
+
+.progress-bar-animated-fill {
+    /* Animation de remplissage au chargement */
+    animation: progress-fill 1s ease-out forwards;
+
+    /* Transition pour la brillance au survol */
+    transition: filter 0.3s ease-in-out;
+}
+
+.progress-bar-animated-fill:hover {
+    filter: brightness(1.1);
+    cursor: pointer; /* Optionnel : indique que l'élément est interactif */
+}

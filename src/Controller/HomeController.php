@@ -145,6 +145,8 @@ final class HomeController extends AbstractController
             'exposurePercentage' => $exposure['percentage'],
             'exposureUsed' => $exposure['used'],
             'exposureRemaining' => $exposure['remaining'],
+            'exposureColor' => $exposure['exposure_color'],
+            'exposureStatus' => $exposure['exposure_status'],
             'coreStats' => $coreStats,
         ]);
     }

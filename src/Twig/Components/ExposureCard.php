@@ -12,7 +12,9 @@ use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 final class ExposureCard
 {
     public Chart $chart;
-    public int $percentage;
+    public float $percentage;
     public float $used;
     public float $remaining;
+    public string $exposureColor;
+    public string $exposureStatus;
 }

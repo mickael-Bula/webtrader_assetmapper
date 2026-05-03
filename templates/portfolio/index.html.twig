@@ -9,7 +9,7 @@
             <div class="col-md-4">
                 <div class="card bg-dark text-white border-secondary h-100">
                     <div class="card-body">
-                        <h6 class="text-secondary text-uppercase small">Valeur Totale (Equity)</h6>
+                        <h6 class="text-white opacity-75 text-uppercase small">Valeur Totale (Equity)</h6>
                         <h2 class="display-12 fw-bold">{{ stats.total_equity|number_format(2, ',', ' ') }} €</h2>
                         {% if perf.is_calculable %}
                             <div class="{% if perf.diff >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
@@ -19,7 +19,7 @@
                                 <span class="text-secondary fw-normal small">depuis la dernière cotation</span>
                             </div>
                         {% else %}
-                            <div class="text-muted small">
+                            <div class="text-info opacity-75 small">
                                 <i class="bi bi-info-circle me-1"></i>
                                 Analyse de performance disponible à la prochaine clôture
                             </div>
@@ -36,16 +36,34 @@
             <div class="col-md-4">
                 <div class="card bg-dark text-white border-secondary h-100">
                     <div class="card-body">
-                        <h6 class="text-secondary text-uppercase small">Exposition</h6>
-                        <h2 class="display-12 fw-bold">{{ ((stats.total_equity - stats.cash_amount) / stats.total_equity * 100)|round(1)|number_format(1, ',', ' ') }}
-                            %</h2>
-                        <div class="progress mt-2" style="height: 6px; background: #222;">
-                            {% set exp_percent = ((stats.total_equity - stats.cash_amount) / stats.total_equity * 100) %}
-                            <div
-                                class="progress-bar"
-                                role="progressbar"
-                                style="width: {{ stats.exposure_percent|number_format(2, '.') }}%; background-color: {{ stats.exposure_color }} !important;"
-                            ></div>
+                        <h6 class="text-white opacity-75 text-uppercase small">Exposition</h6>
+                        <h2 class="display-12 fw-bold">
+                            {{ ((stats.total_equity - stats.cash_amount) / stats.total_equity * 100)|round(1)|number_format(2, ',', ' ') }} %
+                        </h2>
+                        <div class="mt-2">
+                            <div class="progress" style="height: 6px; background: #222;">
+                                <div
+                                    class="progress-bar progress-bar-animated-fill"
+                                    role="progressbar"
+                                    style="
+                                        width: {{ stats.exposure_percent|number_format(2, '.') }}%;
+                                        background-color: {{ stats.exposure_color }} !important;"
+                                ></div>
+                            </div>
+
+                            {# Label de la phase d'investissement #}
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <span class="fw-bold text-white opacity-50" style="font-size: 0.75rem; letter-spacing: 0.8px;">
+                                    {{ stats.exposure_label|upper }}
+                                </span>
+                            </div>
+
+                            {# Description de la phase d'investissment #}
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-white opacity-50" style="font-size: 0.75rem; letter-spacing: 0.8px;">
+                                    {{ stats.exposure_description }}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -55,10 +73,10 @@
             <div class="col-md-4">
                 <div class="card bg-dark text-white border-secondary h-100">
                     <div class="card-body">
-                        <h6 class="text-secondary text-uppercase small">Cash disponible</h6>
+                        <h6 class="text-white opacity-75 text-uppercase small">Cash disponible</h6>
                         <h2 class="display-12 fw-bold text-info">{{ stats.cash_amount|number_format(2, ',', ' ') }}
                             €</h2>
-                        <span class="text-secondary small">Prêt pour de nouveaux signaux</span>
+                        <span class="text-white opacity-50 small">Prêt pour de nouveaux signaux</span>
                     </div>
                 </div>
             </div>
@@ -88,7 +106,9 @@
                             <td class="text-end text-info">{{ asset.total_quantity }}</td>
                             <td class="text-end text-info">{{ asset.pru|number_format(2, ',', ' ') }} €</td>
                             <td class="text-end text-info">{{ asset.current_price|number_format(2, ',', ' ') }} €</td>
-                            <td class="text-end text-info fw-bold">{{ asset.total_current_value|number_format(2, ',', ' ') }} €</td>
+                            <td class="text-end text-info fw-bold">{{ asset.total_current_value|number_format(2, ',', ' ') }}
+                                €
+                            </td>
                             <td class="text-end text-info">
                             <span class="badge {% if asset.pnl_euro >= 0 %}bg-success{% else %}bg-danger{% endif %}">
                                 {{ asset.pnl_euro >= 0 ? '+' : '' }}{{ asset.pnl_euro|number_format(2, ',', ' ') }} €
@@ -98,7 +118,8 @@
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">Aucune position ouverte actuellement.</td>
+                            <td colspan="6" class="text-center text-muted py-4">Aucune position ouverte actuellement.
+                            </td>
                         </tr>
                     {% endfor %}
                     </tbody>

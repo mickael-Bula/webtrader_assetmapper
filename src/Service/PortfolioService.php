@@ -48,7 +48,9 @@ readonly class PortfolioService
             'cash_amount' => $totalCapital - $this->getEngagedCapital($runningPositions),
             'unrealized_pnl' => $unrealizedPnl,
             'exposure_percent' => $exposurePercent,
-            'exposure_color' => $this->getExposureColor($exposurePercent)
+            'exposure_color' => $this->getExposureColor($exposurePercent),
+            'exposure_label' => $this->getExposureLabel($exposurePercent),
+            'exposure_description' => $this->getExposureDescription($exposurePercent),
         ];
     }
 
@@ -91,6 +93,8 @@ readonly class PortfolioService
             'percentage' => $percentage,
             'used' => $usedCapital,
             'remaining' => $remainingCapital,
+            'exposure_color' => $this->getExposureColor($percentage),
+            'exposure_status' => $this->getExposureStatus($percentage),
         ];
     }
 
@@ -102,6 +106,36 @@ readonly class PortfolioService
             $percentage >= 50 => '#ffa502', // Orange
             $percentage >= 25 => '#198754', // Vert
             default => '#36a2eb',           // Bleu
+        };
+    }
+
+    public function getExposureStatus(float $percentage): string
+    {
+        return match (true) {
+            $percentage >= 75 => 'PHASE 4',
+            $percentage >= 50 => 'PHASE 3',
+            $percentage >= 25 => 'PHASE 2',
+            default => 'PHASE 1',
+        };
+    }
+
+    public function getExposureLabel(float $percentage): string
+    {
+        return match (true) {
+            $percentage >= 75 => 'ALLÈGEMENT DE L\'EXPOSITION (PHASE 4)',
+            $percentage >= 50 => 'RÉCUPÉRATION DU CAPITAL INVESTI (PHASE 3)',
+            $percentage >= 25 => 'ACCUMULATION DES POSITIONS (PHASE 2)',
+            default => 'INVESTISSEMENT EN COURS (PHASE 1)',
+        };
+    }
+
+    public function getExposureDescription(float $percentage): string
+    {
+        return match (true) {
+            $percentage >= 75 => 'Revente complète de la ligne. Si la revente ne permet pas de retomber sous 75 % d\'exposition, on complète avec des positions CORE.',
+            $percentage >= 50 => 'Revente totale de la ligne. Récupération du capital et de la plus-value.',
+            $percentage >= 25 => 'Revente des positions limitée au seul capital investi. La plus-value reste investie.',
+            default => 'Achat de positions sans revente. Représente l\'actif CORE.',
         };
     }
 
@@ -131,7 +165,7 @@ readonly class PortfolioService
                                'interaction' => [
                                    'intersect' => true,
                                ],
-                               'cutout' => '80%', // Un anneau plus fin fait paraître le graphique plus petit/élégant
+                               'cutout' => '80%', // Un anneau plus fin fait paraître le graphique plus petit et élégant
                            ]);
 
         return $chart;

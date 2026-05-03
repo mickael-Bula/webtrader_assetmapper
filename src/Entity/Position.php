@@ -49,8 +49,8 @@ class Position
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     private string $buyPrice;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
-    private string $targetPrice;
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    private ?string $targetPrice = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     private ?string $lvcBuyPrice = null;
@@ -66,6 +66,12 @@ class Position
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    private ?string $lvcCurrentPrice = null;
+
+    #[ORM\Column]
+    private ?bool $isCore = null;
 
     public function __construct()
     {
@@ -120,7 +126,7 @@ class Position
         return $this->buyPrice;
     }
 
-    public function getTargetPrice(): string
+    public function getTargetPrice(): ?string
     {
         return $this->targetPrice;
     }
@@ -204,6 +210,25 @@ class Position
         return $this;
     }
 
+    public function getLvcCurrentPrice(): ?string
+    {
+        return $this->lvcCurrentPrice;
+    }
+
+    public function setLvcCurrentPrice(?string $lvcCurrentPrice): static
+    {
+        $this->lvcCurrentPrice = $lvcCurrentPrice;
+        return $this;
+    }
+
+    /**
+     * Retourne le prix actuel sous forme de float pour les calculs
+     */
+    public function getCurrentPrice(): float
+    {
+        return (float) ($this->lvcCurrentPrice ?? 0.0);
+    }
+
     public function getTargetDistance(string $currentCacPrice): array
     {
         $current = (float) $currentCacPrice;
@@ -217,5 +242,17 @@ class Position
             'percent' => round($percent, 2),
             'is_close' => abs($percent) < 1.0 // Moins de 1% de l'objectif
         ];
+    }
+
+    public function isCore(): ?bool
+    {
+        return $this->isCore;
+    }
+
+    public function setIsCore(bool $isCore): static
+    {
+        $this->isCore = $isCore;
+
+        return $this;
     }
 }

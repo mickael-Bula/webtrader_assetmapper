@@ -289,7 +289,6 @@ body.menu-open .app-main::before {
 .row-positions-spacer {
     /* Ligne 2 : Positions (2/3) + Espace vide (1/3) */
     width: 100%;
-    gap: 20px;
     flex-grow: 1; /* Permet à cette ligne d'occuper l'espace vertical restant */
 }
 
@@ -452,7 +451,6 @@ body.menu-open .app-main::before {
 /* -------------------------------------- */
 
 .position-card {
-    margin-bottom: 20px;
     width: 100%;
 }
 
@@ -774,4 +772,22 @@ input[type=number] {
     color: #0dcaf0 !important;
     box-shadow: none !important;
     transform: none !important;
+}
+
+/* --- Animation de la barre de progression --- */
+@keyframes progress-fill {
+    from { width: 0; }
+}
+
+.progress-bar-animated-fill {
+    /* Animation de remplissage au chargement */
+    animation: progress-fill 1s ease-out forwards;
+
+    /* Transition pour la brillance au survol */
+    transition: filter 0.3s ease-in-out;
+}
+
+.progress-bar-animated-fill:hover {
+    filter: brightness(1.1);
+    cursor: pointer; /* Optionnel : indique que l'élément est interactif */
 }

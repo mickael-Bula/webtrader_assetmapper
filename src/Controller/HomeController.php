@@ -12,6 +12,7 @@ use App\Enum\PositionStatus;
 use Psr\Log\LoggerInterface;
 use App\Service\PositionManager;
 use App\Service\StrategyManager;
+use App\Service\PortfolioService;
 use App\Repository\PositionRepository;
 use App\Repository\EntrypointRepository;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,7 +24,7 @@ final class HomeController extends AbstractController
 {
     public function __construct(
         private readonly LoggerInterface $tradingLogger,
-        private readonly StrategyManager $strategyManager
+        private readonly StrategyManager $strategyManager, private readonly PositionRepository $positionRepository
     )
     {
     }
@@ -36,7 +37,8 @@ final class HomeController extends AbstractController
         CacDailyRepository $cacRepository,
         PositionRepository $positionRepository,
         EntrypointRepository $entrypointRepository,
-        PositionManager    $positionManager
+        PositionManager    $positionManager,
+        PortfolioService    $portfolioService,
     ): Response
     {
         /** @var User $user */
@@ -95,14 +97,35 @@ final class HomeController extends AbstractController
         // Transmission des formulaires de création et de modification de position.
         $newPosition = new Position(); // On crée une instance vierge de Position pour le formulaire de création
 
+        // Récupération du formulaire
         $form = $this->createForm(PositionType::class, $newPosition, [
             'stimulus_controller' => 'position-calculator',
             'action' => $this->generateUrl('app_position_create'), // Centralise l'URL d'action
         ]);
 
+        // Récupération des statistiques du Core
+        $coreStats = $portfolioService->getCoreStats($user);
+
+        // Récupération des positions de trading en cours
+        $runningPositions = $this->positionRepository->findByStatusUserAndCore(
+            PositionStatus::RUNNING,
+            $user,
+            false
+        );
+
+        // Récupération des positions de trading en attente
+        $waitingPositions = $this->positionRepository->findByStatusUserAndCore(
+            PositionStatus::WAITING,
+            $user,
+            false
+        );
+
+        // Récupération des données d'exposition via le service
+        $exposure = $portfolioService->getExposureData($user);
+
         return $this->render('home/index.html.twig', [
-            'runningPositions' => $positionRepository->findByStatusAndUser(PositionStatus::RUNNING, $user),
-            'waitingPositions' => $positionRepository->findByStatusAndUser(PositionStatus::WAITING, $user),
+            'runningPositions' => $runningPositions,
+            'waitingPositions' => $waitingPositions,
             'cacQuotes' => $cacQuotes,
             'lastQuote' => $currentClose,
             'lastLvcPrice' => $lastLvcPrice,
@@ -118,6 +141,13 @@ final class HomeController extends AbstractController
             // On passe deux vues distinctes pour chacune des instances du composant PositionTable
             'formRunning' => $form->createView(),
             'formWaiting' => $form->createView(),
+            'exposureChart' => $exposure['chart'],
+            'exposurePercentage' => $exposure['percentage'],
+            'exposureUsed' => $exposure['used'],
+            'exposureRemaining' => $exposure['remaining'],
+            'exposureColor' => $exposure['exposure_color'],
+            'exposureStatus' => $exposure['exposure_status'],
+            'coreStats' => $coreStats,
         ]);
     }
 }

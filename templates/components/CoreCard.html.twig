@@ -1,0 +1,80 @@
+<div class="card bg-dark border-info border-opacity-25 shadow-sm" style="border-left: 4px solid #36A2EBFF;">
+    <div class="card-body py-2 px-3">
+        <!-- Utilisation de gx-2 pour réduire l'espace entre colonnes et permettre le maintien sur une ligne -->
+        <div class="row align-items-center text-nowrap gx-2">
+
+            <!-- 1. Progression Valeur (25% PF) -->
+            <div class="col-md-3">
+                <div class="text-white text-opacity-75 small text-uppercase fw-bold mb-1"
+                     style="font-size: 0.6rem; letter-spacing: 0.5px;">
+                    Objectif Core (25% PF)
+                </div>
+                <div class="text-white fw-bold mb-1">
+                    <span style="font-size: 1rem;">{{ currentValue|number_format(0, ',', ' ') }} €</span>
+                    <span class="text-white text-opacity-75 fw-normal small">/ {{ targetValue|number_format(0, ',', ' ') }} €</span>
+                </div>
+                <div class="progress" style="height: 5px; background-color: #1a1a1a;">
+                    <div class="progress-bar bg-info" role="progressbar" style="width: {{ progressPercent }}%"></div>
+                </div>
+            </div>
+
+            <!-- 2. Quantité Accumulée -->
+            <div class="col-md-2 border-start border-secondary border-opacity-25">
+                <div class="ps-2">
+                    <div class="text-white text-opacity-75 small text-uppercase fw-bold"
+                         style="font-size: 0.6rem; letter-spacing: 0.5px;">
+                        Quantité
+                    </div>
+                    <div class="text-info fw-bold" style="font-size: 1.1rem;">
+                        {{ totalQuantity }} <span class="small fw-normal text-white text-opacity-75">LVC</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. PRU -->
+            <div class="col-md-2 border-start border-secondary border-opacity-25">
+                <div class="ps-2">
+                    <div class="text-white text-opacity-75 small text-uppercase fw-bold"
+                         style="font-size: 0.6rem; letter-spacing: 0.5px;">
+                        PRU
+                    </div>
+                    <div class="text-white fw-bold" style="font-size: 1.1rem;">
+                        {{ pru|number_format(2, ',', ' ') }}
+                        <span class="small fw-normal text-white text-opacity-75" style="font-size: 0.7rem;">€</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. PERFORMANCE -->
+            <div class="col-md-2 border-start border-secondary border-opacity-25">
+                <div class="ps-2">
+                    <div class="text-white text-opacity-75 small text-uppercase fw-bold"
+                         style="font-size: 0.6rem; letter-spacing: 0.5px;">
+                        Performance
+                    </div>
+                    <div class="fw-bold {{ performancePercent >= 0 ? 'text-success' : 'text-danger' }}" style="font-size: 1.1rem;">
+                        {{ performancePercent >= 0 ? '+' : '' }}{{ performancePercent|number_format(2, ',', ' ') }}%
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Reste à investir -->
+            <div class="col-md-3 border-start border-secondary border-opacity-25 text-end">
+                {% set remaining = targetValue - currentValue %}
+                {% if remaining > 0 %}
+                    <div class="text-white text-opacity-75 small text-uppercase fw-bold" style="font-size: 0.6rem;">
+                        Reste à investir
+                    </div>
+                    <div class="text-warning fw-bold" style="font-size: 1.1rem;">
+                        {{ remaining|number_format(0, ',', ' ') }} €
+                    </div>
+                {% else %}
+                    <span class="badge bg-success-soft text-success px-2 py-1">
+                        <i class="mdi mdi-check-decagram"></i> CORE REMPLI
+                    </span>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>

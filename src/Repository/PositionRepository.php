@@ -7,6 +7,7 @@ namespace App\Repository;
 use App\Entity\User;
 use App\Entity\Position;
 use App\Enum\PositionStatus;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
@@ -22,30 +23,55 @@ class PositionRepository extends ServiceEntityRepository
 
     /**
      * Récupère les positions d'un utilisateur en passant par la table Entrypoint.
-     * Si un ID d'entrypoint est fourni, on exclut les positions de cet entrypoint.
+     * Cette méthode sert à construire les méthodes findByStatusAndUser et findByStatusUserAndCore.
      *
-     * @return array<Position>
+     * @param User $user
+     * @param PositionStatus $status
+     * @return QueryBuilder
      */
-    public function findByStatusAndUser(
-        PositionStatus $status,
-        User           $user,
-        ?int           $excludedEntrypointId = null
-    ): array
+    private function getBaseQueryBuilder(User $user, PositionStatus $status): QueryBuilder
     {
-        $qb = $this->createQueryBuilder('p')
+        return $this->createQueryBuilder('p')
             ->innerJoin('p.entrypoint', 'e')
             ->where('e.user = :user')
             ->andWhere('p.status = :status')
             ->setParameter('user', $user)
             ->setParameter('status', $status);
+    }
 
-        // Si un ID est fourni, on ajoute la condition d'exclusion
+    /**
+     * Récupère TOUTES les positions RUNNING (Core + Trading).
+     * Si un ID d'entrypoint est fourni, on exclut les positions de cet entrypoint.
+     */
+    public function findByStatusAndUser(
+        PositionStatus $status,
+        User           $user,
+        ?int           $excludedEntrypointId = null
+    ): array {
+        $qb = $this->getBaseQueryBuilder($user, $status);
+
         if ($excludedEntrypointId !== null) {
             $qb->andWhere('e.id != :excludedId')
                 ->setParameter('excludedId', $excludedEntrypointId);
         }
 
         return $qb->orderBy('p.createdAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Récupère spécifiquement le bloc Core ou le bloc Trading
+     */
+    public function findByStatusUserAndCore(
+        PositionStatus $status,
+        User $user,
+        bool $isCore
+    ): array {
+        return $this->getBaseQueryBuilder($user, $status)
+            ->andWhere('p.isCore = :isCore')
+            ->setParameter('isCore', $isCore)
+            ->orderBy('p.createdAt', 'ASC')
             ->getQuery()
             ->getResult();
     }

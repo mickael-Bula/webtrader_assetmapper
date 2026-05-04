@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Enum\LogAction;
 use App\Entity\User;
 use App\Enum\LogOrigin;
+use App\Enum\LogContext;
 use App\Entity\Entrypoint;
 use App\Service\LogManager;
 use App\Form\EntrypointType;
@@ -65,13 +67,14 @@ final class SettingsController extends AbstractController
 
             // Log des modifications de configuration
             $this->logManager->log(
-                sprintf('Paramètres mis à jour : Portefeuille %.2f€, Size %.2f€, Spread %.2f',
+                            sprintf('Paramètres mis à jour : Portefeuille %.2f€, Size %.2f€, Spread %.2f',
                         $user->getTotalPortfolio(),
                         $user->getPositionSize(),
                         $user->getSpread()
                 ),
-                'update',
-                LogOrigin::USER
+                actionType: LogAction::SETUP,
+                origin:     LogOrigin::USER,
+                context:    LogContext::PARAM
             );
 
             // 2. On lie l'entrypoint à son user
@@ -100,7 +103,10 @@ final class SettingsController extends AbstractController
             // On trace l'information.
             $message = sprintf('Entrypoint %d : %s', $entrypoint->getId(), $deleteMessage);
             if (str_contains($deleteMessage, 'Les anciens ordres en attente ont été supprimés.')) {
-                $this->logManager->log($message, 'delete');
+                $this->logManager->log(
+                    $message,
+                    actionType: LogAction::POSITION_CLEANUP
+                );
             }
             $this->addFlash('success', $message);
 
@@ -127,7 +133,7 @@ final class SettingsController extends AbstractController
             );
             $this->logManager->log(
                 $strategyMessage,
-                'create'
+                actionType: LogAction::PENDING_ORDER_CREATE
             );
             $this->addFlash('success', $strategyMessage);
 

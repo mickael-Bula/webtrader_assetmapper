@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Enum\LogAction;
 use App\Entity\User;
 use App\Entity\Position;
+use App\Enum\LogContext;
 use App\Entity\Entrypoint;
 use App\Enum\PositionStatus;
 use App\Dto\MarketData\CacDailyDto;
@@ -67,7 +69,8 @@ readonly class PositionManager
                         $pos->getTargetPrice(),
                         $day->getHigh()
                     ),
-                    'info'
+                    actionType: LogAction::SELL,
+                    context: LogContext::RUNNING,
                 );
             }
         }
@@ -92,7 +95,8 @@ readonly class PositionManager
                 $user->getUpperRange(),
                 $newCacHigh
             ),
-            'info');
+            actionType: LogAction::TRAILING_ADJUSTMENT
+        );
 
         // 1. Mise à jour de l'Upper Range (formaté sur deux décimales).
         $user->setUpperRange(number_format($newCacHigh, 2, '.', ''));
@@ -117,7 +121,7 @@ readonly class PositionManager
                     "Les positions en attente de l'entrypoint %d ont été mises à jour",
                     $positions[0]->getEntrypoint()->getId()
                 ),
-                'info'
+                  actionType: LogAction::TRAILING_ADJUSTMENT
             );
         }
         $this->entityManager->flush();
@@ -137,7 +141,7 @@ readonly class PositionManager
                 $pos->setStatus(PositionStatus::RUNNING);
                 $this->logManager->log(
                     sprintf("Position ouverte : id #%s le %s", $pos->getId(), $day->getLow()),
-                    "info"
+                    actionType: LogAction::BUY
                 );
 
                 if ($pos->getRank() === 1) {
@@ -190,7 +194,7 @@ readonly class PositionManager
         // On enregistre le log de création des positions en attente du nouvel entrypoint.
         $this->logManager->log(
             sprintf('Les positions en attente du nouvel entrypoint %d ont été créées', $newEntrypoint->getId()),
-            'create'
+            actionType: LogAction::PENDING_ORDER_CREATE
         );
 
         // On enregistre les nouvelles positions.
@@ -275,7 +279,7 @@ readonly class PositionManager
                     $entrypoint->getId(),
                     $entrypoint->getEntrypoint()
                 ),
-                'create'
+                 actionType: LogAction::PENDING_ORDER_CREATE
             );
         }
     }
@@ -335,12 +339,32 @@ readonly class PositionManager
             foreach ($entrypoint->getPositions() as $position) {
                 if ($position->getStatus() === PositionStatus::WAITING) {
                     $entrypoint->removePosition($position);
+
+                    // 1. Log individuel avant suppression
+                    $this->logManager->log(
+                        message: sprintf(
+                                     "Suppression position en attente : ID #%d (Prix d'achat: %s) suite à réinitialisation",
+                                     $position->getId(),
+                                     $position->getBuyPrice()
+                                 ),
+                        actionType: LogAction::POSITION_CLEANUP
+                    );
+
+                    // 2. Suppression de la position
                     $this->entityManager->remove($position);
                 }
             }
             // On change le statut des entrypoints précédents et sans positions 'en cours' pour les rendre 'inactifs'.
             if (!$entrypoint->isLocked()) {
                 $entrypoint->setStatus(PositionStatus::CLOSED);
+
+                // Log de clôture de l'entrypoint
+                $this->logManager->log(
+                    message: sprintf("Entrypoint #%d clôturé car sans position active", $entrypoint->getId()),
+                    actionType: LogAction::POSITION_CLEANUP,
+                    context: LogContext::ENTRYPOINT
+                );
+
                 $this->entityManager->flush();
             }
         }
@@ -353,12 +377,22 @@ readonly class PositionManager
      */
     public function getLogMetadata(PositionStatus $status): array
     {
-        // On définit le verbe et le type de log selon le statut
-        $isWaiting = ($status === PositionStatus::WAITING);
-
-        return [
-            'verb' => $isWaiting ? 'placée' : 'achetée',
-            'label' => $isWaiting ? 'en attente' : 'en cours'
-        ];
+        return match ($status) {
+            PositionStatus::WAITING => [
+                'verb'    => 'placée',
+                'context' => LogContext::WAITING,
+                'action'  => LogAction::SETUP,
+            ],
+            PositionStatus::RUNNING => [
+                'verb'    => 'achetée',
+                'context' => LogContext::RUNNING,
+                'action'  => LogAction::BUY,
+            ],
+            PositionStatus::CLOSED => [
+                'verb'    => 'clôturée',
+                'context' => LogContext::CLOSED,
+                'action'  => LogAction::SELL,
+            ],
+        };
     }
 }

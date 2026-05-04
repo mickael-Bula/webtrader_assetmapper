@@ -70,6 +70,10 @@ final class PortfolioController extends AbstractController
         // Création du graphique
         $chart = $chartBuilder->createChart(Chart::TYPE_LINE);
 
+        // On inverse l'ordre pour que le graphique soit chronologique (le tri se faisant avec DESC dans la requête).
+        $labels = array_reverse($labels);
+        $data = array_reverse($data);
+
         $chart->setData([
                             'labels' => $labels,
                             'datasets' => [

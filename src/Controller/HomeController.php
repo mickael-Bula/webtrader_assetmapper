@@ -24,7 +24,7 @@ final class HomeController extends AbstractController
 {
     public function __construct(
         private readonly LoggerInterface $tradingLogger,
-        private readonly StrategyManager $strategyManager, private readonly PositionRepository $positionRepository
+        private readonly StrategyManager $strategyManager
     )
     {
     }
@@ -107,14 +107,14 @@ final class HomeController extends AbstractController
         $coreStats = $portfolioService->getCoreStats($user);
 
         // Récupération des positions de trading en cours
-        $runningPositions = $this->positionRepository->findByStatusUserAndCore(
+        $runningPositions = $positionRepository->findByStatusUserAndCore(
             PositionStatus::RUNNING,
             $user,
             false
         );
 
         // Récupération des positions de trading en attente
-        $waitingPositions = $this->positionRepository->findByStatusUserAndCore(
+        $waitingPositions = $positionRepository->findByStatusUserAndCore(
             PositionStatus::WAITING,
             $user,
             false

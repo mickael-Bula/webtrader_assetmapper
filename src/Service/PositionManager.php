@@ -55,13 +55,18 @@ readonly class PositionManager
             $this->handleUpperRangeTrailing($user, $day);
         }
 
-        // 2. VENTES : on vérifie si le plus haut du jour >= Target de vente de chaque position en cours.
-        $runningPositions = $this->positionRepository->findByStatusAndUser(PositionStatus::RUNNING, $user);
+        // 2. VENTES : on vérifie si le plus haut du jour >= Target de vente de chaque position en cours non CORE.
+        $runningPositions = $this->positionRepository->findByStatusUserAndCore(PositionStatus::RUNNING, $user, false);
         foreach ($runningPositions as $pos) {
-            if ($day->getHigh() >= (float)$pos->getTargetPrice()) {
+            if (null !== $pos->getTargetPrice() && $day->getHigh() >= (float)$pos->getTargetPrice()) {
                 $pos->setStatus(PositionStatus::CLOSED);
                 $this->logManager->log(
-                    sprintf("Position clôturée : id #%s le %s", $pos->getId(), $day->getHigh()),
+                    sprintf(
+                        "Position clôturée : id #%s (Cible: %s, Haut du jour: %s)",
+                        $pos->getId(),
+                        $pos->getTargetPrice(),
+                        $day->getHigh()
+                    ),
                     'info'
                 );
             }

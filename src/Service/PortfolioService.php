@@ -24,6 +24,7 @@ readonly class PortfolioService
 
     public function calculateCurrentSnapshot(User $user): array
     {
+        // Récupère toutes les positions en cours de l'utilisateur (Core + Trading).
         $runningPositions = $this->positionRepository->findByStatusAndUser(
             PositionStatus::RUNNING,
             $user
@@ -178,6 +179,7 @@ readonly class PortfolioService
      */
     public function getGroupedPositions(User $user): array
     {
+        // Récupère toutes les positions en cours de l'utilisateur (Core + Trading).
         $positions = $this->positionRepository->findByStatusAndUser(PositionStatus::RUNNING, $user);
         $grouped = [];
 
@@ -266,25 +268,6 @@ readonly class PortfolioService
         $lastSnapshot = $this->snapshotRepo->findOneBy(['owner' => $user], ['createdAt' => 'DESC'],
         );
 
-        // Recherche de l'avant-dernier snapshot pour effectuer la comparaison :
-        $snapshotsForCalculation = $this->snapshotRepo->findBy(['owner' => $user], ['createdAt' => 'DESC'], 2);
-        $yesterdaySnapshot = (count($snapshotsForCalculation) > 1) ? $snapshotsForCalculation[1] : null;
-
-        $performanceData = [
-            'is_calculable' => false,
-            'diff' => 0,
-            'percent' => 0
-        ];
-
-        if ($yesterdaySnapshot) {
-            $diff = $currentStats['total_equity'] - $yesterdaySnapshot->getTotalEquity();
-            $performanceData = [
-                'is_calculable' => true,
-                'diff' => $diff,
-                'percent' => ($diff / $yesterdaySnapshot->getTotalEquity()) * 100
-            ];
-        }
-
         $dailyDiff = 0;
         $dailyPercent = 0;
 
@@ -300,6 +283,27 @@ readonly class PortfolioService
         // 3. Récupération des données pour le GRAPHIQUE (30 derniers jours).
         $history = $this->snapshotRepo->findBy(['owner' => $user], ['createdAt' => 'ASC'], 30);
 
+        // 4. Récupération du premier snapshot de l'utilisateur
+        $firstSnapshot = $this->snapshotRepo->findOneBy(['owner' => $user], ['createdAt' => 'ASC']);
+
+        $globalPerf = [
+            'is_calculable' => false,
+            'diff' => 0,
+            'percent' => 0
+        ];
+
+        if ($firstSnapshot) {
+            $diff = $currentStats['total_equity'] - $firstSnapshot->getTotalEquity();
+            $globalPerf = [
+                'is_calculable' => true,
+                'diff' => $diff,
+                // On calcule par rapport à la valeur de départ
+                'percent' => ($firstSnapshot->getTotalEquity() > 0)
+                    ? ($diff / $firstSnapshot->getTotalEquity()) * 100
+                    : 0
+            ];
+        }
+
         foreach ($history as $snapshot) {
             $labels[] = $snapshot->getCreatedAt()?->format('d/m');
             $data[] = $snapshot->getTotalEquity();
@@ -308,7 +312,7 @@ readonly class PortfolioService
         return [
             'labels' => $labels,
             'data' => $data,
-            'performance_data' => $performanceData,
+            'performance_data' => $globalPerf,
             'daily_diff' => $dailyDiff,
             'daily_percent' => $dailyPercent
         ];

@@ -7,7 +7,16 @@
     </h6>
 
     {# Mapping pour les classes CSS correspondant au journal_controller.js #}
-    {% set styles = {'create': 'text-success', 'update': 'text-info', 'delete': 'text-danger', 'default': 'text-muted'} %}
+    {% set styles = {
+        'buy': 'text-success',
+        'sell': 'text-danger',
+        'trailing_adjustment': 'text-info',
+        'pending_order_create': 'text-info',
+        'pending_order_update': 'text-info',
+        'position_cleanup': 'text-info',
+        'setup': 'text-warning',
+        'default': 'text-muted',
+    } %}
 
     {# Liste des entrées #}
     <ul class="list-unstyled mb-0" data-journal-target="list">

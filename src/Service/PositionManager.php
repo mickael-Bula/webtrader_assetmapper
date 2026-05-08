@@ -34,6 +34,16 @@ readonly class PositionManager
      */
     public function checkAndUpdatePositions(User $user, CacDailyDto $latestCacDto): void
     {
+        // MISE À JOUR DU PRIX LVC COURANT DES POSITIONS EN COURS
+        $runningPositions = $this->positionRepository->findByStatusAndUser(
+            PositionStatus::RUNNING,
+            $user
+        );
+
+        foreach ($runningPositions as $position) {
+            $position->setLvcCurrentPrice((string)$latestCacDto->getLvcClose());
+        }
+
         // Récupère l'historique manqué (du plus vieux au plus récent)
         $missedCacs = $this->cacRepository->findRangeWithLvc(
             $user->getLastCacUpdatedId(),

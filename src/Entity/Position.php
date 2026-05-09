@@ -230,6 +230,13 @@ class Position
         return (float) ($this->lvcCurrentPrice ?? 0.0);
     }
 
+    /**
+     * Méthode permettant de calculer la distance entre le prix actuel et le prix cible.
+     * La propriété is_close permet d'identifier si le prix est proche de l'objectif.
+     *
+     * @param string $currentCacPrice
+     * @return array
+     */
     public function getTargetDistance(string $currentCacPrice): array
     {
         $current = (float) $currentCacPrice;

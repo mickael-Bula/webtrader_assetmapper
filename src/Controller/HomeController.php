@@ -10,7 +10,6 @@ use App\Form\PositionType;
 use Doctrine\DBAL\Exception;
 use App\Enum\PositionStatus;
 use Psr\Log\LoggerInterface;
-use App\Service\PositionManager;
 use App\Service\StrategyManager;
 use App\Service\PortfolioService;
 use App\Repository\PositionRepository;
@@ -22,12 +21,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 final class HomeController extends AbstractController
 {
-    public function __construct(
-        private readonly LoggerInterface $tradingLogger,
-        private readonly StrategyManager $strategyManager
-    )
-    {
-    }
+    public function __construct(private readonly StrategyManager $strategyManager) {}
 
     /**
      * @throws Exception
@@ -37,10 +31,11 @@ final class HomeController extends AbstractController
         CacDailyRepository $cacRepository,
         PositionRepository $positionRepository,
         EntrypointRepository $entrypointRepository,
-        PositionManager    $positionManager,
         PortfolioService    $portfolioService,
     ): Response
     {
+        /** Une vérification de la synchronisation des données est lancée à chaque requête @see MarketSyncSubscriber */
+
         /** @var User $user */
         $user = $this->getUser();
 
@@ -51,19 +46,6 @@ final class HomeController extends AbstractController
         // Si l'utilisateur n'a pas configuré son capital, on le redirige vers la page de description de la stratégie.
         if ($user->getTotalPortfolio() === null) {
             return $this->redirectToRoute('app_settings');
-        }
-
-        // TODO : est-il utile de faire cette requête, sachant que l'on a la donnée à l'index[0] de CacQuotes ?
-        $latestCacDto = $cacRepository->findLast();
-
-        // Si le dernier Cac disponible diffère de celui enregistré, on vérifie si les positions ont été touchées.
-        if ($latestCacDto && $user->getLastCacUpdatedId() !== $latestCacDto->getId()) {
-            try {
-                $positionManager->checkAndUpdatePositions($user, $latestCacDto);
-            } catch (\Exception $e) {
-                $this->addFlash('error', 'Les données de marché sont momentanément indisponibles.');
-                $this->tradingLogger->error($e->getMessage(), ['exception' => $e]);
-            }
         }
 
         // Récupération des données du cac et du Lvc correspondant.

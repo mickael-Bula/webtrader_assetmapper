@@ -21,7 +21,7 @@ class Position
         // 1. Validation CAC
         if ($this->getTargetPrice() <= $this->getBuyPrice()) {
             $context->buildViolation("Le prix cible CAC doit être supérieur au prix d'achat CAC.")
-                ->atPath('targetPrice') // C'est ici que l'erreur est envoyée sur le champ
+                ->atPath('targetPrice') // L'erreur est envoyée sur ce champ.
                 ->addViolation();
         }
 
@@ -218,6 +218,7 @@ class Position
     public function setLvcCurrentPrice(?string $lvcCurrentPrice): static
     {
         $this->lvcCurrentPrice = $lvcCurrentPrice;
+
         return $this;
     }
 
@@ -229,6 +230,13 @@ class Position
         return (float) ($this->lvcCurrentPrice ?? 0.0);
     }
 
+    /**
+     * Méthode permettant de calculer la distance entre le prix actuel et le prix cible.
+     * La propriété is_close permet d'identifier si le prix est proche de l'objectif.
+     *
+     * @param string $currentCacPrice
+     * @return array
+     */
     public function getTargetDistance(string $currentCacPrice): array
     {
         $current = (float) $currentCacPrice;

@@ -9,24 +9,35 @@
             <div class="col-md-4">
                 <div class="card bg-dark text-white border-secondary h-100">
                     <div class="card-body">
-                        <h6 class="text-white opacity-75 text-uppercase small">Valeur Totale (Equity)</h6>
+                        <h6 class="text-white opacity-75 text-uppercase small">Évaluation du compte</h6>
                         <h2 class="display-12 fw-bold">{{ stats.total_equity|number_format(2, ',', ' ') }} €</h2>
+
+                        {# Performance GLOBALE (depuis le premier snapshot) #}
                         {% if perf.is_calculable %}
-                            <div class="{% if perf.diff >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                            <div class="{% if perf.diff >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold fs-5">
                                 <i class="bi {{ perf.diff >= 0 ? 'bi-caret-up-fill' : 'bi-caret-down-fill' }}"></i>
                                 {{ perf.diff >= 0 ? '+' : '' }}{{ perf.diff|number_format(2, ',', ' ') }} €
                                 ({{ perf.percent|number_format(2, ',', ' ') }}%)
-                                <span class="text-secondary fw-normal small">depuis la dernière cotation</span>
+                                <span class="fw-bold text-white opacity-50" style="font-size: 0.75rem; letter-spacing: 0.8px;">
+                                    +/- value/latente
+                                </span>
                             </div>
                         {% else %}
                             <div class="text-info opacity-75 small">
                                 <i class="bi bi-info-circle me-1"></i>
-                                Analyse de performance disponible à la prochaine clôture
+                                Calcul de performance globale en attente de données
                             </div>
                         {% endif %}
-                        <div class="{% if daily_diff >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+
+                        {# Performance de la dernière journée de cotation #}
+                        <hr class="my-2 opacity-25">
+                        <div class="{% if perf.diff >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                            <i class="bi {{ perf.diff >= 0 ? 'bi-caret-up-fill' : 'bi-caret-down-fill' }}"></i>
                             {{ daily_diff >= 0 ? '+' : '' }}{{ daily_diff|number_format(2, ',', ' ') }} €
-                            ({{ daily_percent|number_format(2, ',', ' ') }}%) aujourd'hui
+                            ({{ daily_percent|number_format(2, ',', ' ') }}%)
+                            <span class="fw-bold text-white opacity-50" style="font-size: 0.75rem; letter-spacing: 0.8px;">
+                                performance du jour
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -83,7 +94,7 @@
         </div>
 
         {# Détail des assets #}
-        <div class="card bg-dark border-secondary mt-4">
+        <div class="card bg-dark border-secondary mb-4">
             <div class="card-header border-secondary text-white fw-bold">
                 Détail des actifs
             </div>

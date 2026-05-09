@@ -20,7 +20,7 @@ when@dev:
                 type: stream
                 path: "%kernel.logs_dir%/trading.log"
                 level: info
-                channels: [ "trading" ] # N'écoute uniquement le canal trading
+                channels: [ "trading" ] # Écoute uniquement le canal trading
 
 when@test:
     monolog:

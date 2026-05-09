@@ -102,9 +102,9 @@ final class PositionController extends AbstractController
         $this->logManager->log(
             "Entrypoint #{$position->getEntrypoint()?->getId()} : "
                 ."position #{$position->getRank()} {$meta['verb']} à {$buyPriceCac} pts",
-            'create',
-            LogOrigin::USER,
-            $meta['label']
+            actionType: $meta['action'],
+            origin: LogOrigin::USER,
+            context: $meta['label']
         );
 
         $this->addFlash('success', 'Position enregistrée avec succès.');
@@ -125,9 +125,9 @@ final class PositionController extends AbstractController
             $this->logManager->log(
                 "Entrypoint #{$position->getEntrypoint()?->getId()} : "
                     ."position #{$position->getRank()} modifiée à {$position->getBuyPrice()} pts",
-                'update',
-                LogOrigin::USER,
-                $meta['label']
+                actionType: $meta['action'],
+                origin: LogOrigin::USER,
+                context: $meta['context']
             );
 
             // 2. Gestion AJAX (Succès)
@@ -178,9 +178,9 @@ final class PositionController extends AbstractController
         // Ajout du log de suppression
         $this->logManager->log(
             "Entrypoint #{$position->getEntrypoint()?->getId()} : position #{$position->getRank()} supprimée",
-            'delete',
-            LogOrigin::USER,
-            $meta['label']
+            actionType: $meta['action'],
+            origin: LogOrigin::USER,
+            context: $meta['context']
         );
 
         $entityManager->remove($position);

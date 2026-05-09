@@ -9,10 +9,14 @@ export default class extends Controller {
 
     // Mapping des couleurs métiers
     actionStyles = {
-        'create': 'text-success', // Vert
-        'update': 'text-info',    // Bleu
-        'delete': 'text-danger',  // Rouge
-        'default': 'text-muted'   // Gris
+        'buy': 'text-success',                  // Vert
+        'sell': 'text-danger',                  // Rouge
+        'trailing_adjustment': 'text-info',     // Bleu
+        'pending_order_create': 'text-info',    // Bleu
+        'pending_order_update': 'text-info',    // Bleu
+        'position_cleanup': 'text-info',        // Bleu
+        'setup': 'text-warning',                // Jaune
+        'default': 'text-white text-opacity-50' // Gris
     };
 
     addEntry(message, action = 'default') {

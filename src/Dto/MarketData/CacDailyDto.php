@@ -13,7 +13,8 @@ final readonly class CacDailyDto
         private float              $high,
         private float              $low,
         private float              $close,
-        private ?float             $lvcHigh = null
+        private ?float             $lvcHigh = null,
+        private ?float             $lvcClose = null
     )
     {
     }
@@ -56,5 +57,10 @@ final readonly class CacDailyDto
     public function getLvcHigh(): ?float
     {
         return $this->lvcHigh;
+    }
+
+    public function getLvcClose(): ?float
+    {
+        return $this->lvcClose;
     }
 }

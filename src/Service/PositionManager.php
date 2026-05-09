@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Enum\LogAction;
 use App\Entity\User;
 use App\Entity\Position;
+use App\Enum\LogContext;
 use App\Entity\Entrypoint;
 use App\Enum\PositionStatus;
 use App\Dto\MarketData\CacDailyDto;
@@ -15,6 +17,16 @@ use App\Repository\EntrypointRepository;
 use Doctrine\Common\Collections\Collection;
 use App\Repository\MarketData\CacDailyRepository;
 
+/**
+ * Service central de gestion du cycle de vie des positions de trading.
+ *
+ * Cette classe orchestre la logique métier liée à la stratégie de "Grid Trading" :
+ *
+ * - Synchronisation des prix LVC avec le marché.
+ * - Gestion du Trailing (remontée automatique des ordres en cas de hausse du CAC).
+ * - Exécution simulée des ordres d'achat et de vente basés sur les plus hauts/bas du jour.
+ * - Maintenance et nettoyage des points d'entrée (Entrypoints).
+ */
 readonly class PositionManager
 {
     public function __construct(
@@ -28,10 +40,30 @@ readonly class PositionManager
     }
 
     /**
-     * Mise à jour des positions en itérant sur chaque jour manqué de l'historique du CAC.
+     * Synchronise les prix actuels et traite les événements de trading (achats/ventes).
+     *
+     * Cette méthode met à jour 'lvcCurrentPrice' pour toutes les positions RUNNING,
+     * puis simule chronologiquement les jours manqués si nécessaire.
+     *
+     * @param User $user L'investisseur concerné.
+     * @param CacDailyDto $latestCacDto La dernière cotation de marché disponible.
+     *
+     * @throws \Exception Si une erreur survient lors du calcul ou de la persistence.
+     *
+     * @see MarketSyncSubscriber  Déclencheur automatique de cette méthode à chaque requête.
      */
     public function checkAndUpdatePositions(User $user, CacDailyDto $latestCacDto): void
     {
+        // MISE À JOUR DU PRIX LVC COURANT DES POSITIONS EN COURS
+        $runningPositions = $this->positionRepository->findByStatusAndUser(
+            PositionStatus::RUNNING,
+            $user
+        );
+
+        foreach ($runningPositions as $position) {
+            $position->setLvcCurrentPrice((string)$latestCacDto->getLvcClose());
+        }
+
         // Récupère l'historique manqué (du plus vieux au plus récent)
         $missedCacs = $this->cacRepository->findRangeWithLvc(
             $user->getLastCacUpdatedId(),
@@ -48,6 +80,17 @@ readonly class PositionManager
         $this->entityManager->flush();
     }
 
+    /**
+     * Simule l'activité boursière sur une journée précise.
+     *
+     * Étapes de traitement :
+     * 1. Trailing : Ajuste l'Upper Range si le marché atteint de nouveaux sommets.
+     * 2. Ventes : Vérifie si les cibles (Targets) de vente ont été atteintes (High du jour).
+     * 3. Achats : Vérifie si les prix d'entrée ont été touchés (Low du jour).
+     *
+     * @param User        $user L'utilisateur concerné.
+     * @param CacDailyDto $day  Les données de cotation de la journée traitée.
+     */
     private function processSingleDay(User $user, CacDailyDto $day): void
     {
         // 1. GESTION DE L'UPPER RANGE. Si le CAC High > Upper Range actuel, on ajuste les positions WAITING
@@ -55,14 +98,20 @@ readonly class PositionManager
             $this->handleUpperRangeTrailing($user, $day);
         }
 
-        // 2. VENTES : on vérifie si le plus haut du jour >= Target de vente de chaque position en cours.
-        $runningPositions = $this->positionRepository->findByStatusAndUser(PositionStatus::RUNNING, $user);
+        // 2. VENTES : on vérifie si le plus haut du jour >= Target de vente de chaque position en cours non CORE.
+        $runningPositions = $this->positionRepository->findByStatusUserAndCore(PositionStatus::RUNNING, $user, false);
         foreach ($runningPositions as $pos) {
-            if ($day->getHigh() >= (float)$pos->getTargetPrice()) {
+            if (null !== $pos->getTargetPrice() && $day->getHigh() >= (float)$pos->getTargetPrice()) {
                 $pos->setStatus(PositionStatus::CLOSED);
                 $this->logManager->log(
-                    sprintf("Position clôturée : id #%s le %s", $pos->getId(), $day->getHigh()),
-                    'info'
+                    sprintf(
+                        "Position clôturée : id #%s (Cible: %s, Haut du jour: %s)",
+                        $pos->getId(),
+                        $pos->getTargetPrice(),
+                        $day->getHigh()
+                    ),
+                    actionType: LogAction::SELL,
+                    context: LogContext::RUNNING,
                 );
             }
         }
@@ -72,9 +121,14 @@ readonly class PositionManager
     }
 
     /**
-     * On assigne le plus haut du jour au nouveau upper range de l'utilisateur.
+     * Ajuste la stratégie suite à une hausse du marché (Trailing).
+     *
+     * On assigne le plus haut du jour au nouvel upper range de l'utilisateur.
      * On fixe la buy limit par défaut à 6 % sous le nouvel upper range.
      * On remonte les positions en attente de l'utilisateur vers le niveau du plus haut du CAC du jour.
+     *
+     * @param User        $user L'utilisateur concerné.
+     * @param CacDailyDto $day  La cotation ayant déclenché le trailing.
      */
     private function handleUpperRangeTrailing(User $user, CacDailyDto $day): void
     {
@@ -87,7 +141,8 @@ readonly class PositionManager
                 $user->getUpperRange(),
                 $newCacHigh
             ),
-            'info');
+            actionType: LogAction::TRAILING_ADJUSTMENT
+        );
 
         // 1. Mise à jour de l'Upper Range (formaté sur deux décimales).
         $user->setUpperRange(number_format($newCacHigh, 2, '.', ''));
@@ -112,15 +167,20 @@ readonly class PositionManager
                     "Les positions en attente de l'entrypoint %d ont été mises à jour",
                     $positions[0]->getEntrypoint()->getId()
                 ),
-                'info'
+                  actionType: LogAction::TRAILING_ADJUSTMENT
             );
         }
         $this->entityManager->flush();
     }
 
     /**
-     * Gestion des niveaux d'achat des positions en attente.
-     * Si une position de rang un est touchée, la méthode s'appelle elle-même.
+     * Analyse et exécute les ordres d'achat en attente (WAITING).
+     *
+     * Si une position de Rang 1 est exécutée, un nouveau cycle d'ordres est généré,
+     * ce qui déclenche une réévaluation récursive pour le même jour de cotation.
+     *
+     * @param User        $user L'utilisateur concerné.
+     * @param CacDailyDto $day  Cotation du jour pour tester les seuils d'achat.
      */
     private function processPurchases(User $user, CacDailyDto $day): void
     {
@@ -132,7 +192,7 @@ readonly class PositionManager
                 $pos->setStatus(PositionStatus::RUNNING);
                 $this->logManager->log(
                     sprintf("Position ouverte : id #%s le %s", $pos->getId(), $day->getLow()),
-                    "info"
+                    actionType: LogAction::BUY
                 );
 
                 if ($pos->getRank() === 1) {
@@ -151,8 +211,13 @@ readonly class PositionManager
     }
 
     /**
-     * Génération du nouvel entrypoint et des nouvelles positions en attente.
-     * Les positions sont créées en tenant compte du gap stratégique.
+     * Gère la transition d'un point d'entrée vers l'état actif.
+     *
+     * Lorsqu'un prix d'achat est touché :
+     *
+     * - L'Entrypoint courant passe en RUNNING.
+     * - Un nouvel Entrypoint WAITING est calculé plus bas selon le gap stratégique.
+     * - Les 3 positions rattachées au nouvel entrypoint sont générées.
      */
     private function handleRankOneTrigger(
         User $user,
@@ -185,7 +250,7 @@ readonly class PositionManager
         // On enregistre le log de création des positions en attente du nouvel entrypoint.
         $this->logManager->log(
             sprintf('Les positions en attente du nouvel entrypoint %d ont été créées', $newEntrypoint->getId()),
-            'create'
+            actionType: LogAction::PENDING_ORDER_CREATE
         );
 
         // On enregistre les nouvelles positions.
@@ -212,7 +277,9 @@ readonly class PositionManager
     }
 
     /**
-     * Méthode générant un nouvel entrypoint.
+     * Initialise un nouveau point d'entrée stratégique avec un statut en attente.
+     *
+     * @return Entrypoint Le nouveau point d'entrée persisité.
      */
     private function createNewEntrypoint(User $user, Position $currentPosition): Entrypoint
     {
@@ -232,7 +299,7 @@ readonly class PositionManager
 
     /**
      * Création des trois positions en attente pour un entrypoint nouvellement configuré.
-     * Le gap stratégique n'est pas appliqué ici.
+     * Dans ce cas particulier, le gap stratégique n'est pas appliqué.
      */
     public function createWaitingPositionsForInitialEntrypoint(Entrypoint $entrypoint, float $cac, float $lvc): void
     {
@@ -270,16 +337,17 @@ readonly class PositionManager
                     $entrypoint->getId(),
                     $entrypoint->getEntrypoint()
                 ),
-                'create'
+                 actionType: LogAction::PENDING_ORDER_CREATE
             );
         }
     }
 
     /**
-     * @param Collection<int, Position> $positions
-     * @return Collection<int, Position>
+     * Recalcule les seuils d'achat et de revente pour une collection de positions.
      *
-     * Création et mise à jour des positions en attente.
+     * Utilisé principalement lors du Trailing pour remonter les ordres existants.
+     *
+     * @return Collection<int, Position> La collection mise à jour.
      */
     public function handleWaitingPositions(Collection $positions, float $cacHigh, float $lvcHigh): Collection
     {
@@ -330,12 +398,32 @@ readonly class PositionManager
             foreach ($entrypoint->getPositions() as $position) {
                 if ($position->getStatus() === PositionStatus::WAITING) {
                     $entrypoint->removePosition($position);
+
+                    // 1. Log individuel avant suppression
+                    $this->logManager->log(
+                        message: sprintf(
+                                     "Suppression position en attente : ID #%d (Prix d'achat: %s) suite à réinitialisation",
+                                     $position->getId(),
+                                     $position->getBuyPrice()
+                                 ),
+                        actionType: LogAction::POSITION_CLEANUP
+                    );
+
+                    // 2. Suppression de la position
                     $this->entityManager->remove($position);
                 }
             }
             // On change le statut des entrypoints précédents et sans positions 'en cours' pour les rendre 'inactifs'.
             if (!$entrypoint->isLocked()) {
                 $entrypoint->setStatus(PositionStatus::CLOSED);
+
+                // Log de clôture de l'entrypoint
+                $this->logManager->log(
+                    message: sprintf("Entrypoint #%d clôturé car sans position active", $entrypoint->getId()),
+                    actionType: LogAction::POSITION_CLEANUP,
+                    context: LogContext::ENTRYPOINT
+                );
+
                 $this->entityManager->flush();
             }
         }
@@ -345,15 +433,29 @@ readonly class PositionManager
 
     /**
      * Méthode pour adapter les messages de log en fonction du statut de la position.
+     *
+     * Fournit les métadonnées de journalisation (verbe, contexte, action) selon le statut.
+     *
+     * @return array{verb: string, context: LogContext, action: LogAction}
      */
     public function getLogMetadata(PositionStatus $status): array
     {
-        // On définit le verbe et le type de log selon le statut
-        $isWaiting = ($status === PositionStatus::WAITING);
-
-        return [
-            'verb' => $isWaiting ? 'placée' : 'achetée',
-            'label' => $isWaiting ? 'en attente' : 'en cours'
-        ];
+        return match ($status) {
+            PositionStatus::WAITING => [
+                'verb'    => 'placée',
+                'context' => LogContext::WAITING,
+                'action'  => LogAction::SETUP,
+            ],
+            PositionStatus::RUNNING => [
+                'verb'    => 'achetée',
+                'context' => LogContext::RUNNING,
+                'action'  => LogAction::BUY,
+            ],
+            PositionStatus::CLOSED => [
+                'verb'    => 'clôturée',
+                'context' => LogContext::CLOSED,
+                'action'  => LogAction::SELL,
+            ],
+        };
     }
 }

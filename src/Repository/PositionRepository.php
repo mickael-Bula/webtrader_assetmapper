@@ -42,6 +42,11 @@ class PositionRepository extends ServiceEntityRepository
     /**
      * Récupère TOUTES les positions RUNNING (Core + Trading).
      * Si un ID d'entrypoint est fourni, on exclut les positions de cet entrypoint.
+     *
+     * @param PositionStatus $status
+     * @param User $user
+     * @param int|null $excludedEntrypointId
+     * @return array<Position>
      */
     public function findByStatusAndUser(
         PositionStatus $status,

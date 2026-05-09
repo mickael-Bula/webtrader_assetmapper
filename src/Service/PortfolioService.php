@@ -8,6 +8,7 @@ use App\Entity\User;
 use App\Entity\Position;
 use App\Enum\PositionStatus;
 use App\Repository\PositionRepository;
+use App\Repository\PortfolioSnapshotRepository;
 use Symfony\UX\Chartjs\Builder\ChartBuilderInterface;
 use Symfony\UX\Chartjs\Model\Chart;
 
@@ -16,12 +17,14 @@ readonly class PortfolioService
     public function __construct(
         private ChartBuilderInterface $chartBuilder,
         private PositionRepository $positionRepository,
+        private PortfolioSnapshotRepository $snapshotRepo,
     )
     {
     }
 
     public function calculateCurrentSnapshot(User $user): array
     {
+        // Récupère toutes les positions en cours de l'utilisateur (Core + Trading).
         $runningPositions = $this->positionRepository->findByStatusAndUser(
             PositionStatus::RUNNING,
             $user
@@ -176,6 +179,7 @@ readonly class PortfolioService
      */
     public function getGroupedPositions(User $user): array
     {
+        // Récupère toutes les positions en cours de l'utilisateur (Core + Trading).
         $positions = $this->positionRepository->findByStatusAndUser(PositionStatus::RUNNING, $user);
         $grouped = [];
 
@@ -249,6 +253,68 @@ readonly class PortfolioService
             'performance_percent' => $performancePercent,
             'total_quantity' => $totalQuantity,
             'progress_percent' => $targetValue > 0 ? min(100, ($totalValue / $targetValue) * 100) : 0,
+        ];
+    }
+
+    /**
+     * Récupère les données de performance pour le graphique.
+     */
+    public function getPerformanceData(User $user): array
+    {
+        // 1. Données actuelles (Live)
+        $currentStats = $this->calculateCurrentSnapshot($user);
+
+        // 2. Calcul de la performance quotidienne. On cherche le dernier snapshot enregistré (celui de la veille).
+        $lastSnapshot = $this->snapshotRepo->findOneBy(['owner' => $user], ['createdAt' => 'DESC'],
+        );
+
+        $dailyDiff = 0;
+        $dailyPercent = 0;
+
+        if ($lastSnapshot) {
+            $dailyDiff = $currentStats['total_equity'] - $lastSnapshot->getTotalEquity();
+            $dailyPercent = ($dailyDiff / $lastSnapshot->getTotalEquity()) * 100;
+        }
+
+        // Extraction des données pour Chart.js
+        $labels = [];
+        $data = [];
+
+        // 3. Récupération des données pour le GRAPHIQUE (30 derniers jours).
+        $history = $this->snapshotRepo->findBy(['owner' => $user], ['createdAt' => 'ASC'], 30);
+
+        // 4. Récupération du premier snapshot de l'utilisateur
+        $firstSnapshot = $this->snapshotRepo->findOneBy(['owner' => $user], ['createdAt' => 'ASC']);
+
+        $globalPerf = [
+            'is_calculable' => false,
+            'diff' => 0,
+            'percent' => 0
+        ];
+
+        if ($firstSnapshot) {
+            $diff = $currentStats['total_equity'] - $firstSnapshot->getTotalEquity();
+            $globalPerf = [
+                'is_calculable' => true,
+                'diff' => $diff,
+                // On calcule par rapport à la valeur de départ
+                'percent' => ($firstSnapshot->getTotalEquity() > 0)
+                    ? ($diff / $firstSnapshot->getTotalEquity()) * 100
+                    : 0
+            ];
+        }
+
+        foreach ($history as $snapshot) {
+            $labels[] = $snapshot->getCreatedAt()?->format('d/m');
+            $data[] = $snapshot->getTotalEquity();
+        }
+
+        return [
+            'labels' => $labels,
+            'data' => $data,
+            'performance_data' => $globalPerf,
+            'daily_diff' => $dailyDiff,
+            'daily_percent' => $dailyPercent
         ];
     }
 }

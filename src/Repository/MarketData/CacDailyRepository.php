@@ -68,6 +68,7 @@ final readonly class CacDailyRepository
                    c.high,
                    c.low,
                    c.close AS cac_close,
+                   l.high AS lvc_high,
                    l.close AS lvc_close
             FROM market_data.cac_daily c
             LEFT JOIN market_data.lvc_daily l ON l.date = c.date
@@ -88,7 +89,8 @@ final readonly class CacDailyRepository
             (float)$row['high'],
             (float)$row['low'],
             (float)$row['cac_close'],
-            (float)$row['lvc_close'],
+            (float)$row['lvc_high'],
+            round((float)$row['lvc_close'], 2), // On formate le prix LVC enregistré dans `position.lvc_buy_price`
         );
     }
 

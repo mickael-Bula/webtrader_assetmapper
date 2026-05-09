@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Enum\LogAction;
 use App\Enum\LogOrigin;
 use App\Entity\LogEntry;
+use App\Enum\LogContext;
 use Doctrine\ORM\EntityManagerInterface;
 
 readonly class LogManager
@@ -16,15 +18,15 @@ readonly class LogManager
 
     public function log(
         string $message,
-        string $actionType,
+        LogAction $actionType,
         LogOrigin $origin = LogOrigin::WORKFLOW,
-        string $contextLabel = 'en attente'
+        LogContext $context = LogContext::WAITING
     ): void {
         $log = new LogEntry();
         $log->setMessage($message);
-        $log->setActionType($actionType);
         $log->setOrigin($origin);
-        $log->setContextLabel($contextLabel);
+        $log->setActionType($actionType->value);
+        $log->setContextLabel($context->value);
 
         $this->em->persist($log);
         $this->em->flush();

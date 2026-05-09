@@ -236,6 +236,8 @@ class Position
      *
      * @param string $currentCacPrice
      * @return array
+     *
+     * @noinspection PhpUnused La méthode est utilisée dans le template _position_drawer.html.twig
      */
     public function getTargetDistance(string $currentCacPrice): array
     {

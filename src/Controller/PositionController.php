@@ -127,7 +127,7 @@ final class PositionController extends AbstractController
                     ."position #{$position->getRank()} modifiée à {$position->getBuyPrice()} pts",
                 actionType: $meta['action'],
                 origin: LogOrigin::USER,
-                context: $meta['label']
+                context: $meta['context']
             );
 
             // 2. Gestion AJAX (Succès)
@@ -180,7 +180,7 @@ final class PositionController extends AbstractController
             "Entrypoint #{$position->getEntrypoint()?->getId()} : position #{$position->getRank()} supprimée",
             actionType: $meta['action'],
             origin: LogOrigin::USER,
-            context: $meta['label']
+            context: $meta['context']
         );
 
         $entityManager->remove($position);

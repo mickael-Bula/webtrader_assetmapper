@@ -24,6 +24,13 @@ final class HomeController extends AbstractController
     public function __construct(private readonly StrategyManager $strategyManager) {}
 
     /**
+     * Affiche le tableau de bord principal.
+     *
+     * Note : La synchronisation des positions avec le marché est vérifiée
+     * automatiquement par le MarketSyncSubscriber à chaque requête.
+     *
+     * @see MarketSyncSubscriber::onKernelRequest()
+     *
      * @throws Exception
      */
     #[Route('/', name: 'app_home')]
@@ -34,8 +41,6 @@ final class HomeController extends AbstractController
         PortfolioService    $portfolioService,
     ): Response
     {
-        /** Une vérification de la synchronisation des données est lancée à chaque requête @see MarketSyncSubscriber */
-
         /** @var User $user */
         $user = $this->getUser();
 

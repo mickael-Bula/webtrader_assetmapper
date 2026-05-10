@@ -212,25 +212,32 @@ final class PositionController extends AbstractController
         }
 
         // 3. Récupération du prix de vente
-        $sellPrice = $request->request->get('final_lvc_price');
+        $sellLvcPrice = $request->request->get('final_lvc_price');
+        $sellCacPrice = $request->request->get('final_cac_price');
 
-        if (!$sellPrice || !is_numeric($sellPrice)) {
+        if (!($sellLvcPrice && is_numeric($sellLvcPrice)) || !($sellCacPrice && is_numeric($sellCacPrice))) {
             if ($request->isXmlHttpRequest()) {
-                return new JsonResponse(['error' => 'Prix de vente invalide'], 400);
+                return new JsonResponse(['error' => 'Les prix de vente CAC et LVC sont requis'], 400);
             }
-            $this->addFlash('error', 'Le prix de vente saisi est invalide.');
+            $this->addFlash('error', 'Le prix de vente LVC saisi est invalide.');
 
             return $this->redirectToRoute('app_home');
         }
 
-        // 4. Enregistrement du prix de vente dans la position et mise à jour du statut
+        // 4. Enregistrement du nouveau prix de vente de la position et mise à jour du statut
         $position->setStatus(PositionStatus::CLOSED);
-        $position->setLvcTargetPrice((string) $sellPrice);
+        $position->setLvcTargetPrice((string) $sellLvcPrice);
+        $position->setTargetPrice((string) $sellCacPrice);
 
         $entityManager->flush();
 
         $this->logManager->log(
-            "Vente anticipée : position #{$position->getId()} clôturée manuellement.",
+            sprintf(
+                "Position #%d clôturée : CAC %s pts / LVC %s €",
+                $position->getId(),
+                $sellCacPrice,
+                $sellLvcPrice
+            ),
             actionType: LogAction::SELL,
             origin: LogOrigin::USER,
             context: LogContext::CLOSED

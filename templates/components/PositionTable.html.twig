@@ -48,7 +48,10 @@
                         </button>
 
                         {# On inclut le menu latéral ici pour qu'il ait accès à la variable 'pos' #}
-                        {{ include('_partials/_position_drawer.html.twig', { 'position': pos, 'lastPrice': lastPrice }) }}
+                        {{ include(
+                            '_partials/_position_drawer.html.twig',
+                            { 'position': pos, 'lastPrice': lastPrice, 'lastLvcPrice': lastLvcPrice })
+                        }}
                     </td>
                 </tr>
             {% else %}

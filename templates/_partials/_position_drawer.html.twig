@@ -1,4 +1,6 @@
+{# Pour que lastPrice soit disponible dans le scope du partial, il doit être passé du Controller au template, puis au partial #}
 {% set currentCacPrice = lastPrice ?? 0 %}
+{% set currentLvcPrice = lastLvcPrice ?? 0 %}
 
 {# On ne calcule la distance que si la position existe ET que l'on a un cours. Distance contient [points, percent, is_close] #}
 {% set distance = (position is defined and currentCacPrice > 0) ? position.targetDistance(currentCacPrice) : null %}
@@ -85,79 +87,103 @@
                     </div>
 
                     {# Section formulaire de clôture #}
-                    <div class="bg-black p-3 rounded border border-success border-opacity-25 mb-3">
-                        <form method="post" action="{{ path('app_position_sell_now', {'id': position.id}) }}">
-                            {# Gestion du CSRF Token #}
+                    <div class="mt-2 border-top border-secondary pt-3 px-2" data-controller="position-close">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="small uppercase fw-bold text-success mb-0">
+                                <i class="mdi mdi-lock-check me-1"></i>Clôture Manuelle
+                            </h6>
+                        </div>
+
+                        <form method="post"
+                              action="{{ path('app_position_sell_now', {'id': position.id}) }}"
+                              data-action="submit->position-close#submit"
+                              class="bg-black rounded border border-success border-opacity-25 p-3">
+
                             <input type="hidden" name="_token" value="{{ csrf_token('close' ~ position.id) }}">
 
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <label for="close_position" class="x-small text-success fw-bold uppercase">Prix de vente réel</label>
-                                <span class="x-small text-secondary">Cible : {{ position.lvcTargetPrice }}€</span>
-                            </div>
-
-                            <div class="input-group input-group-sm mb-2">
-                                <input id="close_position" type="number" step="0.01" name="final_lvc_price"
-                                       class="form-control bg-dark text-white border-secondary"
-                                       placeholder="{{ position.lvcCurrentPrice }}" required>
-                                <span class="input-group-text bg-dark border-secondary text-secondary">€</span>
+                            <div class="row g-2 mb-3">
+                                {# Champ CAC 40 #}
+                                <div class="col-6">
+                                    <label for="final_cac_price" class="x-small text-secondary d-block mb-1">Cours CAC
+                                        40</label>
+                                    <div class="input-group input-group-sm">
+                                        <input id="final_cac_price" type="number" step="0.01" name="final_cac_price"
+                                               class="form-control bg-dark text-white border-secondary"
+                                               placeholder="{{ currentCacPrice|number_format(0, '', '') }}" required>
+                                        <span class="input-group-text bg-dark border-secondary text-secondary x-small">pts</span>
+                                    </div>
+                                </div>
+                                {# Champ LVC #}
+                                <div class="col-6">
+                                    <label for="final_lvc_price" class="x-small text-secondary d-block mb-1">Cours
+                                        LVC</label>
+                                    <div class="input-group input-group-sm">
+                                        <input id="final_lvc_price" type="number" step="0.01" name="final_lvc_price"
+                                               class="form-control bg-dark text-white border-secondary"
+                                               placeholder="{{ currentLvcPrice|number_format(2, '.', '') }}" required>
+                                        <span
+                                            class="input-group-text bg-dark border-secondary text-secondary x-small">€</span>
+                                    </div>
+                                </div>
                             </div>
 
                             <button type="submit" class="btn btn-sm btn-success w-100 fw-bold py-2">
-                                Clôturer la position
+                                <i class="mdi mdi-check me-1"></i>CLOTURER
                             </button>
                         </form>
                     </div>
+
+                    <div class="offcanvas-footer p-3 border-top border-secondary d-flex gap-2">
+                        <button
+                            type="button"
+                            class="btn btn-primary w-100"
+                            data-controller="position-edit"
+                            data-position-edit-position-id-value="{{ position.id }}"
+                            data-action="click->position-edit#openModal"
+                        >Modifier
+                        </button>
+                        <button
+                            type="button"
+                            class="btn btn-danger w-100"
+                            data-action="click->position-delete#prepareDelete"
+                            data-url="{{ path('app_position_delete', {id: position.id}) }}"
+                            data-id="{{ position.id }}"
+                            data-token="{{ csrf_token('delete_position_' ~ position.id) }}" {# Récupération du token généré en back #}
+                            data-bs-toggle="modal"
+                            data-bs-target="#deletePositionModal"
+                        >Supprimer
+                        </button>
+                    </div>
                 </div>
 
-                <div class="offcanvas-footer p-3 border-top border-secondary d-flex gap-2">
-                    <button
-                        type="button"
-                        class="btn btn-primary w-100"
-                        data-controller="position-edit"
-                        data-position-edit-position-id-value="{{ position.id }}"
-                        data-action="click->position-edit#openModal"
-                    >Modifier
-                    </button>
-                    <button
-                        type="button"
-                        class="btn btn-danger w-100"
-                        data-action="click->position-delete#prepareDelete"
-                        data-url="{{ path('app_position_delete', {id: position.id}) }}"
-                        data-id="{{ position.id }}"
-                        data-token="{{ csrf_token('delete_position_' ~ position.id) }}" {# Récupération du token généré en back #}
-                        data-bs-toggle="modal"
-                        data-bs-target="#deletePositionModal"
-                    >Supprimer
-                    </button>
-                </div>
-            </div>
-
-            {# Modal de confirmation de suppression #}
-            <div class="modal fade" id="deletePositionModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content bg-dark text-white border-secondary">
-                        <div class="modal-header border-secondary">
-                            <h5 class="modal-title">Confirmer la suppression</h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p>Êtes-vous sûr de vouloir supprimer cette position ?</p>
-                            <p class="text-danger small">Cette action est irréversible.</p>
-                        </div>
-                        <div class="modal-footer border-secondary">
-                            <button
-                                type="button"
-                                class="btn btn-secondary"
-                                data-bs-dismiss="modal"
-                            >Annuler
-                            </button>
-                            <button
-                                type="button"
-                                class="btn btn-danger"
-                                id="confirmDeleteModalBtn"
-                                data-action="click->position-delete#executeDelete"
-                            >Supprimer
-                            </button>
+                {# Modal de confirmation de suppression #}
+                <div class="modal fade" id="deletePositionModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content bg-dark text-white border-secondary">
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title">Confirmer la suppression</h5>
+                                <button type="button" class="btn-close btn-close-white"
+                                        data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Êtes-vous sûr de vouloir supprimer cette position ?</p>
+                                <p class="text-danger small">Cette action est irréversible.</p>
+                            </div>
+                            <div class="modal-footer border-secondary">
+                                <button
+                                    type="button"
+                                    class="btn btn-secondary"
+                                    data-bs-dismiss="modal"
+                                >Annuler
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn btn-danger"
+                                    id="confirmDeleteModalBtn"
+                                    data-action="click->position-delete#executeDelete"
+                                >Supprimer
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

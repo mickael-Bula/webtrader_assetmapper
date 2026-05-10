@@ -115,6 +115,7 @@ final class HomeController extends AbstractController
             'waitingPositions' => $waitingPositions,
             'cacQuotes' => $cacQuotes,
             'lastQuote' => $currentClose,
+            'lastPrice' => $cacQuotes[0]->getCacClose(),
             'lastLvcPrice' => $lastLvcPrice,
             'upperRange' => $user->getUpperRange(),
             'buyLimit' => $user->getBuyLimit(),

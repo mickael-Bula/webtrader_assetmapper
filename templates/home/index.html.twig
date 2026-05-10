@@ -133,6 +133,8 @@
                                 type="running"
                                 :positions="runningPositions"
                                 :form="formRunning"
+                                :lastPrice="lastPrice"
+                                :lastLvcPrice="lastLvcPrice"
                             />
 
                             {# POSITIONS EN ATTENTE #}
@@ -140,6 +142,8 @@
                                 type="waiting"
                                 :positions="waitingPositions"
                                 :form="formWaiting"
+                                :lastPrice="lastPrice"
+                                :lastLvcPrice="lastLvcPrice"
                             />
 
                             {# 3. JOURNAL DE SUIVI (le composant récupère les logs depuis la base #}

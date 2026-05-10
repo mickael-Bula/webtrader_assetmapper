@@ -1,4 +1,6 @@
-{% set currentCacPrice = app.user.lastCacUpdatedId.close ?? 0 %}
+{# Pour que lastPrice soit disponible dans le scope du partial, il doit être passé du Controller au template, puis au partial #}
+{% set currentCacPrice = lastPrice ?? 0 %}
+{% set currentLvcPrice = lastLvcPrice ?? 0 %}
 
 {# On ne calcule la distance que si la position existe ET que l'on a un cours. Distance contient [points, percent, is_close] #}
 {% set distance = (position is defined and currentCacPrice > 0) ? position.targetDistance(currentCacPrice) : null %}
@@ -19,115 +21,277 @@
         </div>
 
         <div class="offcanvas-body">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
             <span class="badge {{ position.status.value == 'waiting' ? 'bg-warning text-dark' : 'bg-success' }}">
                 {{ position.status.value|upper }}
             </span>
-                <small class="text-secondary italic">Créé le {{ position.createdAt|date('d/m/y à H:i') }}</small>
+                <small class="text-secondary italic">Créé le {{ position.createdAt|date('d/m/y') }}</small>
             </div>
 
-            <div class="card bg-black border-secondary mb-4 shadow-sm">
-                <div class="card-body text-center">
-                    {% if distance is not null %}
-                        <small class="text-secondary d-block mb-1">DISTANCE DE L'OBJECTIF</small>
-                        <h2 class="{{ distance.points > 0 ? 'text-info' : 'text-success' }} mb-0">
-                            {{ distance.points > 0 ? '+' : '' }}{{ distance.points }} pts
-                        </h2>
-                        <div class="badge {{ distance.is_close ? 'bg-danger animate-pulse' : 'bg-secondary' }} mt-2">
-                            {{ distance.percent }} %
+            <div class="card bg-black rounded border border-success border-opacity-25 mb-3">
+                <div class="card-body py-2 px-3">
+
+                    {% if currentCacPrice > 0 %}
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="text-start">
+                                <small class="text-secondary d-block x-small uppercase fw-bold">
+                                    {{ position.status.value == 'waiting' ? 'Distance avant activation' : 'Distance à l\'objectif' }}
+                                </small>
+                                {% if position.status.value == 'waiting' %}
+                                    {# Calcul spécifique pour l'attente #}
+                                    {% set gap = currentCacPrice - position.entrypoint.entrypoint %}
+                                    <h5 class="{{ gap|abs < 20 ? 'text-warning' : 'text-white' }} mb-0 fw-bold">
+                                        {{ gap > 0 ? '+' : '' }}{{ gap|number_format(1, ',', ' ') }} <span
+                                            class="small">pts</span>
+                                    </h5>
+                                {% else %}
+                                    {# Calcul standard pour le running (via votre méthode targetDistance) #}
+                                    <h5 class="{{ distance.points > 0 ? 'text-info' : 'text-success' }} mb-0 fw-bold">
+                                        {{ distance.points > 0 ? '+' : '' }}{{ distance.points|number_format(0, ',', ' ') }}
+                                        <span class="small">pts</span>
+                                    </h5>
+                                {% endif %}
+                            </div>
+
+                            <div class="text-end">
+                                <div
+                                    class="badge {{ (distance.is_close or (gap is defined and gap|abs < 20)) ? 'bg-danger animate-pulse' : 'bg-secondary' }} px-3 py-2 fs-6">
+                                    {{ position.status.value == 'waiting' ? 'EN ATTENTE' : distance.percent ~ ' %' }}
+                                </div>
+                            </div>
                         </div>
                     {% else %}
-                        {# Affichage de remplacement si le cours est manquant #}
-                        <div class="py-3">
-                            <i class="mdi mdi-database-off text-secondary d-block h4"></i>
-                            <span class="small text-white-50 italic">Données boursières indisponibles</span>
+                        <div class="d-flex align-items-center justify-content-center py-2 text-muted">
+                            <i class="mdi mdi-database-off me-2"></i>
+                            <span class="x-small italic">Cours indisponible</span>
                         </div>
                     {% endif %}
+
                 </div>
             </div>
 
-            <div class="row g-3">
-                <div class="col-6">
-                    <label class="small text-secondary">Achat (CAC)</label>
-                    <div
-                        class="h5 border-start border-info ps-2">{{ position.buyPrice|number_format(2, ',', ' ') }}</div>
-                </div>
-                <div class="col-6">
-                    <label class="small text-secondary">Objectif (CAC)</label>
-                    <div
-                        class="h5 border-start border-success ps-2">{{ position.targetPrice|number_format(2, ',', ' ') }}</div>
-                </div>
+            {# Section Produit LVC #}
+            <div class="col-12 mt-3">
+                <h6 class="text-info border-bottom border-secondary pb-2 mb-2 uppercase x-small fw-bold">PRODUIT LVC
+                    (Levier x2)</h6>
 
-                <div class="col-12 mt-4">
-                    <h6 class="text-info border-bottom border-secondary pb-2">PRODUIT LVC (Levier x2)</h6>
-                    <div class="d-flex justify-content-between mt-2">
-                        <span>Prix Achat LVC :</span>
-                        <span class="fw-bold">{{ position.lvcBuyPrice|number_format(2, ',', ' ') }} €</span>
+                {# Bloc LVC #}
+                <div class="row g-3">
+                    <div class="col-6">
+                        <label class="text-secondary">Achat LVC</label>
+                        <div
+                            class="h5 border-start border-success ps-2">{{ position.lvcBuyPrice|number_format(2, ',', ' ') }}
+                            <small class="text-secondary fw-normal"> €</small>
+                        </div>
                     </div>
-                    <div class="d-flex justify-content-between">
-                        <span>Objectif LVC :</span>
-                        <span
-                            class="fw-bold text-success">{{ position.lvcTargetPrice|number_format(2, ',', ' ') }} €</span>
-                    </div>
-                    <div class="d-flex justify-content-between mt-2 pt-2 border-top border-secondary">
-                        <span>Quantité :</span>
-                        <span class="fw-bold">{{ position.quantity ?? '—' }} titres</span>
+                    <div class="col-6">
+                        <label class="text-secondary">Quantité</label>
+                        <div
+                            class="h5 border-start border-success ps-2">{{ position.quantity ?? '—' }}
+                            <small class="text-secondary fw-normal">titres</small>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="offcanvas-footer p-3 border-top border-secondary d-flex gap-2">
-            <button
-                type="button"
-                class="btn btn-primary w-100"
-                data-controller="position-edit"
-                data-position-edit-position-id-value="{{ position.id }}"
-                data-action="click->position-edit#openModal"
-            >Modifier
-            </button>
-            <button
-                type="button"
-                class="btn btn-danger w-100"
-                data-action="click->position-delete#prepareDelete"
-                data-url="{{ path('app_position_delete', {id: position.id}) }}"
-                data-id="{{ position.id }}"
-                data-token="{{ csrf_token('delete_position_' ~ position.id) }}" {# Récupération du token généré en back #}
-                data-bs-toggle="modal"
-                data-bs-target="#deletePositionModal"
-            >Supprimer
-            </button>
-        </div>
-    </div>
+                {# Section CAC #}
+                <div class="row g-3">
+                    <div class="col-6">
+                        <label class="small text-secondary">Achat CAC</label>
+                        <div
+                            class="h6 border-start border-success ps-2 text-white opacity-75">
+                            {{ position.buyPrice|number_format(2, ',', ' ') }}
+                            <small class="text-secondary fw-normal"> pts</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label class="small text-secondary">Objectif de vente CAC</label>
+                        <div
+                            class="h6 border-start border-success ps-2 text-white opacity-75">
+                            {{ position.targetPrice|number_format(2, ',', ' ') }}
+                            <small class="text-secondary fw-normal"> pts</small>
+                        </div>
+                    </div>
+                </div>
 
-    {# Modal de confirmation de suppression #}
-    <div class="modal fade" id="deletePositionModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-dark text-white border-secondary">
-                <div class="modal-header border-secondary">
-                    <h5 class="modal-title">Confirmer la suppression</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Êtes-vous sûr de vouloir supprimer cette position ?</p>
-                    <p class="text-danger small">Cette action est irréversible.</p>
-                </div>
-                <div class="modal-footer border-secondary">
+                {% if position.status.value == 'running' %}
+                    {# Section calcul dynamique des plus-values #}
+                    <div class="mt-2 border-top border-secondary pt-3 px-2"
+                         data-controller="position-close"
+                         data-position-close-buy-price-value="{{ position.lvcBuyPrice }}"
+                         data-position-close-quantity-value="{{ position.quantity }}"
+                    >
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="small uppercase fw-bold text-success mb-0">
+                                <i class="mdi mdi-lock-check me-1"></i>Clôture Manuelle
+                            </h6>
+                        </div>
+
+                        {# Bloc de Plus-value dynamique #}
+                        <div class="card bg-black rounded border border-success border-opacity-25 mb-2">
+                            <div class="card-body py-2 px-3 d-flex align-items-center justify-content-between">
+                                {# Titre et Montant sur la même ligne à gauche #}
+                                <div class="d-flex align-items-center gap-2">
+                                    <small class="x-small fw-bold text-secondary uppercase text-nowrap">PV estimée
+                                        :</small>
+                                    <h6 class="mb-0 fw-bold transition-all text-nowrap text-secondary"
+                                        data-position-close-target="pnlDisplay">
+                                        0.00 €
+                                    </h6>
+                                </div>
+                                {# Pourcentage à droite #}
+                                <div class="badge bg-secondary px-2 py-1" data-position-close-target="pnlPercent">
+                                    0.00 %
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Section formulaire de clôture #}
+                        <form method="post"
+                              action="{{ path('app_position_sell_now', {'id': position.id}) }}"
+                              data-action="submit->position-close#submit input->position-close#calculate"
+                              data-position-close-target="form"
+                              class="bg-black rounded border border-success border-opacity-25 p-3">
+
+                            <input type="hidden" name="_token" value="{{ csrf_token('close' ~ position.id) }}">
+
+                            <div class="row g-2 mb-3">
+                                {# Champ CAC 40 #}
+                                <div class="col-6">
+                                    <label for="final_cac_price" class="x-small text-secondary d-block mb-1">Cours CAC
+                                        40</label>
+                                    <div class="input-group input-group-sm">
+                                        <input id="final_cac_price" type="number" step="0.01" name="final_cac_price"
+                                               class="form-control bg-dark text-white border-secondary"
+                                               placeholder="{{ currentCacPrice|number_format(0, '', '') }}" required>
+                                        <span
+                                            class="input-group-text bg-dark border-secondary text-secondary x-small">pts</span>
+                                    </div>
+                                </div>
+                                {# Champ LVC #}
+                                <div class="col-6">
+                                    <label for="final_lvc_price" class="x-small text-secondary d-block mb-1">Cours
+                                        LVC</label>
+                                    <div class="input-group input-group-sm">
+                                        <input id="final_lvc_price" type="number" step="0.01" name="final_lvc_price"
+                                               class="form-control bg-dark text-white border-secondary"
+                                               data-position-close-target="lvcInput"
+                                               placeholder="{{ currentLvcPrice|number_format(2, '.', '') }}" required>
+                                        <span
+                                            class="input-group-text bg-dark border-secondary text-secondary x-small">€</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit"
+                                    data-position-close-target="submitButton"
+                                    class="btn btn-sm btn-success w-100 fw-bold py-2">
+                                <i class="mdi mdi-check me-1"></i>CLÔTURER
+                            </button>
+                        </form>
+                    </div>
+                {% else %}
+
+                    {# Calculs Performance Théorique #}
+                    {% set gainParTitre = position.lvcTargetPrice - position.lvcBuyPrice %}
+                    {% set gainGlobal = gainParTitre * position.quantity %}
+                    {% set perfCac = ((position.targetPrice - position.buyPrice) / position.buyPrice) * 100 %}
+                    {% set perfLvc = ((position.lvcTargetPrice - position.lvcBuyPrice) / position.lvcBuyPrice) * 100 %}
+
+                    <div class="mt-4">
+                        <h6 class="x-small uppercase fw-bold text-success mb-3 border-bottom border-secondary pb-2">
+                            <i class="mdi mdi-target me-1"></i>Plan de Trade théorique
+                        </h6>
+
+                        <div class="bg-black bg-opacity-25 p-3 rounded border border-secondary border-opacity-25">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <span class="small text-white opacity-50">Gain théorique :</span>
+                                <div class="text-end">
+                                    {# Ligne principale : Gain total + Gain par titre #}
+                                    <div class="mb-1">
+                                        <span class="h6 fw-bold text-success">
+                                            +{{ gainGlobal|number_format(2, ',', ' ') }} €
+                                        </span>
+                                        <span class="text-white-50 small ms-1">
+                                            ({{ gainParTitre|number_format(2, ',', ' ') }} €/titre)
+                                        </span>
+                                    </div>
+                                    {# Ligne secondaire : Détails techniques #}
+                                    <div class="x-small text-secondary">
+                                        <span class="text-info">
+                                            {{ (position.targetPrice - position.buyPrice)|number_format(0) }} pts CAC
+                                        </span>
+                                        <span class="mx-1">•</span>
+                                        <span>
+                                            +{{ perfLvc|number_format(2, ',', ' ') }}% LVC
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 p-2 text-center">
+                            <span class="small text-white opacity-50 fst-italic">
+                                Ordre exécuté dès que le CAC touchera {{ position.entrypoint.entrypoint }} pts.
+                            </span>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="offcanvas-footer p-3 border-top border-secondary d-flex gap-2">
                     <button
                         type="button"
-                        class="btn btn-secondary"
-                        data-bs-dismiss="modal"
-                    >Annuler
+                        class="btn btn-primary w-100"
+                        data-controller="position-edit"
+                        data-position-edit-position-id-value="{{ position.id }}"
+                        data-action="click->position-edit#openModal"
+                    >Modifier
                     </button>
                     <button
                         type="button"
-                        class="btn btn-danger"
-                        id="confirmDeleteModalBtn"
-                        data-action="click->position-delete#executeDelete"
+                        class="btn btn-danger w-100"
+                        data-action="click->position-delete#prepareDelete"
+                        data-url="{{ path('app_position_delete', {id: position.id}) }}"
+                        data-id="{{ position.id }}"
+                        data-token="{{ csrf_token('delete_position_' ~ position.id) }}" {# Récupération du token généré en back #}
+                        data-bs-toggle="modal"
+                        data-bs-target="#deletePositionModal"
                     >Supprimer
                     </button>
+                </div>
+            </div>
+
+            {# Modal de confirmation de suppression #}
+            <div class="modal fade" id="deletePositionModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content bg-dark text-white border-secondary">
+                        <div class="modal-header border-secondary">
+                            <h5 class="modal-title">Confirmer la suppression</h5>
+                            <button type="button" class="btn-close btn-close-white"
+                                    data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Êtes-vous sûr de vouloir supprimer cette position ?</p>
+                            <p class="text-danger small">Cette action est irréversible.</p>
+                        </div>
+                        <div class="modal-footer border-secondary">
+                            <button
+                                type="button"
+                                class="btn btn-secondary"
+                                data-bs-dismiss="modal"
+                            >Annuler
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-danger"
+                                id="confirmDeleteModalBtn"
+                                data-action="click->position-delete#executeDelete"
+                            >Supprimer
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+

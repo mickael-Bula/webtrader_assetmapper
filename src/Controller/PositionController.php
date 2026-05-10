@@ -6,7 +6,9 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Enum\LogOrigin;
+use App\Enum\LogAction;
 use App\Entity\Position;
+use App\Enum\LogContext;
 use App\Form\PositionType;
 use App\Entity\Entrypoint;
 use App\Service\LogManager;
@@ -161,12 +163,7 @@ final class PositionController extends AbstractController
     }
 
     #[Route('/position/{id}/delete', name: 'app_position_delete', methods: ['DELETE'])]
-    public function delete(
-        Position                  $position,
-        Request                   $request,
-        EntityManagerInterface    $entityManager,
-        CsrfTokenManagerInterface $csrfTokenManager
-    ): Response
+    public function delete(Position $position, Request $request, EntityManagerInterface $entityManager): Response
     {
         // Ici la gestion du token CSRF est nécessaire, car l'appel de la route est fait en AJAX
         if (!$this->isCsrfTokenValid('delete_position_' . $position->getId(), $request->headers->get('X-CSRF-TOKEN'))) {
@@ -191,6 +188,62 @@ final class PositionController extends AbstractController
         }
 
         $this->addFlash('success', 'La position a été supprimée avec succès.');
+
+        return $this->redirectToRoute('app_home');
+    }
+
+    /**
+     * Mise à jour de la position clôturée manuellement
+     */
+    #[Route('/position/{id}/sell-now', name: 'app_position_sell_now', methods: ['POST'])]
+    public function sellNow(Position $position, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        // 1. On récupère le token depuis le POST (formulaire)
+        $submittedToken = $request->request->get('_token');
+
+        // 2. On valide avec l'ID 'close' correspondant au template
+        if (!$this->isCsrfTokenValid('close' . $position->getId(), $submittedToken)) {
+            if ($request->isXmlHttpRequest()) {
+                return new JsonResponse(['error' => 'Action non autorisée'], 403);
+            }
+            $this->addFlash('error', 'Le jeton de sécurité est invalide.');
+
+            return $this->redirectToRoute('app_home');
+        }
+
+        // 3. Récupération du prix de vente
+        $sellLvcPrice = $request->request->get('final_lvc_price');
+        $sellCacPrice = $request->request->get('final_cac_price');
+
+        if (!($sellLvcPrice && is_numeric($sellLvcPrice)) || !($sellCacPrice && is_numeric($sellCacPrice))) {
+            if ($request->isXmlHttpRequest()) {
+                return new JsonResponse(['error' => 'Les prix de vente CAC et LVC sont requis'], 400);
+            }
+            $this->addFlash('error', 'Le prix de vente LVC saisi est invalide.');
+
+            return $this->redirectToRoute('app_home');
+        }
+
+        // 4. Enregistrement du nouveau prix de vente de la position et mise à jour du statut
+        $position->setStatus(PositionStatus::CLOSED);
+        $position->setLvcTargetPrice((string) $sellLvcPrice);
+        $position->setTargetPrice((string) $sellCacPrice);
+
+        $entityManager->flush();
+
+        $this->logManager->log(
+            sprintf(
+                "Position #%d clôturée : CAC %s pts / LVC %s €",
+                $position->getId(),
+                $sellCacPrice,
+                $sellLvcPrice
+            ),
+            actionType: LogAction::SELL,
+            origin: LogOrigin::USER,
+            context: LogContext::CLOSED
+        );
+
+        $this->addFlash('success', 'Position clôturée avec succès.');
 
         return $this->redirectToRoute('app_home');
     }

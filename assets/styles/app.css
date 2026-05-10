@@ -720,18 +720,18 @@ input[type=number] {
 /* --- 3. Séparations Verticales (Bordures) --- */
 
 /* Séparation Fine INTERNE (Entre LVC et CAC d'un même groupe) */
-.position-card .position-table td:nth-child(4),                          /* CAC Achat */
-.position-card .position-table td:nth-child(6),                          /* CAC Revente */
-.position-card .position-table thead tr:nth-child(2) th:nth-child(2),    /* Header CAC Achat */
-.position-card .position-table thead tr:nth-child(2) th:nth-child(4) {   /* Header CAC Revente */
-    border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
+/*.position-card .position-table td:nth-child(4),                          !* CAC Achat *!*/
+/*.position-card .position-table td:nth-child(6),                          !* CAC Revente *!*/
+/*.position-card .position-table thead tr:nth-child(2) th:nth-child(2),    !* Header CAC Achat *!*/
+/*.position-card .position-table thead tr:nth-child(2) th:nth-child(4) {   !* Header CAC Revente *!*/
+/*    border-left: 1px solid rgba(255, 255, 255, 0.1) !important;*/
+/*}*/
 
 /* Séparation Forte de GROUPE (Entre Achat et Revente) */
 .position-card .position-table td:nth-child(5),                         /* LVC Revente */
 .position-card .position-table thead tr:first-child th:nth-child(4),    /* Header "Revente" */
 .position-card .position-table thead tr:nth-child(2) th:nth-child(3) {  /* Header LVC sous Revente */
-    border-left: 2px solid rgba(255, 255, 255, 0.25) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.25) !important;
     box-shadow: -1px 0 0 rgba(0, 0, 0, 0.5);             /* Effet de profondeur */
     padding-left: 20px !important;                       /* Plus d'espace pour le groupe Revente */
 }

@@ -16,6 +16,8 @@ class PositionTable
 {
     public string $type; // 'running' (en cours) ou 'waiting' (en attente)
     public ?FormView $form = null; // Le formulaire de position
+    public string $lastPrice;
+    public string $lastLvcPrice;
 
     /**
      * @var array<Position> Un tableau des données de trading

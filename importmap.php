@@ -16,6 +16,9 @@ return [
         'path' => './assets/app.js',
         'entrypoint' => true,
     ],
+    'close-position-command' => [
+        'path' => './assets/commands/close-position-command.js',
+    ],
     '@hotwired/stimulus' => [
         'version' => '3.2.2',
     ],

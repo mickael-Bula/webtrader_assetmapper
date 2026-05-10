@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus";
+import { ClosePositionCommand } from "close-position-command";
 
 /**
  * @property {HTMLFormElement} lvcInputTarget
@@ -49,33 +50,28 @@ export default class extends Controller {
     }
 
     /**
-     * Envoi du formulaire en AJAX
+     * Envoi du formulaire en AJAX via le pattern Command
      */
     async submit(event) {
         event.preventDefault();
 
-        const form = this.formTarget;
-        const formData = new FormData(form);
-        const submitBtn = this.submitButtonTarget;
-
         // Récupération ds élements HTML
+        const submitBtn = this.submitButtonTarget;
         const originalBtnText = submitBtn.innerHTML;
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>En cours...';
 
+        // Préparation de la commande
+        const command = new ClosePositionCommand(
+            this.formTarget.action,
+            new FormData(this.formTarget)
+        );
+
         try {
-            // La route est récupérée dynamiquement via le formulaire.
-            const response = await fetch(form.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
+            // Exécution de la commande
+            const data = await command.execute();
 
-            const data = await response.json();
-
-            if (response.ok && data.success) {
+            if (data.success) {
                 // Succès : On recharge la page pour voir le mouvement dans le portefeuille
                 window.location.reload();
             } else {

@@ -41,26 +41,29 @@
             <nav class="navigation-drawer">
                 <div class="drawer-header">Menu</div>
                 <ul class="list-compact">
+                    {# Récupération de la route courante #}
+                    {% set current_route = app.request.attributes.get('_route') %}
+
                     <li class="list-item">
-                        <a href="/" class="list-link active">
+                        <a href="{{ path('app_home') }}" class="list-link {{ current_route == 'app_home' ? 'active' }}">
                             <i class="mdi mdi-finance list-icon icon-green"></i>
                             <span class="list-item-title">Dashboard</span>
                         </a>
                     </li>
                     <li class="list-item">
-                        <a href="{{ path('app_portfolio') }}" class="list-link">
+                        <a href="{{ path('app_portfolio') }}" class="list-link {{ current_route == 'app_portfolio' ? 'active' }}">
                             <i class="mdi mdi-wallet list-icon icon-green"></i>
                             <span class="list-item-title">Portefeuille</span>
                         </a>
                     </li>
                     <li class="list-item">
-                        <a href="{{ path('app_strategy_description') }}" class="list-link">
-                            <i class="mdi mdi-wallet list-icon icon-green"></i>
+                        <a href="{{ path('app_strategy_description') }}" class="list-link {{ current_route == 'app_strategy_description' ? 'active' }}">
+                            <i class="mdi mdi-shield-check list-icon icon-green"></i>
                             <span class="list-item-title">Stratégie</span>
                         </a>
                     </li>
                     <li class="list-item">
-                        <a href="{{ path('app_settings') }}" class="list-link">
+                        <a href="{{ path('app_settings') }}" class="list-link {{ current_route == 'app_settings' ? 'active' }}">
                             <i class="mdi mdi-cog list-icon icon-green"></i>
                             <span class="list-item-title">Paramètres</span>
                         </a>

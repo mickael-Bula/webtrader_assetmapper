@@ -42,15 +42,19 @@
         </div>
         <div class="card-text card-metrics">
             <span class="h6 fw-bold text-white">{{ this.formattedValue }}</span>
-            {% if trend == 'up' %}
-                <i class="mdi mdi-arrow-up-thin icon-up add-margin-left"></i>
-                <span class="small text-webtrader-muted">{{ subtitle }}</span>
-            {% elseif trend == 'down' %}
-                <i class="mdi mdi-arrow-down-thin icon-down add-margin-left"></i>
-                <span class="small text-webtrader-muted">{{ subtitle }}</span>
-            {% else %}
-                <span class="small add-margin-left text-webtrader-muted">{{ subtitle }}</span>
+
+            {# On affiche l'icône de trend uniquement pour la Card CAC (cardType == null) #}
+            {% if not cardType and trend is defined %}
+                {% set icon = (trend == 'up') ? 'mdi-arrow-up-thin icon-up' : 'mdi-arrow-down-thin icon-down' %}
+                <i class="mdi {{ icon }} add-margin-left"></i>
             {% endif %}
+
+            {# On adapte les classes CSS selon que le Card est ou n'est pas celui du CAC #}
+            <span class="small {{ not cardType ? 'text-webtrader-muted' : 'add-margin-left text-webtrader-muted' }}"
+                  {# Affiche le titre uniqiement pour le card Buy Limit #}
+                {% if cardType == 'buy' %}title="Distance avant exécution"{% endif %}>
+                {{ subtitle }}
+            </span>
         </div>
     </div>
 </div>

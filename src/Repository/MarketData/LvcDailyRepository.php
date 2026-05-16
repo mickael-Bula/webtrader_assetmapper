@@ -43,4 +43,20 @@ final readonly class LvcDailyRepository
             (float) $row['close'],
         );
     }
+
+    /**
+     * Récupère le dernier cours de clôture du LVC.
+     *
+     * @throws Exception
+     */
+    public function findLastClose(): string
+    {
+        $result = $this->connection->fetchOne('SELECT close FROM market_data.lvc_daily ORDER BY date DESC LIMIT 1');
+
+        if ($result === false) {
+            throw new \RuntimeException("Aucune cotation LVC trouvée en base de données.");
+        }
+
+        return (string) $result; // Sécurisation du type de retour
+    }
 }

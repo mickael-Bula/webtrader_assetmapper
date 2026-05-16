@@ -11,7 +11,10 @@
         {# On initialise le form avec l'option stimulus_controller #}
         {{ form_start(form, {
             'action': path('app_position_create'),
-            'attr': { 'data-controller': 'position-calculator' }
+            'attr': {
+                'data-controller': 'position-calculator',
+                'data-action': 'input->position-calculator#calculate'
+            }
         }) }}
 
         {# Champs cachés #}
@@ -19,35 +22,73 @@
         <input type="hidden" data-position-calculator-target="positionSize" value="{{ app.user.positionSize }}">
 
         <div class="row mb-3">
-            <div class="col-6">{{ form_row(form.buyPrice) }}</div>
-            <div class="col-6">{{ form_row(form.lvcBuyPrice) }}</div>
+            <div class="col-6">
+                {{ form_row(form.buyPrice, { 'attr': { 'data-position-calculator-target': 'buyCac' } }) }}
+            </div>
+            <div class="col-6">
+                {{ form_row(form.lvcBuyPrice, { 'attr': { 'data-position-calculator-target': 'buyLvc' } }) }}
+            </div>
         </div>
 
         <div class="row mb-4">
-            <div class="col-6">{{ form_row(form.targetPrice) }}</div>
-            <div class="col-6">{{ form_row(form.lvcTargetPrice) }}</div>
+            <div class="col-6">
+                {{ form_row(form.targetPrice, { 'attr': { 'data-position-calculator-target': 'targetCac' } }) }}
+            </div>
+            <div class="col-6">
+                {{ form_row(form.lvcTargetPrice, { 'attr': { 'data-position-calculator-target': 'targetLvc' } }) }}
+            </div>
         </div>
 
         <hr class="text-secondary">
 
         <div class="mb-4">
-            {{ form_row(form.quantity) }}
-            <div class="form-text text-info opacity-75 small">Calculé automatiquement : Taille de la position / Prix LVC</div>
+            {{ form_row(form.quantity, { 'attr': { 'data-position-calculator-target': 'quantity' } }) }}
+            <div class="form-text text-info opacity-75 small">Calculé automatiquement : Quantité / Prix LVC</div>
         </div>
 
         <hr class="text-secondary">
 
-        <div class="mb-4">
-            {{ form_row(form.createdAt) }}
-            <div class="form-text text-info opacity-75 small">Par défaut : +3 mois</div>
+        <div class="row mb-2">
+            {# Date de l'opération #}
+            <div class="{{ currentStatus == 'waiting' ? 'col-6' : 'col-12' }}">
+                {{ form_row(form.createdAt, {
+                    'attr': {
+                        'data-position-calculator-target': 'operationDate',
+                        'data-action': 'change->position-calculator#updateValidityDate'
+                    }
+                }) }}
+            </div>
+
+            {# Date de validité affichée uniquement pour les positions en attente #}
+            {% if currentStatus == 'waiting' %}
+                <div class="col-6">
+                    {{ form_row(form.expiresAt, {
+                        'attr': { 'data-position-calculator-target': 'validityDate' }
+                    }) }}
+                </div>
+            {% else %}
+                {# Rendu masqué pour les positions en cours afin de ne pas fausser le formulaire Symfony #}
+                <div class="d-none">
+                    {{ form_row(form.expiresAt) }}
+                </div>
+            {% endif %}
         </div>
 
-        <div class="form-check form-switch mb-3">
+        {# Affichage du texte d'information uniquement pour le mode waiting #}
+        {% if currentStatus == 'waiting' %}
+            <div class="form-text text-info opacity-75 small">
+                Annulation de l'ordre après cette date (Défaut : +3 mois).
+            </div>
+        {% endif %}
+
+        <hr class="text-secondary">
+
+        <div class="form-check form-switch mb-1">
             <input class="form-check-input" type="checkbox" name="is_active" id="isActive">
             <label class="form-check-label text-white small" for="isActive">Rendre le point d'entrée Actif</label>
         </div>
 
-        <div class="d-grid gap-2 mt-5">
+        <div class="d-grid gap-2 mt-3">
             <button type="submit" class="btn btn-primary">Enregistrer la position</button>
         </div>
         {{ form_end(form) }}

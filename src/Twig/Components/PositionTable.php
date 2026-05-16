@@ -35,22 +35,28 @@ class PositionTable
 
     /**
      * Affiche la date d'achat pour les positions en cours
-     * et une date de validité calculée à trois mois pour les positions en attente.
+     * et la date d'expiration pour les positions en attente.
      * @noinspection PhpUnused
      */
     public function getFormattedDate(Position $position): string
     {
-        $date = clone $position->getCreatedAt();
-
-        if ($this->type === 'waiting') {
-            $date = $date->modify('+3 months');
+        if ($this->type === 'running') {
+            return $position->getCreatedAt()->format('d/m/y');
         }
 
-        return $date->format('d/m/y');
+        // Pour le mode waiting, on e&cupère la date d'expiration
+        $expiresAt = $position->getExpiresAt();
+
+        // Pour les anciennes lignes n'ayant pas encore de valeur, on fixe une valeur par défaut à +3 mois.
+        if ($expiresAt === null) {
+            $expiresAt = $position->getCreatedAt()->modify('+3 months');
+        }
+
+        return $expiresAt->format('d/m/y');
     }
 
     /**
-     * Retourne un booléen indiquant que la date de validité est inférieure à une semaine ou non.
+     * Retourne un booléen indiquant que la date de validité est inférieure à une semaine.
      * @noinspection PhpUnused
      */
     public function isExpiringSoon(Position $position): bool
@@ -59,14 +65,21 @@ class PositionTable
             return false;
         }
 
-        $validityDate = $position->getCreatedAt()->modify('+3 months');
-        $now = new \DateTimeImmutable();
+        // ON récupère la date d'expiration
+        $expiresAt = $position->getExpiresAt();
 
-        // On calcule la différence
-        $interval = $now->diff($validityDate);
+        // Pour les anciennes lignes n'ayant pas encore de valeur, on fixe une valeur par défaut à +3 mois.
+        if ($expiresAt === null) {
+            $expiresAt = $position->getCreatedAt()->modify('+3 months');
+        }
+
+        $now = new \DateTimeImmutable('today'); // 'today' pour ignorer l'influence des heures/minutes
+
+        // On calcule la différence de jours
+        $interval = $now->diff($expiresAt);
         $daysRemaining = (int)$interval->format('%r%a');
 
-        // On considère "urgent" s'il reste entre 0 et 7 jours
+        // On considère "urgent" s'il reste entre 0 et 7 jours avant expiration
         return $daysRemaining <= 7 && $daysRemaining >= 0;
     }
 

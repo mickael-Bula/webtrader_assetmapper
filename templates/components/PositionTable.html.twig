@@ -1,6 +1,7 @@
 <div class="card position-card {{ type }}-positions d-flex justify-content-between align-items-center">
     <div class="card-title {{ this.headerClass }}">
         <span>{{ this.displayTitle }}</span>
+        {# Bouton de création d'une nouvelle position. Ouvre la modale `_partials/_new_position_drawer.html.twig` #}
         <button class="btn btn-sm btn-link text-white p-0"
                 type="button"
                 data-bs-toggle="offcanvas"
@@ -32,7 +33,10 @@
             <tbody class="text-white">
             {% for pos in positions %}
                 <tr>
-                    <td class="text-nowrap">{{ this.formattedDate(pos) }}</td>
+                    {# Utilisation de la méthode isExpiringSoon pour colorer la date si l'échéance approche #}
+                    <td class="text-nowrap {{ this.isExpiringSoon(pos) ? 'text-warning fw-bold' : '' }}">
+                        {{ this.formattedDate(pos) }}
+                    </td>
                     <td class="text-center">{{ pos.quantity ?? "—" }}</td>
                     <td class="text-center">{{ pos.lvcBuyPrice|number_format(2, ',', ' ') }}</td>
                     <td class="text-center">{{ pos.buyPrice|number_format(0, ',', ' ') }}</td>

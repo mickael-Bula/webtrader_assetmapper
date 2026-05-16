@@ -35,6 +35,7 @@ readonly class PositionManager
         private EntityManagerInterface $entityManager,
         private StrategyManager        $strategyManager,
         private LogManager             $logManager,
+        private PortfolioService       $portfolioService
     )
     {
     }
@@ -457,5 +458,38 @@ readonly class PositionManager
                 'action'  => LogAction::SELL,
             ],
         };
+    }
+
+    /**
+     * Détermine si une nouvelle position doit être marquée comme Core.
+     * Retourne false si l'objectif des 25% de l'Equity est déjà atteint.
+     */
+    public function shouldNewPositionBeCore(User $user): bool
+    {
+        // On récupère l'Equity totale
+        $snapshot = $this->portfolioService->calculateCurrentSnapshot($user);
+        $totalEquity = $snapshot['total_equity'];
+
+        if ($totalEquity <= 0) {
+            return true; // Évite la division par zéro, autorisant le Core par défaut
+        }
+
+        // On calcule la valeur actuelle des positions Core RUNNING uniquement
+        $corePositions = $this->positionRepository->findByStatusUserAndCore(
+            PositionStatus::RUNNING,
+            $user,
+            true
+        );
+
+        $currentCoreValue = 0.0;
+        foreach ($corePositions as $pos) {
+            $currentCoreValue += ((float)$pos->getQuantity() * $pos->lvcCurrentPrice());
+        }
+
+        // Vérification de la règle métier : est-ce que le Core actuel représente déjà 25% ou plus de l'Equity totale ?
+        $coreRatio = $currentCoreValue / $totalEquity;
+
+        // Si le ratio actuel est inférieur à 25%, la nouvelle position est Core.
+        return $coreRatio < 0.25;
     }
 }

@@ -9,7 +9,6 @@ use App\Entity\Position;
 use App\Form\PositionType;
 use Doctrine\DBAL\Exception;
 use App\Enum\PositionStatus;
-use Psr\Log\LoggerInterface;
 use App\Service\StrategyManager;
 use App\Service\PortfolioService;
 use App\Repository\PositionRepository;

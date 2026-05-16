@@ -25,6 +25,7 @@ export default class extends Controller {
 
     // Le hook 'connect' s'exécute au chargement du drawer
     connect() {
+        // On ne calcule la date que si le target 'validityDate' est présent dans le HTML
         if (this.hasValidityDateTarget && !this.validityDateTarget.value) {
             const date = new Date();
             // Ajout de 3 mois

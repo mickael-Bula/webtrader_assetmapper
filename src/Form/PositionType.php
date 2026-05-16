@@ -62,18 +62,31 @@ class PositionType extends AbstractType
                     'class' => 'form-control form-control-sm bg-black text-white border-0 fw-bold',
                     'placeholder' => 'Ex: 100'
                 ], 'quantity'),
-                'row_attr' => ['class' => 'mb-3'],
+                'row_attr' => ['class' => 'mb-2'],
             ])
             ->add('createdAt', DateType::class, [
                 'widget' => 'single_text', // Indispensable pour avoir l'input HTML5 date
-                'label' => 'Date de création',
-                'input' => 'datetime_immutable', // Ou 'datetime' selon votre entité
+                'label' => 'Date de l\'opération',
+                'input' => 'datetime_immutable',
                 'label_attr' => ['class' => 'x-small text-secondary fw-bold d-block mb-1'],
-                'attr' => $this->getAttr($controller, [
+                'attr' => [
                     'class' => $inputClass,
-                    'style' => 'color-scheme: dark;'
-                ], 'validityDate'),
-                'row_attr' => ['class' => 'mb-3'],
+                    'style' => 'color-scheme: dark;',
+                ],
+                'row_attr' => ['class' => 'mb-2'],
+            ])
+            ->add('expiresAt', DateType::class, [
+                'widget' => 'single_text', // Pour avoir l'input HTML5 date
+                'label' => 'Date de validité',
+                'input' => 'datetime_immutable', // Facultatif pour les positions existantes
+                'required' => false,
+                'label_attr' => ['class' => 'x-small text-secondary fw-bold d-block mb-1'],
+                'attr' => [
+                    'class' => $inputClass,
+                    'style' => 'color-scheme: dark;',
+                    'data-position-calculator-target' => 'validityDate' // Cible pour le calcul +3 mois
+                ],
+                'row_attr' => ['class' => 'mb-2'],
             ]);
     }
 

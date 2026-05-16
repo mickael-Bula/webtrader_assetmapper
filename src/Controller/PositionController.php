@@ -13,23 +13,22 @@ use App\Form\PositionType;
 use App\Entity\Entrypoint;
 use App\Service\LogManager;
 use App\Enum\PositionStatus;
+use Doctrine\DBAL\Exception;
 use App\Service\PositionManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Repository\MarketData\LvcDailyRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 final class PositionController extends AbstractController
 {
-    public function __construct(private readonly LogManager $logManager, private readonly PositionManager $positionManager)
-    {
-    }
+    public function __construct(private readonly LogManager $logManager, private readonly PositionManager $positionManager, private readonly LvcDailyRepository $lvcDailyRepository) {}
 
     /**
-     * @throws \Exception
+     * @throws \Exception|Exception
      */
     #[Route('/position/create', name: 'app_position_create', methods: ['POST'])]
     public function create(Request $request, EntityManagerInterface $entityManager): Response
@@ -37,79 +36,83 @@ final class PositionController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
-        // Récupère le repository des Entrypoints
-        $entrypointRepo = $entityManager->getRepository(Entrypoint::class);
+        // On crée le formulaire avec une position vide
+        $position = new Position();
+        $form = $this->createForm(PositionType::class, $position);
 
-        $buyPriceCac = $request->request->get('buy_price_cac');
-        $buyPriceLvc = $request->request->get('buy_price_lvc');
-        $targetPriceCac = $request->request->get('target_price_cac');
-        $targetPriceLvc = $request->request->get('target_price_lvc');
-        $quantity = (int)$request->request->get('quantity');
-        $validityDate = $request->request->get('validity_date');
-        $isActive = $request->request->getBoolean('is_active');
+        $form->handleRequest($request);
 
-        if ($isActive) {
-            // On désactive tous les autres entrypoints de l'utilisateur
-            $entrypointRepo->updatePreviousEntrypoints($user);
-        }
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Récupération des données extra-formulaire (status et isActive ne sont pas dans l'objet Position)
+            $statusValue = $request->request->get('status', 'waiting');
+            $status = PositionStatus::tryFrom($statusValue) ?? PositionStatus::WAITING;
+            $isActive = $request->request->getBoolean('is_active');
 
-        // Le statut est transmis depuis le template Twig en utilisant l'id du tableau de positions
-        $statusValue = $request->request->get('status', 'waiting');
-        $status = PositionStatus::tryFrom($statusValue) ?? PositionStatus::WAITING;
+            // On récupère la date saisie par l'utilisateur (ou celle par défaut).
+            $operationDate = $position->getCreatedAt() ?? new \DateTimeImmutable();
 
-        $meta = $this->positionManager->getLogMetadata($status);
+            // Date de validité à trois mois par défaut (uniquement pour les positions en attente).
+            if (($status === PositionStatus::WAITING)) {
+                $position->setExpiresAt((new \DateTimeImmutable())->modify('+3 months'));
+            }
 
-        if ($targetPriceLvc <= $buyPriceLvc || $targetPriceCac <= $buyPriceCac) {
-            $this->addFlash('error', 'La cible de revente doit être supérieure au prix d’achat.');
+            // --- GESTION DE L'ENTRYPOINT ---
+            $entrypointRepo = $entityManager->getRepository(Entrypoint::class);
+
+            // On cherche l'Entrypoint basé sur le buyPrice du formulaire, sinon on le crée.
+            $buyPriceCac = $position->getBuyPrice();
+            $entrypoint = $entrypointRepo->findOneBy(['entrypoint' => $buyPriceCac, 'user' => $user]);
+
+            if (!$entrypoint) {
+                $entrypoint = new Entrypoint();
+                $entrypoint->setEntrypoint($buyPriceCac);
+                $entrypoint->setUser($user);
+
+                // On aligne la date de l'entrypoint sur la date de l'opération (date saisie dans le passé).
+                $entrypoint->setCreatedAt($operationDate);
+
+                $entityManager->persist($entrypoint);
+            }
+
+            // Si la case a été cochée, on neutralise les entrypoints précédents et on rend actif l'actuel.
+            if ($isActive) {
+                $entrypointRepo->updatePreviousEntrypoints($user);
+                $entrypoint->setIsActive(true);
+            }
+
+            // On détermine si la position doit être Core ou non
+            $isCore = $this->positionManager->shouldNewPositionBeCore($user);
+            $position->setIsCore($isCore);
+
+            // Finalisation de la Position
+            $position->setEntrypoint($entrypoint);
+            $position->setStatus($status);
+            $position->setRank(1);
+
+            // Récupération de la dernière clôture du LVC
+            $lastLvc = $this->lvcDailyRepository->findLastClose();
+            $position->setLvcCurrentPrice($lastLvc);
+
+            $entityManager->persist($position);
+            $entityManager->flush();
+
+            // Logging
+            $meta = $this->positionManager->getLogMetadata($status);
+            $this->logManager->log(
+                "Entrypoint #{$entrypoint->getId()} : position #{$position->getRank()} {$meta['verb']} à {$buyPriceCac} pts",
+                actionType: $meta['action'],
+                origin: LogOrigin::USER,
+                context: $meta['context']
+            );
+
+            $this->addFlash('success', 'Position enregistrée avec succès.');
+
             return $this->redirectToRoute('app_home');
         }
 
-        // --- GESTION DE L'ENTRYPOINT ---
-        // On cherche si un Entrypoint existe déjà à ce prix pour cet utilisateur
-        $entrypoint = $entrypointRepo->findOneBy(
-            [
-                'entrypoint' => $buyPriceCac,
-                'user' => $user,
-            ]);
+        // Si le formulaire n'est pas valide, on affiche un message d'erreur.
+        $this->addFlash('error', 'Données de formulaire invalides.');
 
-        if (!$entrypoint) {
-            $entrypoint = new Entrypoint();
-            $entrypoint->setEntrypoint($buyPriceCac);
-            $entrypoint->setUser($user);
-            $entrypoint->setIsActive($isActive);
-            $entrypoint->setCreatedAt(new \DateTimeImmutable());
-            $entityManager->persist($entrypoint);
-        }
-
-        $position = new Position();
-        $position->setEntrypoint($entrypoint);
-        $position->setStatus($status);
-        $position->setRank(1);
-
-        // Remplissage des données
-        $position->setQuantity($quantity);
-        $position->setBuyPrice($buyPriceCac);
-        $position->setLvcBuyPrice($buyPriceLvc);
-        $position->setTargetPrice($targetPriceCac);
-        $position->setLvcTargetPrice($targetPriceLvc);
-
-        if ($validityDate) {
-            $position->setCreatedAt(new \DateTimeImmutable());
-        }
-
-        $entityManager->persist($position);
-        $entityManager->flush();
-
-        // Ajout du log de création
-        $this->logManager->log(
-            "Entrypoint #{$position->getEntrypoint()?->getId()} : "
-                ."position #{$position->getRank()} {$meta['verb']} à {$buyPriceCac} pts",
-            actionType: $meta['action'],
-            origin: LogOrigin::USER,
-            context: $meta['label']
-        );
-
-        $this->addFlash('success', 'Position enregistrée avec succès.');
         return $this->redirectToRoute('app_home');
     }
 

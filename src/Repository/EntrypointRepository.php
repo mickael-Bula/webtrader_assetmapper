@@ -37,13 +37,17 @@ class EntrypointRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function updatePreviousEntrypoints(User $user): array
+    /**
+     * Met à jour les entrypoints précédents et retourne le nombre de lignes affectées.
+     */
+    public function updatePreviousEntrypoints(User $user): int
     {
         return $this->createQueryBuilder('e')
             ->update()
-            ->set('e.isActive', 'false')
+            ->set('e.isActive', ':status')
             ->where('e.user = :user')
             ->setParameter('user', $user)
+            ->setParameter('status', false)
             ->getQuery()
             ->execute();
     }

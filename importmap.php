@@ -19,6 +19,9 @@ return [
     'close-position-command' => [
         'path' => './assets/commands/close-position-command.js',
     ],
+    'delete-position-command' => [
+        'path' => './assets/commands/delete-position-command.js',
+    ],
     '@hotwired/stimulus' => [
         'version' => '3.2.2',
     ],

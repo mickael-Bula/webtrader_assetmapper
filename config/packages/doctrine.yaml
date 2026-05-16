@@ -4,7 +4,7 @@ doctrine:
         profiling_collect_backtrace: '%kernel.debug%'
         use_savepoints: true
         driver: 'pdo_pgsql'
-        schema_filter: '~^(?!market_data\.).*~'
+        schema_filter: '~^(?!market_data)~'
 
     orm:
         auto_generate_proxy_classes: true

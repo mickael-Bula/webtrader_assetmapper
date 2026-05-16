@@ -51,7 +51,12 @@
         <div class="row mb-2">
             {# Date de l'opération #}
             <div class="{{ currentStatus == 'waiting' ? 'col-6' : 'col-12' }}">
-                {{ form_row(form.createdAt) }}
+                {{ form_row(form.createdAt, {
+                    'attr': {
+                        'data-position-calculator-target': 'operationDate',
+                        'data-action': 'change->position-calculator#updateValidityDate'
+                    }
+                }) }}
             </div>
 
             {# Date de validité affichée uniquement pour les positions en attente #}

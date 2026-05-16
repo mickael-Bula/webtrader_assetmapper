@@ -33,7 +33,10 @@
             <tbody class="text-white">
             {% for pos in positions %}
                 <tr>
-                    <td class="text-nowrap">{{ this.formattedDate(pos) }}</td>
+                    {# Utilisation de la méthode isExpiringSoon pour colorer la date si l'échéance approche #}
+                    <td class="text-nowrap {{ this.isExpiringSoon(pos) ? 'text-warning fw-bold' : '' }}">
+                        {{ this.formattedDate(pos) }}
+                    </td>
                     <td class="text-center">{{ pos.quantity ?? "—" }}</td>
                     <td class="text-center">{{ pos.lvcBuyPrice|number_format(2, ',', ' ') }}</td>
                     <td class="text-center">{{ pos.buyPrice|number_format(0, ',', ' ') }}</td>

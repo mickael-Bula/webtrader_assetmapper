@@ -24,6 +24,6 @@ class PositionJournal
      */
     public function mount(): void
     {
-        $this->logs = $this->logRepository->findBy([], ['createdAt' => 'DESC'], 20);
+        $this->logs = $this->logRepository->findBy([], ['createdAt' => 'DESC'], 10);
     }
 }

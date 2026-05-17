@@ -58,8 +58,14 @@ class Position
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     private ?string $lvcTargetPrice = null;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
-    private ?int $quantity = null;
+    #[ORM\Column(type: 'integer')]
+    private int $initialQuantity;
+
+    #[ORM\Column(type: 'integer')]
+    private int $quantity;
+
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
+    private int $soldQuantity = 0;
 
     #[ORM\Column(type: 'string', enumType: PositionStatus::class)]
     private PositionStatus $status = PositionStatus::WAITING;
@@ -184,6 +190,30 @@ class Position
     public function setQuantity(?int $quantity): static
     {
         $this->quantity = $quantity;
+
+        return $this;
+    }
+
+    public function getInitialQuantity(): int
+    {
+        return $this->initialQuantity;
+    }
+
+    public function setInitialQuantity(int $initialQuantity): static
+    {
+        $this->initialQuantity = $initialQuantity;
+
+        return $this;
+    }
+
+    public function getSoldQuantity(): int
+    {
+        return $this->soldQuantity;
+    }
+
+    public function setSoldQuantity(int $soldQuantity): static
+    {
+        $this->soldQuantity = $soldQuantity;
 
         return $this;
     }

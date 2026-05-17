@@ -6,16 +6,19 @@ namespace App\Service;
 
 use App\Enum\LogAction;
 use App\Entity\User;
+use App\Enum\LogOrigin;
 use App\Entity\Position;
 use App\Enum\LogContext;
 use App\Entity\Entrypoint;
 use App\Enum\PositionStatus;
+use Doctrine\DBAL\Exception;
 use App\Dto\MarketData\CacDailyDto;
 use App\Repository\PositionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\EntrypointRepository;
 use Doctrine\Common\Collections\Collection;
 use App\Repository\MarketData\CacDailyRepository;
+use App\Repository\MarketData\LvcDailyRepository;
 
 /**
  * Service central de gestion du cycle de vie des positions de trading.
@@ -35,10 +38,9 @@ readonly class PositionManager
         private EntityManagerInterface $entityManager,
         private StrategyManager        $strategyManager,
         private LogManager             $logManager,
-        private PortfolioService       $portfolioService
-    )
-    {
-    }
+        private PortfolioService       $portfolioService,
+        private LvcDailyRepository     $lvcDailyRepository
+    ) {}
 
     /**
      * Synchronise les prix actuels et traite les événements de trading (achats/ventes).
@@ -367,6 +369,79 @@ readonly class PositionManager
         }
 
         return $positions;
+    }
+
+    /**
+     * Traite les données reçues du formulaire de création d'une position.
+     * @param Position $position
+     * @param User $user
+     * @param string $statusValue
+     * @param bool $isActive
+     * @return Position
+     * @throws Exception
+     */
+    public function createPositionFromForm(Position $position, User $user, string $statusValue, bool $isActive): Position
+    {
+        $status = PositionStatus::tryFrom($statusValue) ?? PositionStatus::WAITING;
+
+        // On récupère la date saisie par l'utilisateur (ou celle par défaut).
+        $operationDate = $position->getCreatedAt() ?? new \DateTimeImmutable();
+
+        // Date de validité à trois mois par défaut (uniquement pour les positions en attente).
+        if (($status === PositionStatus::WAITING)) {
+            $position->setExpiresAt((new \DateTimeImmutable())->modify('+3 months'));
+        }
+
+        // --- GESTION DE L'ENTRYPOINT ---
+        $entrypointRepo = $this->entityManager->getRepository(Entrypoint::class);
+
+        // On cherche l'Entrypoint basé sur le buyPrice du formulaire, sinon on le crée.
+        $buyPriceCac = $position->getBuyPrice();
+        $entrypoint = $entrypointRepo->findOneBy(['entrypoint' => $buyPriceCac, 'user' => $user]);
+
+        if (!$entrypoint) {
+            $entrypoint = new Entrypoint();
+            $entrypoint->setEntrypoint($buyPriceCac);
+            $entrypoint->setUser($user);
+
+            // On aligne la date de l'entrypoint sur la date de l'opération (date saisie dans le passé).
+            $entrypoint->setCreatedAt($operationDate);
+
+            $this->entityManager->persist($entrypoint);
+        }
+
+        // Si la case a été cochée, on neutralise les entrypoints précédents et on rend actif l'actuel.
+        if ($isActive) {
+            $entrypointRepo->updatePreviousEntrypoints($user);
+            $entrypoint->setIsActive(true);
+        }
+
+        // On détermine si la position doit être Core ou non
+        $isCore = $this->shouldNewPositionBeCore($user);
+        $position->setIsCore($isCore);
+
+        // Finalisation de la Position
+        $position->setEntrypoint($entrypoint);
+        $position->setStatus($status);
+        $position->setRank(1);
+
+        // Récupération de la dernière clôture du LVC
+        $lastLvc = $this->lvcDailyRepository->findLastClose();
+        $position->setLvcCurrentPrice($lastLvc);
+
+        $this->entityManager->persist($position);
+        $this->entityManager->flush();
+
+        // Logging
+        $meta = $this->getLogMetadata($status);
+        $this->logManager->log(
+            "Entrypoint #{$entrypoint->getId()} : position #{$position->getRank()} {$meta['verb']} à {$buyPriceCac} pts",
+            actionType: $meta['action'],
+            origin: LogOrigin::USER,
+            context: $meta['context']
+        );
+
+        return $position;
     }
 
     /**

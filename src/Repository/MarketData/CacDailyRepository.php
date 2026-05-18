@@ -13,14 +13,12 @@ use App\Dto\MarketData\CacDailyDto;
 use App\Dto\MarketData\CacLvcQuoteDto;
 use Doctrine\ORM\EntityManagerInterface;
 
-final readonly class CacDailyRepository
+final readonly class CacDailyRepository implements CacDailyRepositoryInterface
 {
     public function __construct(
         private Connection $connection,
         private EntityManagerInterface $entityManager
-    )
-    {
-    }
+    ) {}
 
     /**
      * Récupère un DTO par son ID.

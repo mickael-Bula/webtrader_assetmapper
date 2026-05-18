@@ -17,8 +17,8 @@ use App\Repository\PositionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\EntrypointRepository;
 use Doctrine\Common\Collections\Collection;
-use App\Repository\MarketData\CacDailyRepository;
-use App\Repository\MarketData\LvcDailyRepository;
+use App\Repository\MarketData\LvcDailyRepositoryInterface;
+use App\Repository\MarketData\CacDailyRepositoryInterface;
 
 /**
  * Service central de gestion du cycle de vie des positions de trading.
@@ -33,13 +33,13 @@ use App\Repository\MarketData\LvcDailyRepository;
 readonly class PositionManager
 {
     public function __construct(
-        private PositionRepository     $positionRepository,
-        private CacDailyRepository     $cacRepository,
-        private EntityManagerInterface $entityManager,
-        private StrategyManager        $strategyManager,
-        private LogManager             $logManager,
-        private PortfolioService       $portfolioService,
-        private LvcDailyRepository     $lvcDailyRepository
+        private CacDailyRepositoryInterface $cacRepository,
+        private LvcDailyRepositoryInterface $lvcDailyRepository,
+        private EntityManagerInterface      $entityManager,
+        private PositionRepository          $positionRepository,
+        private StrategyManager             $strategyManager,
+        private LogManager                  $logManager,
+        private PortfolioService            $portfolioService
     ) {}
 
     /**
@@ -295,7 +295,7 @@ readonly class PositionManager
         }
 
         /** --- PHASE 2 : Exposition >= 25% et < 50% (Récupération du capital, reliquat complet devient CORE) --- */
-        if ($totalRowValue > $capitalEngaged && (float)$lvcSellPrice > 0) {
+        elseif ($totalRowValue > $capitalEngaged && (float)$lvcSellPrice > 0) {
             // Calcul de la quantité de LVC (arrondie à l'entier supérieur ou inférieur au plus près)
             $qtyTotal = $pos->getQuantity();
             $qtyToSellTheoretical = $capitalEngaged / (float)$lvcSellPrice;

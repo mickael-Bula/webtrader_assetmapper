@@ -50,7 +50,12 @@ class PortfolioSnapshotCommand extends Command
 
         $this->entityManager->flush();
 
-        $output->writeln('Snapshot enregistré avec succès !');
+        // Récupère la date et l'heure actuelles
+        $now = new \DateTimeImmutable();
+        $timestamp = $now->format('[' . \DateTimeInterface::ATOM . ']'); // Format : [2026-05-18T18:05:00+02:00]
+
+        // Utilisation de termes sans accents pour éviter les problèmes d'encodage de la console Cron
+        $output->writeln(sprintf('%s [SUCCESS] Snapshot enregistre avec succes !', $timestamp));
 
         return Command::SUCCESS;
     }

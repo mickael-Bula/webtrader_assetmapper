@@ -8,7 +8,7 @@ use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\Connection;
 use App\Dto\MarketData\LvcDailyDto;
 
-final readonly class LvcDailyRepository
+final readonly class LvcDailyRepository implements LvcDailyRepositoryInterface
 {
     public function __construct(
         private Connection $connection,

@@ -71,12 +71,13 @@ class PositionRepository extends ServiceEntityRepository
     public function findByStatusUserAndCore(
         PositionStatus $status,
         User $user,
-        bool $isCore
+        bool $isCore,
+        string $order = 'ASC'
     ): array {
         return $this->getBaseQueryBuilder($user, $status)
             ->andWhere('p.isCore = :isCore')
             ->setParameter('isCore', $isCore)
-            ->orderBy('p.createdAt', 'ASC')
+            ->orderBy('p.createdAt', $order)
             ->getQuery()
             ->getResult();
     }

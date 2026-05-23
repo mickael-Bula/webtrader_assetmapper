@@ -10,28 +10,31 @@ use App\Enum\LogAction;
 use App\Entity\Position;
 use App\Enum\LogContext;
 use App\Form\PositionType;
-use App\Entity\Entrypoint;
 use App\Service\LogManager;
 use App\Enum\PositionStatus;
 use Doctrine\DBAL\Exception;
+use Psr\Log\LoggerInterface;
 use App\Service\PositionManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use App\Repository\MarketData\LvcDailyRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 final class PositionController extends AbstractController
 {
-    public function __construct(private readonly LogManager $logManager, private readonly PositionManager $positionManager, private readonly LvcDailyRepository $lvcDailyRepository) {}
+    public function __construct(
+        private readonly LogManager      $logManager,
+        private readonly PositionManager $positionManager,
+        private readonly LoggerInterface $logger,
+    ) {}
 
     /**
-     * @throws \Exception|Exception
+     * @throws \Exception
      */
     #[Route('/position/create', name: 'app_position_create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $entityManager): Response
+    public function create(Request $request, PositionManager $positionManager): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -45,69 +48,20 @@ final class PositionController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             // Récupération des données extra-formulaire (status et isActive ne sont pas dans l'objet Position)
             $statusValue = $request->request->get('status', 'waiting');
-            $status = PositionStatus::tryFrom($statusValue) ?? PositionStatus::WAITING;
             $isActive = $request->request->getBoolean('is_active');
 
-            // On récupère la date saisie par l'utilisateur (ou celle par défaut).
-            $operationDate = $position->getCreatedAt() ?? new \DateTimeImmutable();
+            try {
+                $positionManager->createPositionFromForm($position, $user, $statusValue, $isActive);
+                $this->addFlash('success', 'Position enregistrée avec succès.');
 
-            // Date de validité à trois mois par défaut (uniquement pour les positions en attente).
-            if (($status === PositionStatus::WAITING)) {
-                $position->setExpiresAt((new \DateTimeImmutable())->modify('+3 months'));
+                return $this->redirectToRoute('app_home');
+            } catch (Exception $e) {
+                $this->logger->error(sprintf(
+                    'Erreur lors de l\'enregistrement de la position : %s',
+                    $e->getMessage())
+                );
+                $this->addFlash('error', 'Erreur lors de l\'enregistrement de la position.');
             }
-
-            // --- GESTION DE L'ENTRYPOINT ---
-            $entrypointRepo = $entityManager->getRepository(Entrypoint::class);
-
-            // On cherche l'Entrypoint basé sur le buyPrice du formulaire, sinon on le crée.
-            $buyPriceCac = $position->getBuyPrice();
-            $entrypoint = $entrypointRepo->findOneBy(['entrypoint' => $buyPriceCac, 'user' => $user]);
-
-            if (!$entrypoint) {
-                $entrypoint = new Entrypoint();
-                $entrypoint->setEntrypoint($buyPriceCac);
-                $entrypoint->setUser($user);
-
-                // On aligne la date de l'entrypoint sur la date de l'opération (date saisie dans le passé).
-                $entrypoint->setCreatedAt($operationDate);
-
-                $entityManager->persist($entrypoint);
-            }
-
-            // Si la case a été cochée, on neutralise les entrypoints précédents et on rend actif l'actuel.
-            if ($isActive) {
-                $entrypointRepo->updatePreviousEntrypoints($user);
-                $entrypoint->setIsActive(true);
-            }
-
-            // On détermine si la position doit être Core ou non
-            $isCore = $this->positionManager->shouldNewPositionBeCore($user);
-            $position->setIsCore($isCore);
-
-            // Finalisation de la Position
-            $position->setEntrypoint($entrypoint);
-            $position->setStatus($status);
-            $position->setRank(1);
-
-            // Récupération de la dernière clôture du LVC
-            $lastLvc = $this->lvcDailyRepository->findLastClose();
-            $position->setLvcCurrentPrice($lastLvc);
-
-            $entityManager->persist($position);
-            $entityManager->flush();
-
-            // Logging
-            $meta = $this->positionManager->getLogMetadata($status);
-            $this->logManager->log(
-                "Entrypoint #{$entrypoint->getId()} : position #{$position->getRank()} {$meta['verb']} à {$buyPriceCac} pts",
-                actionType: $meta['action'],
-                origin: LogOrigin::USER,
-                context: $meta['context']
-            );
-
-            $this->addFlash('success', 'Position enregistrée avec succès.');
-
-            return $this->redirectToRoute('app_home');
         }
 
         // Si le formulaire n'est pas valide, on affiche un message d'erreur.

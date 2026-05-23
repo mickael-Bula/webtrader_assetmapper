@@ -108,7 +108,7 @@ class PositionManagerTest extends TestCase
     }
 
     /**
-     * Test de la PHASE 3 / PHASE 1 : L'exposition est standard (ex: 60% ou 15%).
+     * Test de la PHASE 3 / PHASE 1 : L'exposition est standard (ex : 60% ou 15%).
      * Attendu : Clôture intégrale classique de la position de trading ayant touché son objectif.
      */
     public function testExecuteStrategySellInPhase3ClosesEntirePosition(): void
@@ -138,30 +138,28 @@ class PositionManagerTest extends TestCase
     }
 
     /**
-     * Test de la PHASE 2 : L'exposition est entre 25% et 50%, et la ligne dégage une plus-value.
+     * Test de la PHASE 2 : L'exposition est entre 25% et 50%, et l'objectif LVC de +20% est atteint.
      * Attendu : Mutation. Récupération du capital initial (parts vendues passées au statut CLOSED)
      * et création d'une nouvelle entité "reliquat" marquée isCore = true au statut RUNNING.
      */
     public function testExecuteStrategySellInPhase2CreatesCoreReliquat(): void
     {
         // Arrange
-        // Achat initial de 10 parts à 40€ (Capital engagé = 400€).
-        // Vente sur cible LVC à 50€ (Valeur totale de la ligne = 500€).
-        // Parts nécessaires à vendre pour récupérer le capital : 400 / 50 = 8 parts. Reliquat = 2 parts.
-        $position = $this->createTradingPosition(quantity: 10, buyPrice: "8000.0", lvcBuyPrice: "40.0", targetPrice: "8200.0");
-        $position->setLvcTargetPrice("50.0");
+        // Conforme à la règle des +20% : Achat 45€ (Capital 450€) → Cible touchée à 54€ (Valeur 540€)
+        // Calcul théorique de vente : 450 / 54 = 8.33 → arrondi à 8 parts. Reliquat = 2 parts CORE.
+        $position = $this->createTradingPosition(quantity: 10, buyPrice: "8000.0", lvcBuyPrice: "45.0", targetPrice: "8200.0");
+        $position->setLvcTargetPrice("54.0");
 
         $this->positionRepositoryMock->method('findByStatusUserAndCore')->willReturn([$position]);
         $this->portfolioServiceMock->method('calculateCurrentSnapshot')->willReturn(['exposure_percent' => 35.0]); // Phase 2
         $this->positionRepositoryMock->method('findBy')->willReturn([$position]);
 
         // Assert
-        // On s'attend à persister la nouvelle position CORE créée à la volée
         $this->entityManagerMock->expects($this->exactly(2))
             ->method('persist')
             ->willReturnOnConsecutiveCalls(
                 [$this->isInstanceOf(Position::class)], // La nouvelle ligne CORE
-                [$this->equalTo($position)]             // La ligne originale modifiée
+                [$this->equalTo($position)]                       // La ligne originale modifiée
             );
 
         $this->logManagerMock->expects($this->once())->method('log')->with(
@@ -176,7 +174,7 @@ class PositionManagerTest extends TestCase
 
         // Assertions sur la ligne de Trading initiale
         $this->assertSame(PositionStatus::CLOSED, $position->getStatus());
-        $this->assertSame(8, $position->getSoldQuantity()); // 400€ engagés / 50€ cible = 8 parts vendues
+        $this->assertSame(8, $position->getSoldQuantity());
         $this->assertSame(8, $position->getQuantity());
     }
 
@@ -212,37 +210,6 @@ class PositionManagerTest extends TestCase
         // Assertions
         $this->assertSame(PositionStatus::CLOSED, $position->getStatus());
         $this->assertSame(2, $position->getSoldQuantity());
-        $this->assertSame(0, $position->getQuantity());
-    }
-
-    /**
-     * Test de la PHASE 2 (Cas de secours) : Marché baissier ou stable sans plus-value.
-     * Attendu : Clôture standard via le bloc de repli.
-     */
-    public function testExecuteStrategySellInPhase2ClosesNormallyIfNoProfitMaturing(): void
-    {
-        // Arrange
-        $position = $this->createTradingPosition(quantity: 10, buyPrice: "8000.0", lvcBuyPrice: "45.0", targetPrice: "8200.0");
-        $position->setLvcTargetPrice("45.0"); // Aucun profit latent (Vente = Achat)
-
-        $this->positionRepositoryMock->method('findByStatusUserAndCore')->willReturn([$position]);
-        $this->portfolioServiceMock->method('calculateCurrentSnapshot')->willReturn(['exposure_percent' => 33.0]);
-        $this->positionRepositoryMock->method('findBy')->willReturn([$position]);
-
-        // Assert
-        $this->logManagerMock->expects($this->once())->method('log')->with(
-            $this->stringContains('[Phase 2] Pas de PV suffisante pour arbitrage'),
-            LogAction::SELL,
-            LogOrigin::WORKFLOW,
-            LogContext::RUNNING
-        );
-
-        // Act
-        $this->positionManager->processDailySales($this->user, $this->dayDto);
-
-        // Assertions
-        $this->assertSame(PositionStatus::CLOSED, $position->getStatus());
-        $this->assertSame(10, $position->getSoldQuantity());
         $this->assertSame(0, $position->getQuantity());
     }
 

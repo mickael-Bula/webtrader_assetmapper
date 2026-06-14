@@ -182,16 +182,15 @@ readonly class PortfolioService
         // Récupère toutes les positions en cours de l'utilisateur (Core + Trading).
         $positions = $this->positionRepository->findByStatusAndUser(PositionStatus::RUNNING, $user);
         $grouped = [];
+        $name = 'LVC';
 
         foreach ($positions as $position) {
-            $name = 'LVC';
-
             if (!isset($grouped[$name])) {
                 $grouped[$name] = [
                     'name' => $name,
                     'total_quantity' => 0,
                     'total_cost' => 0,
-                    'current_price' => (float)$position->getCurrentPrice(),
+                    'current_price' => $position->getCurrentPrice(),
                     'total_current_value' => 0,
                 ];
             }
@@ -201,15 +200,18 @@ readonly class PortfolioService
 
             $grouped[$name]['total_quantity'] += $quantity;
             $grouped[$name]['total_cost'] += ($quantity * $buyPrice);
-            $grouped[$name]['total_current_value'] += ($quantity * (float)$position->getCurrentPrice());
+            $grouped[$name]['total_current_value'] += ($quantity * $position->getCurrentPrice());
         }
 
         // Calcul final du PRU et de la performance pour chaque groupe
-        foreach ($grouped as $name => &$data) {
+        foreach ($grouped as &$data) {
             $data['pru'] = $data['total_cost'] / $data['total_quantity'];
             $data['pnl_euro'] = $data['total_current_value'] - $data['total_cost'];
             $data['pnl_percent'] = ($data['pnl_euro'] / $data['total_cost']) * 100;
         }
+
+        // SÉCURITÉ : on détruit la variable "pointeur" $data pour casser le lien de référence (&).
+        unset($data);
 
         return $grouped;
     }
@@ -316,5 +318,27 @@ readonly class PortfolioService
             'daily_diff' => $dailyDiff,
             'daily_percent' => $dailyPercent
         ];
+    }
+
+    /**
+     * Calcule le nombre de LVC CORE qu'il faudra vendre pour repasser sous les 75% d'exposition,
+     * basé sur un prix de LVC donné (le prix de vente cible).
+     */
+    public function calculateCoreQuantityToReduceExposure(User $user, float $lvcPrice): int
+    {
+        $portfolioData = $this->calculateCurrentSnapshot($user);
+        $totalPortfolioValue = $portfolioData['total_value'];
+        $currentExposureValue = $portfolioData['exposure_value'];
+
+        // Calculer le montant en € à revendre pour atteindre 74.9%
+        $targetExposureValue = $totalPortfolioValue * 0.749;
+        $amountToLiquidate = $currentExposureValue - $targetExposureValue;
+
+        if ($amountToLiquidate <= 0) {
+            return 0;
+        }
+
+        // Convertir en nombre de parts LVC complets
+        return (int) ceil($amountToLiquidate / $lvcPrice);
     }
 }

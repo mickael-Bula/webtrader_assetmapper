@@ -99,6 +99,24 @@ final class HomeController extends AbstractController
             false
         );
 
+        // On récupère l'exposition actuelle une seule fois pour tout le tableau
+        $snapshot = $portfolioService->calculateCurrentSnapshot($user);
+        $exposure = $snapshot['exposure_percent'];
+
+        foreach ($runningPositions as $pos) {
+            // Si l'exposition globale est critique (>= 75%) ET que la ligne n'est pas déjà une ligne `CORE`
+            if ($exposure >= 75.0 && !$pos->isCore()) {
+
+                $lvcSellPrice = (float) $pos->getLvcTargetPrice();
+
+                // On calcule combien de positions 'CORE' il faudra liquider en plus.
+                $qtyCoreToSell = $portfolioService->calculateCoreQuantityToReduceExposure($user, $lvcSellPrice);
+
+                // La quantité ajustée de LVC à revendre devient la quantité initiale + le complément CORE
+                $pos->setAdjustedTargetSellQuantity($pos->getQuantity() + $qtyCoreToSell);
+            }
+        }
+
         // Récupération des positions de trading en attente
         $waitingPositions = $positionRepository->findByStatusUserAndCore(
             PositionStatus::WAITING,

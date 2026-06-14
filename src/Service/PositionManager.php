@@ -17,6 +17,7 @@ use App\Repository\PositionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\EntrypointRepository;
 use Doctrine\Common\Collections\Collection;
+use App\Service\Strategy\SalesStrategyInterface;
 use App\Repository\MarketData\LvcDailyRepositoryInterface;
 use App\Repository\MarketData\CacDailyRepositoryInterface;
 
@@ -32,6 +33,9 @@ use App\Repository\MarketData\CacDailyRepositoryInterface;
  */
 readonly class PositionManager
 {
+    /**
+     * @param iterable<SalesStrategyInterface> $strategies
+     */
     public function __construct(
         private CacDailyRepositoryInterface $cacRepository,
         private LvcDailyRepositoryInterface $lvcDailyRepository,
@@ -39,7 +43,10 @@ readonly class PositionManager
         private PositionRepository          $positionRepository,
         private StrategyManager             $strategyManager,
         private LogManager                  $logManager,
-        private PortfolioService            $portfolioService
+        private PortfolioService            $portfolioService,
+
+        #[TaggedIterator('app.sales_strategy')] // Permet à Symfony de collecter toutes les classes ayant ce tag
+        private iterable                    $strategies
     ) {}
 
     /**
@@ -67,6 +74,9 @@ readonly class PositionManager
             $position->setLvcCurrentPrice((string)$latestCacDto->getLvcClose());
         }
 
+        // On flush la mise à jour de prix pour que le snapshot initial soit juste
+        $this->entityManager->flush();
+
         // Récupère l'historique manqué (du plus vieux au plus récent)
         $missedCacs = $this->cacRepository->findRangeWithLvc(
             $user->getLastCacUpdatedId(),
@@ -76,11 +86,11 @@ readonly class PositionManager
         foreach ($missedCacs as $currentCac) {
             // On traite chaque jour de manière isolée et chronologique
             $this->processSingleDay($user, $currentCac);
-        }
 
-        // On met à jour le dernier CAC traité pour l'utilisateur.
-        $user->setLastCacUpdatedId($latestCacDto->getId());
-        $this->entityManager->flush();
+            // On met à jour le dernier CAC traité pour l'utilisateur.
+            $user->setLastCacUpdatedId($latestCacDto->getId());
+            $this->entityManager->flush();
+        }
     }
 
     /**
@@ -158,7 +168,6 @@ readonly class PositionManager
                   actionType: LogAction::TRAILING_ADJUSTMENT
             );
         }
-        $this->entityManager->flush();
     }
 
     /**
@@ -201,13 +210,21 @@ readonly class PositionManager
     /**
      * Traite la vente par phase des positions :
      *
-     * - Phase 1 (<25 % PF) : pas de revente pour les positions CORE (déjà pris en compte).
+     * - Phase 1 (<25 % PF) : pas de revente.
      * - Phase 2 (<50 % PF) : revente de la position à hauteur du capital engagé, le reliquat de LVC devenant CORE.
      * - Phase 3 (<75 % PF) : revente de la position complète (cas le plus simple).
      * - Phase 4 (>75 % PF) : revente de la position, complétée par des LVC CORE, pourcramaner l'exposition du portefeuille sous 75 %.
      */
     public function processDailySales(User $user, CacDailyDto $day): void
     {
+        $snapshot = $this->portfolioService->calculateCurrentSnapshot($user);
+        $exposure = $snapshot['exposure_percent'];
+
+        // Si l'exposition est sous 25 %, alors on est en Phase 1 : pas de revente.
+        if ($exposure < 25.0) {
+            return;
+        }
+
         // On récupère uniquement les positions de TRADING (non CORE) qui sont en cours
         $runningPositions = $this->positionRepository->findByStatusUserAndCore(
             PositionStatus::RUNNING,
@@ -219,7 +236,7 @@ readonly class PositionManager
         foreach ($runningPositions as $pos) {
             // Vérification : est-ce que le plus haut du jour a touché l'objectif de vente ?
             if (null !== $pos->getTargetPrice() && $day->getHigh() >= (float)$pos->getTargetPrice()) {
-                $this->executeStrategySell($user, $pos, $day);
+                $this->executeStrategySell($user, $pos, $day, $exposure);
             }
         }
     }
@@ -227,165 +244,38 @@ readonly class PositionManager
     /**
      * Exécute la revente d'une position spécifique en appliquant les règles de phases
      * au LVC complet et selon le PRU fiscal global.
+     *
+     * @see processDailySales() Les stratégies ne sont exécutées que si l'exposition est > 25 %.
+     *
+     * @param User $user
+     * @param Position $pos
+     * @param CacDailyDto $day
+     * @return void
      */
-    private function executeStrategySell(User $user, Position $pos, CacDailyDto $day): void
+    private function executeStrategySell(User $user, Position $pos, CacDailyDto $day, float $exposure): void
     {
-        // 1. Évaluation de l'exposition globale instantanée du portefeuille
-        $snapshot = $this->portfolioService->calculateCurrentSnapshot($user);
-        $exposure = $snapshot['exposure_percent'];
-
-        // 2. Calcul du PRU Fiscal Global
+        // 1. Calcul du PRU Fiscal Global
         $globalPru = $this->calculateGlobalPru($user);
 
-        // 3. Détermination des valeurs de vente (pas de division de titre)
-        $lvcSellPrice = $pos->getLvcTargetPrice() ? (float)$pos->getLvcTargetPrice() : $day->getLvcClose();
+        // 2. Détermination des valeurs de vente (pas de division de titre)
+        $lvcSellPrice = (float) $pos->getLvcTargetPrice();
         $capitalEngaged = $pos->getQuantity() * (float)$pos->getLvcBuyPrice();
         $totalRowValue = $pos->getQuantity() * (float)$lvcSellPrice;
 
-        /** --- PHASE 4 : Exposition >= 75% (Désendettement / Réduction de l'exposition) --- */
-        if ($exposure >= 75.0) {
-            // Vente de la position complète à l'entier près
-            $qtySold = $pos->getQuantity();
+        $hasGain = ($totalRowValue > $capitalEngaged && $lvcSellPrice > 0);
 
-            $pos->setStatus(PositionStatus::CLOSED);
-            $pos->setSoldQuantity($qtySold);
-            $pos->setQuantity(0);
+        // 3. Sélection et exécution de la bonne stratégie (utilisation du Pattern Strategy).
+        foreach ($this->strategies as $strategy) {
+            if ($strategy->supports($exposure, $hasGain)) {
+                $strategy->execute($user, $pos, $day, $globalPru, $exposure);
 
-            $realPnl = ($lvcSellPrice - $globalPru) * $qtySold;
-
-            $this->logManager->log(
-                sprintf(
-                    "[Phase 4 - Expo %.1f%%] Liquidation complète de la ligne #%s (LIFO) "
-                        ."pour réduction des risques. Qte: %d. Plus-value fiscale : %s €.",
-                    $exposure, $pos->getId(),
-                    $qtySold,
-                    round($realPnl, 2)
-                ),
-                actionType: LogAction::SELL,
-                context: LogContext::RUNNING
-            );
-        }
-
-        /**
-         * --- GESTION DES PHASES DE REVENTE 1 ET 3 ---
-         * PHASE 3 : Exposition >= 50% et < 75% (Revente complète standard).
-         * PHASE 1 : Exposition < 25% (Revente standard d'une ligne de Trading).
-         */
-        elseif ($exposure >= 50.0 || $exposure < 25.0) {
-            $qtySold = $pos->getQuantity();
-
-            $pos->setStatus(PositionStatus::CLOSED);
-            $pos->setSoldQuantity($qtySold);
-            $pos->setQuantity(0);
-
-            $realPnl = ($lvcSellPrice - $globalPru) * $qtySold;
-
-            $this->logManager->log(
-                sprintf(
-                    "[Expo %.1f%%] Cible touchée. Clôture standard de la ligne #%s. Qte: %d. "
-                        ."Plus-value fiscale : %s €.",
-                    $exposure,
-                    $pos->getId(),
-                    $qtySold,
-                    round($realPnl, 2)
-                ),
-                actionType: LogAction::SELL,
-                context: LogContext::RUNNING
-            );
-        }
-
-        /** --- PHASE 2 : Exposition >= 25% et < 50% (Récupération du capital, reliquat complet devient CORE) --- */
-        elseif ($totalRowValue > $capitalEngaged && (float)$lvcSellPrice > 0) {
-            // Calcul de la quantité de LVC (arrondie à l'entier supérieur ou inférieur au plus près)
-            $qtyTotal = $pos->getQuantity();
-            $qtyToSellTheoretical = $capitalEngaged / (float)$lvcSellPrice;
-            $qtyToSell = round($qtyToSellTheoretical); // Arrondi au LVC complet
-
-            // Sécurité : on ne peut pas vendre plus de parts que la quantité détenue sur la ligne
-            $qtyToSell = min($qtyTotal, $qtyToSell);
-            $qtyRemaining = $qtyTotal - $qtyToSell;
-
-            if ($qtyRemaining >= 1.0) { // Un reliquat n'existe que s'il reste au moins 1 LVC entier
-
-                // A. Mutation de la ligne de Trading originale (devient la ligne clôturée pour le fisc)
-                $pos->setQuantity((int)$qtyToSell);
-                $pos->setSoldQuantity((int)$qtyToSell);
-                $pos->setStatus(PositionStatus::CLOSED);
-
-                // Calcul de la PNL fiscale pour les parts vendues
-                $realPnl = ($lvcSellPrice - $globalPru) * $qtyToSell;
-
-                // B. Création de la nouvelle ligne de conservation long terme (CORE)
-                $newCorePosition = new Position();
-                $newCorePosition->setEntrypoint($pos->getEntrypoint());
-                $newCorePosition->setBuyPrice($pos->getBuyPrice());
-                $newCorePosition->setLvcBuyPrice($pos->getLvcBuyPrice()); // Garde le prix d'achat initial historique
-
-                $newCorePosition->setQuantity((int)$qtyRemaining);
-                $newCorePosition->setInitialQuantity((int)$qtyRemaining);
-                $newCorePosition->setSoldQuantity(0);
-
-                $newCorePosition->setIsCore(true); // Devient officiellement une brique de l'allocation CORE
-                $newCorePosition->setStatus(PositionStatus::RUNNING);
-                $newCorePosition->setCreatedAt(new \DateTimeImmutable());
-                $newCorePosition->setLvcCurrentPrice((string)$lvcSellPrice);
-
-                $this->entityManager->persist($newCorePosition);
-
-                $this->logManager->log(
-                    sprintf("[Phase 2 - Expo %.1f%%] Arbitrage : Capital récupéré sur la ligne #%s "
-                            ."(Vente de %d LVC, PV fiscale : %s €). Création de la ligne CORE gratuite de %d LVC.",
-                            $exposure,
-                            $pos->getId(),
-                            $qtyToSell,
-                            round($realPnl, 2),
-                            $qtyRemaining
-                    ),
-                    actionType: LogAction::SELL,
-                    context: LogContext::RUNNING
-                );
-            } else {
-                // Si l'arrondi au LVC complet absorbe la quasi-totalité de la ligne, on ferme tout
-                $qtySold = $pos->getQuantity();
-                $pos->setStatus(PositionStatus::CLOSED);
-                $pos->setSoldQuantity($qtySold);
-                $pos->setQuantity(0);
-
-                $realPnl = ($lvcSellPrice - $globalPru) * $qtySold;
-
-                $this->logManager->log(
-                    sprintf("[Phase 2] Reliquat inférieur à 1 LVC complet. Clôture intégrale de la ligne #%s. "
-                            ."PV fiscale : %s €.", $pos->getId(), round($realPnl, 2)
-                    ),
-                    actionType: LogAction::SELL,
-                    context: LogContext::RUNNING
-                );
+                $this->entityManager->persist($pos);
+                return; // Stratégie trouvée et appliquée, on s'arrête là
             }
-        } else {
-            // Pas de plus-value latente permettant un désendettement partiel, fermeture standard de la ligne.
-            $qtySold = $pos->getQuantity();
-
-            $pos->setStatus(PositionStatus::CLOSED);
-            $pos->setSoldQuantity($qtySold);
-            $pos->setQuantity(0);
-
-            // Calcul de la PNL fiscale (qui sera probablement négative ou nulle ici)
-            $realPnl = ((float)$lvcSellPrice - $globalPru) * $qtySold;
-
-            $this->logManager->log(
-                sprintf(
-                    "[Phase 2] Pas de PV suffisante pour arbitrage. Clôture standard de la ligne #%s. "
-                    ."Qte: %d. Performance fiscale : %s €.",
-                    $pos->getId(),
-                    $qtySold,
-                    round($realPnl, 2)
-                ),
-                actionType: LogAction::SELL,
-                context: LogContext::RUNNING
-            );
         }
 
-        $this->entityManager->persist($pos);
+        // si on est à >= 25% d'expo mais qu'aucune stratégie ne se déclenche, c'est une anomalie.
+        throw new \LogicException(sprintf("Aucune stratégie de revente trouvée pour l'exposition %.2f%%", $exposure));
     }
 
     /**
@@ -761,5 +651,27 @@ readonly class PositionManager
 
         // Si le ratio actuel est inférieur à 25%, la nouvelle position est Core.
         return $coreRatio < 0.25;
+    }
+
+    /**
+     * Fabrique une nouvelle position CORE à partir d'un reliquat de ligne de trading.
+     */
+    public function createCorePositionFromTrading(Position $tradingPos, int $quantity, float $currentLvcPrice): Position
+    {
+        $corePos = new Position();
+        $corePos->setEntrypoint($tradingPos->getEntrypoint());
+        $corePos->setBuyPrice($tradingPos->getBuyPrice());
+        $corePos->setLvcBuyPrice($tradingPos->getLvcBuyPrice()); // Conservation du prix historique
+
+        $corePos->setQuantity($quantity);
+        $corePos->setInitialQuantity($quantity);
+        $corePos->setSoldQuantity(0);
+
+        $corePos->setIsCore(true);
+        $corePos->setStatus(PositionStatus::RUNNING);
+        $corePos->setCreatedAt(new \DateTimeImmutable());
+        $corePos->setLvcCurrentPrice((string)$currentLvcPrice);
+
+        return $corePos;
     }
 }

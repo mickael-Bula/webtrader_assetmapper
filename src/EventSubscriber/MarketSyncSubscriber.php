@@ -34,7 +34,6 @@ final readonly class MarketSyncSubscriber implements EventSubscriberInterface
     {
         // On ne traite que la requête principale (pas les appels Twig {{ render(...) }})
         if (!$event->isMainRequest()) {
-
             return;
         }
 

@@ -82,6 +82,12 @@ class Position
     #[ORM\Column]
     private ?bool $isCore = null;
 
+    /**
+     * Quantité totale recommandée à la revente (Trading + CORE éventuel).
+     * Non persistée en BDD.
+     */
+    private ?int $adjustedTargetSellQuantity = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -309,5 +315,20 @@ class Position
         $this->isCore = $isCore;
 
         return $this;
+    }
+
+    /**
+     * Par défaut, si aucun ajustement n'a été calculé, c'est la quantité normale de la ligne
+     *
+     * @return int
+     */
+    public function getAdjustedTargetSellQuantity(): int
+    {
+        return $this->adjustedTargetSellQuantity ?? $this->quantity;
+    }
+
+    public function setAdjustedTargetSellQuantity(int $quantity): void
+    {
+        $this->adjustedTargetSellQuantity = $quantity;
     }
 }

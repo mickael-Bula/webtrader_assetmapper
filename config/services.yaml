@@ -24,5 +24,13 @@ services:
     App\:
         resource: '../src/'
 
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+    # Ajoute un tag à toutes les classes implémentant l'interface SalesStrategyInterface
+    _instanceof:
+        App\Service\Strategy\SalesStrategyInterface:
+            tags: ['app.sales_strategy']
+
+    # Configuration explicite de la classe PositionManager
+    App\Service\PositionManager:
+        arguments:
+            # On dit explicitement à Symfony d'injecter tous les services possédant ce tag
+            $strategies: !tagged_iterator app.sales_strategy

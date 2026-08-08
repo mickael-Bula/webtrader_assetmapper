@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\EventListener;
 
-use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
-use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
-use Symfony\Component\Security\Core\Exception\InvalidCsrfTokenException;
+use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Security\Core\Exception\InvalidCsrfTokenException;
 
 /**
  * @noinspection PhpUnused
@@ -30,7 +30,6 @@ class CsrfExceptionListener
 
         // Si l'erreur est spécifiquement un problème de jeton CSRF
         if ($exception instanceof InvalidCsrfTokenException || str_contains($exception->getMessage(), 'CSRF')) {
-
             // Récupération de la session depuis la requête
             $request = $event->getRequest();
             $session = $request->getSession();

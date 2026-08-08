@@ -44,7 +44,7 @@ body {
 Après avoir configuré correctement le debug à la fois localement et à distance,
 j'ai perdu les connexions lors d'une autre session.
 
-Pour régler le problème, il a fallu que je supprime pui que je recrée le serveur dans PHPSTORM :
+Pour régler le problème, il a fallu que je supprime puis que je recrée le serveur dans PHPSTORM :
 le mappage ne se faisait plus correctement.
 
 Je l'ai déclaré comme ceci :
@@ -55,7 +55,7 @@ Port : 80
 Cocher Use path mapping
 Faire correspondre C:/laragon/www/webtrader_assetmapper -> /var/www/html
 
->NOTE : webtrader.local est le nom de domaine de mon serveur local. POur être reconnu,
+>NOTE : webtrader.local est le nom de domaine de mon serveur local. Pour être reconnu,
 > il doit être déclaré dans le fichier hosts de la machine (`C:\Windows\System32\drivers\etc\hosts`)
 > en ajoutant l'entrée : 192.168.1.23 webtrader.local
 

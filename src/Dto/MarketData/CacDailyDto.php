@@ -7,16 +7,15 @@ namespace App\Dto\MarketData;
 final readonly class CacDailyDto
 {
     public function __construct(
-        private int                $id,
+        private int $id,
         private \DateTimeInterface $date,
-        private float              $open,
-        private float              $high,
-        private float              $low,
-        private float              $close,
-        private ?float             $lvcHigh = null,
-        private ?float             $lvcClose = null
-    )
-    {
+        private float $open,
+        private float $high,
+        private float $low,
+        private float $close,
+        private ?float $lvcHigh = null,
+        private ?float $lvcClose = null,
+    ) {
     }
 
     public function getId(): int
@@ -24,32 +23,27 @@ final readonly class CacDailyDto
         return $this->id;
     }
 
-    public
-    function getDate(): \DateTimeInterface
+    public function getDate(): \DateTimeInterface
     {
         return $this->date;
     }
 
-    public
-    function getClose(): float
+    public function getClose(): float
     {
         return $this->close;
     }
 
-    public
-    function getOpen(): float
+    public function getOpen(): float
     {
         return $this->open;
     }
 
-    public
-    function getHigh(): float
+    public function getHigh(): float
     {
         return $this->high;
     }
 
-    public
-    function getLow(): float
+    public function getLow(): float
     {
         return $this->low;
     }

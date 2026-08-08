@@ -34,3 +34,7 @@ services:
         arguments:
             # On dit explicitement à Symfony d'injecter tous les services possédant ce tag
             $strategies: !tagged_iterator app.sales_strategy
+
+    App\Tests\Fixtures\:
+        resource: '../tests/Fixtures/'
+        public: true

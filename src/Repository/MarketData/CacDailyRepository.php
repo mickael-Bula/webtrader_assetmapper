@@ -4,24 +4,26 @@ declare(strict_types=1);
 
 namespace App\Repository\MarketData;
 
-use App\Entity\CacDaily;
-use App\Entity\LvcDaily;
-use Doctrine\DBAL\Exception;
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\ParameterType;
 use App\Dto\MarketData\CacDailyDto;
 use App\Dto\MarketData\CacLvcQuoteDto;
+use App\Entity\CacDaily;
+use App\Entity\LvcDaily;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class CacDailyRepository implements CacDailyRepositoryInterface
 {
     public function __construct(
         private Connection $connection,
-        private EntityManagerInterface $entityManager
-    ) {}
+        private EntityManagerInterface $entityManager,
+    ) {
+    }
 
     /**
      * Récupère un DTO par son ID.
+     *
      * @throws \Exception|Exception
      */
     public function findById(int $id): ?CacDailyDto
@@ -39,22 +41,23 @@ final readonly class CacDailyRepository implements CacDailyRepositoryInterface
 
         $row = $this->connection->fetchAssociative($sql, ['id' => $id]);
 
-        if ($row === false) {
+        if (false === $row) {
             return null;
         }
 
         return new CacDailyDto(
-            (int)$row['id'],
+            (int) $row['id'],
             new \DateTimeImmutable($row['date']),
-            (float)$row['open'],
-            (float)$row['high'],
-            (float)$row['low'],
-            (float)$row['close'],
+            (float) $row['open'],
+            (float) $row['high'],
+            (float) $row['low'],
+            (float) $row['close'],
         );
     }
 
     /**
      * Dernière cotation CAC sous forme de DTO pour affichage et calculs.
+     *
      * @throws \Exception|Exception
      */
     public function findLast(): ?CacDailyDto
@@ -76,26 +79,27 @@ final readonly class CacDailyRepository implements CacDailyRepositoryInterface
 
         $row = $this->connection->fetchAssociative($sql);
 
-        if ($row === false) {
+        if (false === $row) {
             return null;
         }
 
         return new CacDailyDto(
-            (int)$row['id'],
+            (int) $row['id'],
             new \DateTimeImmutable($row['date']),
-            (float)$row['open'],
-            (float)$row['high'],
-            (float)$row['low'],
-            (float)$row['cac_close'],
-            (float)$row['lvc_high'],
-            round((float)$row['lvc_close'], 2), // On formate le prix LVC enregistré dans `position.lvc_buy_price`
+            (float) $row['open'],
+            (float) $row['high'],
+            (float) $row['low'],
+            (float) $row['cac_close'],
+            (float) $row['lvc_high'],
+            round((float) $row['lvc_close'], 2), // On formate le prix LVC enregistré dans `position.lvc_buy_price`
         );
     }
 
-
     /**
-     * Dernières cotations CAC avec le prix LVC associé
+     * Dernières cotations CAC avec le prix LVC associé.
+     *
      * @return array<CacLvcQuoteDto>
+     *
      * @throws \Exception|Exception
      */
     public function findLastQuotesWithLvc(int $limit = 15): array
@@ -124,13 +128,13 @@ final readonly class CacDailyRepository implements CacDailyRepositoryInterface
         $result = [];
         foreach ($rows as $row) {
             $result[] = new CacLvcQuoteDto(
-                (int)$row['id'],
+                (int) $row['id'],
                 new \DateTimeImmutable($row['date']),
-                (float)$row['cac_close'],
-                (float)$row['open'],
-                (float)$row['high'],
-                (float)$row['low'],
-                isset($row['lvc_close']) ? (float)$row['lvc_close'] : null
+                (float) $row['cac_close'],
+                (float) $row['open'],
+                (float) $row['high'],
+                (float) $row['low'],
+                isset($row['lvc_close']) ? (float) $row['lvc_close'] : null
             );
         }
 

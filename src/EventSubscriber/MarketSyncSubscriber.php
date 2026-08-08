@@ -5,24 +5,25 @@ declare(strict_types=1);
 namespace App\EventSubscriber;
 
 use App\Entity\User;
+use App\Repository\MarketData\CacDailyRepository;
+use App\Service\PositionManager;
 use Doctrine\DBAL\Exception;
 use Psr\Log\LoggerInterface;
-use App\Service\PositionManager;
 use Symfony\Bundle\SecurityBundle\Security;
-use App\Repository\MarketData\CacDailyRepository;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 final readonly class MarketSyncSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private Security           $security,
-        private RequestStack       $requestStack,
+        private Security $security,
+        private RequestStack $requestStack,
         private LoggerInterface $tradingLogger,
         private CacDailyRepository $cacRepository,
-        private PositionManager    $positionManager
-    ) {}
+        private PositionManager $positionManager,
+    ) {
+    }
 
     /**
      * Cette méthode lance la mise à jour automatique des positions dès qu'une nouvelle cotation CAC est disponible.
@@ -41,7 +42,7 @@ final readonly class MarketSyncSubscriber implements EventSubscriberInterface
         $user = $this->security->getUser();
 
         // On vérifie que l'utilisateur est connecté et possède un capital initialisé
-        if (!$user || $user->getTotalPortfolio() === null) {
+        if (!$user || null === $user->getTotalPortfolio()) {
             return;
         }
 

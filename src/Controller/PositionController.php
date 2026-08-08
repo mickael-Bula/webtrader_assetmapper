@@ -4,31 +4,32 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\User;
-use App\Enum\LogOrigin;
-use App\Enum\LogAction;
 use App\Entity\Position;
+use App\Entity\User;
+use App\Enum\LogAction;
 use App\Enum\LogContext;
+use App\Enum\LogOrigin;
+use App\Enum\PositionStatus;
 use App\Form\PositionType;
 use App\Service\LogManager;
-use App\Enum\PositionStatus;
-use Doctrine\DBAL\Exception;
-use Psr\Log\LoggerInterface;
 use App\Service\PositionManager;
+use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 final class PositionController extends AbstractController
 {
     public function __construct(
-        private readonly LogManager      $logManager,
+        private readonly LogManager $logManager,
         private readonly PositionManager $positionManager,
         private readonly LoggerInterface $logger,
-    ) {}
+    ) {
+    }
 
     /**
      * @throws \Exception
@@ -123,7 +124,7 @@ final class PositionController extends AbstractController
     public function delete(Position $position, Request $request, EntityManagerInterface $entityManager): Response
     {
         // Ici la gestion du token CSRF est nécessaire, car l'appel de la route est fait en AJAX
-        if (!$this->isCsrfTokenValid('delete_position_' . $position->getId(), $request->headers->get('X-CSRF-TOKEN'))) {
+        if (!$this->isCsrfTokenValid('delete_position_'.$position->getId(), $request->headers->get('X-CSRF-TOKEN'))) {
             return new JsonResponse(['error' => 'Action non autorisée'], 403);
         }
 
@@ -140,7 +141,7 @@ final class PositionController extends AbstractController
         $entityManager->remove($position);
         $entityManager->flush();
 
-        if ($request->isXmlHttpRequest() || $request->headers->get('X-Requested-With') === 'XMLHttpRequest') {
+        if ($request->isXmlHttpRequest() || 'XMLHttpRequest' === $request->headers->get('X-Requested-With')) {
             return new JsonResponse(['success' => true, 'id' => $position->getId()]);
         }
 
@@ -150,16 +151,16 @@ final class PositionController extends AbstractController
     }
 
     /**
-     * Mise à jour de la position clôturée manuellement
+     * Mise à jour de la position clôturée manuellement.
      */
     #[Route('/position/{id}/sell-now', name: 'app_position_sell_now', methods: ['POST'])]
     public function sellNow(Position $position, Request $request, EntityManagerInterface $entityManager): Response
     {
-        // 1. On récupère le token depuis le POST (formulaire)
+        // 1. On récupère le token depuis le POST (formulaire).
         $submittedToken = $request->request->get('_token');
 
         // 2. On valide avec l'ID 'close' correspondant au template
-        if (!$this->isCsrfTokenValid('close' . $position->getId(), $submittedToken)) {
+        if (!$this->isCsrfTokenValid('close'.$position->getId(), $submittedToken)) {
             if ($request->isXmlHttpRequest()) {
                 return new JsonResponse(['error' => 'Action non autorisée'], 403);
             }
@@ -190,7 +191,7 @@ final class PositionController extends AbstractController
 
         $this->logManager->log(
             sprintf(
-                "Position #%d clôturée : CAC %s pts / LVC %s €",
+                'Position #%d clôturée : CAC %s pts / LVC %s €',
                 $position->getId(),
                 $sellCacPrice,
                 $sellLvcPrice

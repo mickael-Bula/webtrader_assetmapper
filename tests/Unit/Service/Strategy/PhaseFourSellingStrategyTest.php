@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service\Strategy;
 
-use App\Enum\LogOrigin;
 use App\Dto\MarketData\CacDailyDto;
 use App\Entity\Position;
 use App\Entity\User;
 use App\Enum\LogAction;
 use App\Enum\LogContext;
+use App\Enum\LogOrigin;
 use App\Enum\PositionStatus;
 use App\Repository\PositionRepository;
 use App\Service\LogManager;
-use PHPUnit\Framework\Attributes\DataProvider;
 use App\Service\Strategy\PhaseFourSellingStrategy;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -41,13 +41,13 @@ class PhaseFourSellingStrategyTest extends TestCase
 
         // Le DTO étant une classe finale, on instancie avec des données de test cohérentes
         $this->cacDailyDto = new CacDailyDto(
-            id:       42,
-            date:     new \DateTimeImmutable('2024-01-01'),
-            open:     7500.0,
-            high:     7500.0,
-            low:      7420.0,
-            close:    7500.0,
-            lvcHigh:  127.0,
+            id: 42,
+            date: new \DateTimeImmutable('2024-01-01'),
+            open: 7500.0,
+            high: 7500.0,
+            low: 7420.0,
+            close: 7500.0,
+            lvcHigh: 127.0,
             lvcClose: 125.0
         );
     }
@@ -157,6 +157,7 @@ class PhaseFourSellingStrategyTest extends TestCase
             ->method('persist')
             ->with($this->callback(function (Position $position) use (&$calledTargets) {
                 $calledTargets[] = $position;
+
                 return true;
             }));
 

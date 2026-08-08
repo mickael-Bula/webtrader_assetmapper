@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Entity\User;
 use App\Entity\Position;
+use App\Entity\User;
 use App\Enum\PositionStatus;
-use App\Repository\PositionRepository;
 use App\Repository\PortfolioSnapshotRepository;
+use App\Repository\PositionRepository;
 use Symfony\UX\Chartjs\Builder\ChartBuilderInterface;
 use Symfony\UX\Chartjs\Model\Chart;
 
@@ -18,8 +18,7 @@ readonly class PortfolioService
         private ChartBuilderInterface $chartBuilder,
         private PositionRepository $positionRepository,
         private PortfolioSnapshotRepository $snapshotRepo,
-    )
-    {
+    ) {
     }
 
     public function calculateCurrentSnapshot(User $user): array
@@ -30,7 +29,7 @@ readonly class PortfolioService
             $user
         );
 
-        $totalCapital = (float)$user->getTotalPortfolio();
+        $totalCapital = (float) $user->getTotalPortfolio();
         $unrealizedPnl = 0;
 
         foreach ($runningPositions as $pos) {
@@ -58,7 +57,7 @@ readonly class PortfolioService
     }
 
     /**
-     * Calcule le capital total actuellement investi (en €)
+     * Calcule le capital total actuellement investi (en €).
      *
      * @param Position[] $runningPositions
      */
@@ -69,7 +68,7 @@ readonly class PortfolioService
         foreach ($runningPositions as $position) {
             // On vérifie que la quantité et le prix d'achat LVC sont renseignés
             if ($position->getQuantity() && $position->getLvcBuyPrice()) {
-                $totalEngaged += ($position->getQuantity() * (float)$position->getLvcBuyPrice());
+                $totalEngaged += ($position->getQuantity() * (float) $position->getLvcBuyPrice());
             }
         }
 
@@ -149,27 +148,27 @@ readonly class PortfolioService
 
         $chart = $this->chartBuilder->createChart(Chart::TYPE_DOUGHNUT);
         $chart->setData([
-                            'labels' => ['Occupé', 'Libre'],
-                            'datasets' => [[
-                                'backgroundColor' => [$color, '#2c2c2c'],
-                                'borderColor' => 'transparent',
-                                'data' => [$used, $remaining],
-                                'cutout' => '80%',
-                            ]],
-                        ]);
+            'labels' => ['Occupé', 'Libre'],
+            'datasets' => [[
+                'backgroundColor' => [$color, '#2c2c2c'],
+                'borderColor' => 'transparent',
+                'data' => [$used, $remaining],
+                'cutout' => '80%',
+            ]],
+        ]);
 
         $chart->setOptions([
-                               'responsive' => true,
-                               'maintainAspectRatio' => false, // Crucial pour contrôler la taille en CSS
-                               'plugins' => [
-                                   'legend' => ['display' => false],
-                                   'tooltip' => ['enabled' => false],
-                               ],
-                               'interaction' => [
-                                   'intersect' => true,
-                               ],
-                               'cutout' => '80%', // Un anneau plus fin fait paraître le graphique plus petit et élégant
-                           ]);
+            'responsive' => true,
+            'maintainAspectRatio' => false, // Crucial pour contrôler la taille en CSS
+            'plugins' => [
+                'legend' => ['display' => false],
+                'tooltip' => ['enabled' => false],
+            ],
+            'interaction' => [
+                'intersect' => true,
+            ],
+            'cutout' => '80%', // Un anneau plus fin fait paraître le graphique plus petit et élégant
+        ]);
 
         return $chart;
     }
@@ -195,8 +194,8 @@ readonly class PortfolioService
                 ];
             }
 
-            $quantity = (float)$position->getQuantity();
-            $buyPrice = (float)$position->getLvcBuyPrice();
+            $quantity = (float) $position->getQuantity();
+            $buyPrice = (float) $position->getLvcBuyPrice();
 
             $grouped[$name]['total_quantity'] += $quantity;
             $grouped[$name]['total_cost'] += ($quantity * $buyPrice);
@@ -233,9 +232,9 @@ readonly class PortfolioService
         $totalQuantity = 0;
 
         foreach ($corePositions as $pos) {
-            $quantity = (float)$pos->getQuantity();
+            $quantity = (float) $pos->getQuantity();
             $totalQuantity += $quantity;
-            $totalCost += ($quantity * (float)$pos->getLvcBuyPrice());
+            $totalCost += ($quantity * (float) $pos->getLvcBuyPrice());
             $totalValue += ($quantity * $pos->getCurrentPrice());
         }
 
@@ -291,7 +290,7 @@ readonly class PortfolioService
         $globalPerf = [
             'is_calculable' => false,
             'diff' => 0,
-            'percent' => 0
+            'percent' => 0,
         ];
 
         if ($firstSnapshot) {
@@ -302,7 +301,7 @@ readonly class PortfolioService
                 // On calcule par rapport à la valeur de départ
                 'percent' => ($firstSnapshot->getTotalEquity() > 0)
                     ? ($diff / $firstSnapshot->getTotalEquity()) * 100
-                    : 0
+                    : 0,
             ];
         }
 
@@ -316,7 +315,7 @@ readonly class PortfolioService
             'data' => $data,
             'performance_data' => $globalPerf,
             'daily_diff' => $dailyDiff,
-            'daily_percent' => $dailyPercent
+            'daily_percent' => $dailyPercent,
         ];
     }
 

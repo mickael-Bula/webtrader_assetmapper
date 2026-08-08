@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Entity\User;
-use App\Entity\Position;
 use App\Entity\Entrypoint;
+use App\Entity\Position;
+use App\Entity\User;
 
 class StrategyManager
 {
@@ -27,7 +27,7 @@ class StrategyManager
      */
     public function calculateUpperRange(Entrypoint $entrypoint): string
     {
-        $result = (float)$entrypoint->getEntrypoint() * $this->getUpperRangeGapMultiplier($entrypoint->getUser());
+        $result = (float) $entrypoint->getEntrypoint() * $this->getUpperRangeGapMultiplier($entrypoint->getUser());
 
         return number_format($result, 2, '.', '');
     }
@@ -45,7 +45,7 @@ class StrategyManager
 
     /**
      * Calcule le prix cible initial du CAC pour une position.
-     * Formule : Entrypoint de l'user - (RankOffset * Entrypoint)
+     * Formule : Entrypoint de l'user - (RankOffset * Entrypoint).
      */
     public function calculateInitialCacTargetForPosition(Position $position, float $entrypointValue): float
     {
@@ -113,19 +113,14 @@ class StrategyManager
      * Rang 2 : 0.06 + (1 * 0.02) = 0.08 → Déclin de 8%  (Multiplicateur : 0.92)
      * Rang 3 : 0.06 + (2 * 0.02) = 0.10 → Déclin de 10% (Multiplicateur : 0.90)
      *
-     * * @throws \LogicException Si l'utilisateur ou l'entrypoint est manquant.
+     * * @throws \LogicException Si l'utilisateur ou l'entrypoint est manquant
      */
     private function getBaseDecline(Position $position): float
     {
         $user = $position->getEntrypoint()?->getUser();
 
         if (!$user) {
-            throw new \LogicException(
-                sprintf(
-                    'Impossible de calculer le gap : la position #%s n\'est rattachée à aucun utilisateur.',
-                    $position->getId()
-                )
-            );
+            throw new \LogicException(sprintf('Impossible de calculer le gap : la position #%s n\'est rattachée à aucun utilisateur.', $position->getId()));
         }
 
         $gap = $this->getGapStrategy($user);
@@ -139,7 +134,7 @@ class StrategyManager
      * Ex. avec un gap stratégique de 6 %  (0.02 x 3 = 0.06) :
      * – avec un spread de 2 % et un rang 1 : 1 - 0.06 = 0.94 (-6 %)
      * – avec un spread de 2 % et un rang 2 : 1 - 0.08 = 0.92 (-8 %)
-     * – avec un spread de 2 % et un rang 3 : 1 - 0.10 = 0.90 (-10 %)
+     * – avec un spread de 2 % et un rang 3 : 1 - 0.10 = 0.90 (-10 %).
      */
     public function calculateCacTargetForPosition(Position $position, float $newHigh): float
     {
@@ -160,13 +155,31 @@ class StrategyManager
      */
     public function calculateBuyLimitGap(float $currentCac, float $buyLimit): string
     {
-        if ($currentCac === 0.0) {
+        if (0.0 === $currentCac) {
             return '0,00 %';
         }
 
         $variation = (($buyLimit - $currentCac) / $currentCac) * 100;
 
         // On ajoute + ou '' (si la variation est négative, le chiffre contient déjà le signe moins).
-        return sprintf('%s%.2f %%', ($variation > 0 ? '+' : ''), $variation);
+        return sprintf('%s%.2f %%', $variation > 0 ? '+' : '', $variation);
+    }
+
+    /**
+     * Calcule la quantité entière de parts à acheter pour une position donnée.
+     * Formule : Capital alloué / Prix d'achat CAC cible (arrondi à l'entier le plus proche).
+     */
+    public function calculatePositionQuantity(User $user, float $cacTarget): int
+    {
+        $positionSize = (float) $user->getPositionSize();
+
+        if (0.0 === $cacTarget) {
+            throw new \InvalidArgumentException('Le prix CAC cible ne peut pas être égal à zéro.');
+        }
+
+        $quantity = $positionSize / $cacTarget;
+
+        // NOTE : Pour ne pas dépasser le budget, on pourra utiliser (int)floor($quantity) plutôt que round().
+        return (int) round($quantity);
     }
 }

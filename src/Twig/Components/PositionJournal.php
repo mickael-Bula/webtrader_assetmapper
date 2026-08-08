@@ -20,7 +20,7 @@ class PositionJournal
     }
 
     /**
-     * Cette méthode est appelée automatiquement lors du rendu du composant
+     * Cette méthode est appelée automatiquement lors du rendu du composant.
      */
     public function mount(): void
     {

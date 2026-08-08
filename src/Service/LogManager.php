@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Enum\LogAction;
-use App\Enum\LogOrigin;
 use App\Entity\LogEntry;
+use App\Enum\LogAction;
 use App\Enum\LogContext;
+use App\Enum\LogOrigin;
 use Doctrine\ORM\EntityManagerInterface;
 
 readonly class LogManager
@@ -20,7 +20,7 @@ readonly class LogManager
         string $message,
         LogAction $actionType,
         LogOrigin $origin = LogOrigin::WORKFLOW,
-        LogContext $context = LogContext::WAITING
+        LogContext $context = LogContext::WAITING,
     ): void {
         $log = new LogEntry();
         $log->setMessage($message);

@@ -32,6 +32,6 @@ class MarketCard
     {
         $formattedNumber = number_format($this->value, 2, ',', ' ');
 
-        return $formattedNumber . ' ' . $this->unit;
+        return $formattedNumber.' '.$this->unit;
     }
 }

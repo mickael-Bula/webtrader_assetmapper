@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Enum\PositionStatus;
+use App\Repository\PositionRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use App\Repository\PositionRepository;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
@@ -94,15 +94,15 @@ class Position
     }
 
     /**
-     * Calcule automatiquement le targetPrice à +10 % lors de la définition du prix d'achat
+     * Calcule automatiquement le targetPrice à +10 % lors de la définition du prix d'achat.
      */
     public function setBuyPrice(string $buyPrice): static
     {
         $this->buyPrice = $buyPrice;
 
         // On utilise (float) pour le calcul, puis on repasse en string pour le stockage decimal
-        $target = (float)$buyPrice * 1.10;
-        $this->targetPrice = (string)round($target, 2);
+        $target = (float) $buyPrice * 1.10;
+        $this->targetPrice = (string) round($target, 2);
 
         return $this;
     }
@@ -155,7 +155,7 @@ class Position
 
     /**
      * Définit le prix d'achat LVC et calcule automatiquement
-     * le prix de revente cible à +20 %
+     * le prix de revente cible à +20 %.
      */
     public function setLvcBuyPrice(?string $lvcBuyPrice): static
     {
@@ -241,7 +241,6 @@ class Position
         return $this->createdAt;
     }
 
-
     public function setCreatedAt(\DateTimeImmutable $date): static
     {
         $this->createdAt = $date;
@@ -274,7 +273,7 @@ class Position
     }
 
     /**
-     * Retourne le prix actuel sous forme de float pour les calculs
+     * Retourne le prix actuel sous forme de float pour les calculs.
      */
     public function getCurrentPrice(): float
     {
@@ -284,9 +283,6 @@ class Position
     /**
      * Méthode permettant de calculer la distance entre le prix actuel et le prix cible.
      * La propriété is_close permet d'identifier si le prix est proche de l'objectif.
-     *
-     * @param string $currentCacPrice
-     * @return array
      *
      * @noinspection PhpUnused La méthode est utilisée dans le template _position_drawer.html.twig
      */
@@ -301,7 +297,7 @@ class Position
         return [
             'points' => round($points, 2),
             'percent' => round($percent, 2),
-            'is_close' => abs($percent) < 1.0 // Moins de 1% de l'objectif
+            'is_close' => abs($percent) < 1.0, // Moins de 1% de l'objectif
         ];
     }
 
@@ -318,9 +314,7 @@ class Position
     }
 
     /**
-     * Par défaut, si aucun ajustement n'a été calculé, c'est la quantité normale de la ligne
-     *
-     * @return int
+     * Par défaut, si aucun ajustement n'a été calculé, c'est la quantité normale de la ligne.
      */
     public function getAdjustedTargetSellQuantity(): int
     {

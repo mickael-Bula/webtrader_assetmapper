@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service\Strategy;
 
-use App\Entity\User;
-use App\Service\LogManager;
-use PHPUnit\Framework\TestCase;
-use App\Service\PositionManager;
-use App\Service\StrategyManager;
-use App\Service\PortfolioService;
 use App\Dto\MarketData\CacDailyDto;
-use App\Repository\PositionRepository;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Entity\User;
 use App\Repository\MarketData\CacDailyRepositoryInterface;
 use App\Repository\MarketData\LvcDailyRepositoryInterface;
+use App\Repository\PositionRepository;
+use App\Service\LogManager;
+use App\Service\PortfolioService;
+use App\Service\PositionManager;
+use App\Service\StrategyManager;
+use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\TestCase;
 
 class PhaseOneSellingStrategyTest extends TestCase
 {
@@ -25,14 +25,14 @@ class PhaseOneSellingStrategyTest extends TestCase
     {
         // --- ARRANGEMENT ---
         $user = $this->createMock(User::class);
-        $day =  new CacDailyDto(
-            id:       42,
-            date:     new \DateTimeImmutable('2024-01-01'),
-            open:     7500.0,
-            high:     7500.0,
-            low:      7420.0,
-            close:    7500.0,
-            lvcHigh:  127.0,
+        $day = new CacDailyDto(
+            id: 42,
+            date: new \DateTimeImmutable('2024-01-01'),
+            open: 7500.0,
+            high: 7500.0,
+            low: 7420.0,
+            close: 7500.0,
+            lvcHigh: 127.0,
             lvcClose: 125.0
         );
 

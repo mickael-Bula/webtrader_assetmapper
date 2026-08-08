@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace App\Repository\MarketData;
 
-use Doctrine\DBAL\Exception;
-use Doctrine\DBAL\Connection;
 use App\Dto\MarketData\LvcDailyDto;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception;
 
 final readonly class LvcDailyRepository implements LvcDailyRepositoryInterface
 {
     public function __construct(
         private Connection $connection,
-    ) {}
+    ) {
+    }
 
     /**
-     * Dernière cotation LVC
+     * Dernière cotation LVC.
+     *
      * @throws Exception
      * @throws \Exception
      */
@@ -30,7 +32,7 @@ final readonly class LvcDailyRepository implements LvcDailyRepositoryInterface
 
         $row = $this->connection->fetchAssociative($sql);
 
-        if ($row === false) {
+        if (false === $row) {
             return null;
         }
 
@@ -53,8 +55,8 @@ final readonly class LvcDailyRepository implements LvcDailyRepositoryInterface
     {
         $result = $this->connection->fetchOne('SELECT close FROM market_data.lvc_daily ORDER BY date DESC LIMIT 1');
 
-        if ($result === false) {
-            throw new \RuntimeException("Aucune cotation LVC trouvée en base de données.");
+        if (false === $result) {
+            throw new \RuntimeException('Aucune cotation LVC trouvée en base de données.');
         }
 
         return (string) $result; // Sécurisation du type de retour

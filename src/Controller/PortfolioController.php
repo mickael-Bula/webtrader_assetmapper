@@ -3,8 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Service\ChartService;
 use App\Repository\PortfolioSnapshotRepository;
+use App\Service\ChartService;
 use App\Service\PortfolioService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;

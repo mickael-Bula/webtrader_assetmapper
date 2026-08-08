@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Enum\LogOrigin;
-use Doctrine\ORM\Mapping as ORM;
 use App\Repository\LogEntryRepository;
+use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: LogEntryRepository::class)]
 class LogEntry
@@ -97,6 +97,7 @@ class LogEntry
     public function setContextLabel(?string $contextLabel): self
     {
         $this->contextLabel = $contextLabel;
+
         return $this;
     }
 }

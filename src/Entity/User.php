@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Enum\PositionStatus;
-use Doctrine\DBAL\Types\Types;
 use App\Repository\UserRepository;
-use Doctrine\ORM\Mapping as ORM;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -40,7 +40,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2,  nullable: true)]
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     private ?string $totalPortfolio = null; // Valeur du portefeuille
 
     #[ORM\Column(type: 'integer', options: ['default' => 2])]
@@ -177,13 +177,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getSpread(): int
     {
         return $this->spread;
-
     }
 
     public function setSpread(int $spread): void
     {
         $this->spread = $spread;
-
     }
 
     public function getLastCacUpdatedId(): ?int
@@ -237,7 +235,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $activeEntrypoints = [];
         foreach ($this->entrypoints as $entrypoint) {
-            if ($entrypoint->getStatus() !== PositionStatus::CLOSED) {
+            if (PositionStatus::CLOSED !== $entrypoint->getStatus()) {
                 $activeEntrypoints[] = $entrypoint;
             }
         }
@@ -251,7 +249,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getWaitingEntrypoint(): ?Entrypoint
     {
         foreach ($this->entrypoints as $entrypoint) {
-            if ($entrypoint->getStatus() === PositionStatus::WAITING) {
+            if (PositionStatus::WAITING === $entrypoint->getStatus()) {
                 return $entrypoint;
             }
         }

@@ -39,7 +39,7 @@ class PositionManagerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->positionManagerMock = $this->createMock(PositionManager::class);
+        $positionManagerMock = $this->createMock(PositionManager::class);
         $this->positionRepositoryMock = $this->createMock(PositionRepository::class);
         $this->entityManagerMock = $this->createMock(EntityManagerInterface::class);
         $this->portfolioServiceMock = $this->createMock(PortfolioService::class);
@@ -47,7 +47,7 @@ class PositionManagerTest extends TestCase
 
         // Instanciation des stratégies réelles pour tester le comportement du pattern Strategy
         $strategies = [
-            new PhaseTwoSellingStrategy($this->entityManagerMock, $this->positionManagerMock, $this->logManagerMock),
+            new PhaseTwoSellingStrategy($this->entityManagerMock, $positionManagerMock, $this->logManagerMock),
             new PhaseThreeSellingStrategy($this->logManagerMock),
             new PhaseFourSellingStrategy($this->entityManagerMock, $this->positionRepositoryMock, $this->logManagerMock),
         ];

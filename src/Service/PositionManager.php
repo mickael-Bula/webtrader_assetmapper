@@ -20,6 +20,7 @@ use App\Service\Strategy\SalesStrategyInterface;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
 
 /**
  * Service central de gestion du cycle de vie des positions de trading.
@@ -445,6 +446,8 @@ readonly class PositionManager
      *
      * Utilisé principalement lors du Trailing pour remonter les ordres existants.
      *
+     * @param Collection<int, Position> $positions
+     *
      * @return Collection<int, Position> la collection mise à jour
      */
     public function handleWaitingPositions(Collection $positions, float $cacHigh, float $lvcHigh): Collection
@@ -473,10 +476,10 @@ readonly class PositionManager
      */
     public function createPositionFromForm(Position $position, User $user, string $statusValue, bool $isActive): Position
     {
-        $status = PositionStatus::tryFrom($statusValue) ?? PositionStatus::WAITING;
+        $status = PositionStatus::tryFrom($statusValue);
 
         // On récupère la date saisie par l'utilisateur (ou celle par défaut).
-        $operationDate = $position->getCreatedAt() ?? new \DateTimeImmutable();
+        $operationDate = $position->getCreatedAt();
 
         // Date de validité à trois mois par défaut (uniquement pour les positions en attente).
         if (PositionStatus::WAITING === $status) {
@@ -503,6 +506,9 @@ readonly class PositionManager
 
         // Si la case a été cochée, on neutralise les entrypoints précédents et on rend actif l'actuel.
         if ($isActive) {
+            // On utilise un assert() natif PHP pour déclarer le type pour rassurer phpstan
+            assert($entrypointRepo instanceof EntrypointRepository);
+
             $entrypointRepo->updatePreviousEntrypoints($user);
             $entrypoint->setIsActive(true);
         }
@@ -595,7 +601,7 @@ readonly class PositionManager
             }
         }
 
-        return $startMessage.'Les anciens ordres en attente ont été supprimés.';
+        return $startMessage . 'Les anciens ordres en attente ont été supprimés.';
     }
 
     /**
@@ -649,7 +655,7 @@ readonly class PositionManager
 
         $currentCoreValue = 0.0;
         foreach ($corePositions as $pos) {
-            $currentCoreValue += ((float) $pos->getQuantity() * $pos->lvcCurrentPrice());
+            $currentCoreValue += ((float) $pos->getQuantity() * $pos->getLvcCurrentPrice());
         }
 
         // Vérification de la règle métier : est-ce que le Core actuel représente déjà 25% ou plus de l'Equity totale ?

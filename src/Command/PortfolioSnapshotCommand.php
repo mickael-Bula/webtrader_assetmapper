@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Command;
 
 use App\Entity\PortfolioSnapshot;
@@ -43,7 +45,7 @@ class PortfolioSnapshotCommand extends Command
                 $this->entityManager->persist($snapshot);
             }
         } catch (\Exception $e) {
-            $output->writeln('Erreur lors du calcul du snapshot : '.$e->getMessage());
+            $output->writeln('Erreur lors du calcul du snapshot : ' . $e->getMessage());
 
             return Command::FAILURE;
         }
@@ -52,7 +54,7 @@ class PortfolioSnapshotCommand extends Command
 
         // Récupère la date et l'heure actuelles
         $now = new \DateTimeImmutable();
-        $timestamp = $now->format('['.\DateTimeInterface::ATOM.']'); // Format : [2026-05-18T18:05:00+02:00]
+        $timestamp = $now->format('[' . \DateTimeInterface::ATOM . ']'); // Format : [2026-05-18T18:05:00+02:00]
 
         // Utilisation de termes sans accents pour éviter les problèmes d'encodage de la console Cron
         $output->writeln(sprintf('%s [SUCCESS] Snapshot enregistre avec succes !', $timestamp));

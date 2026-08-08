@@ -118,7 +118,7 @@ final class SettingsController extends AbstractController
             $entrypoint->setStatus(PositionStatus::WAITING);
             $user->setBuyLimit($entrypoint->getEntrypoint());
             $user->setUpperRange($strategyManager->calculateUpperRange($entrypoint));
-            $user->setLastCacUpdatedId($cacRepo->findLast()?->getId());
+            $user->setLastCacUpdatedId($cacRepo->findLast()->getId());
 
             // On enregistre en mémoire l'entrypoint.
             $em->persist($entrypoint);

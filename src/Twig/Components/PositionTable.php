@@ -110,7 +110,7 @@ class PositionTable
         $suffix = ('running' === $this->type) ? 'en cours' : 'en attente';
 
         if (0 === $count) {
-            return 'Aucune position '.$suffix;
+            return 'Aucune position ' . $suffix;
         }
 
         return sprintf('%d %s %s', $count, $word, $suffix);

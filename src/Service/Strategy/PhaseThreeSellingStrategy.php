@@ -47,7 +47,7 @@ readonly class PhaseThreeSellingStrategy implements SalesStrategyInterface
         $this->logManager->log(
             sprintf(
                 '[Expo %.1f%%] Cible touchée. Clôture standard de la ligne #%s. Qte: %d. '
-                .'Plus-value fiscale : %s €.',
+                . 'Plus-value fiscale : %s €.',
                 $exposure,
                 $pos->getId(),
                 $qtySold,

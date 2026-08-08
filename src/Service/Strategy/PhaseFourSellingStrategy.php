@@ -103,7 +103,7 @@ readonly class PhaseFourSellingStrategy implements SalesStrategyInterface
         $this->logManager->log(
             sprintf(
                 '[Phase 4 - Expo %.1f%%] Liquidation complète de la ligne #%s '
-                    .'(Qte: %d)%s pour réduction des risques. Plus-value fiscale totale : %s €.',
+                    . '(Qte: %d)%s pour réduction des risques. Plus-value fiscale totale : %s €.',
                 $exposure,
                 $pos->getId(),
                 $qtyTradingSold,

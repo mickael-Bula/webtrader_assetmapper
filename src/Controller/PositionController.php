@@ -84,7 +84,7 @@ final class PositionController extends AbstractController
             $meta = $this->positionManager->getLogMetadata($position->getStatus());
             $this->logManager->log(
                 "Entrypoint #{$position->getEntrypoint()?->getId()} : "
-                    ."position #{$position->getRank()} modifiée à {$position->getBuyPrice()} pts",
+                    . "position #{$position->getRank()} modifiée à {$position->getBuyPrice()} pts",
                 actionType: $meta['action'],
                 origin: LogOrigin::USER,
                 context: $meta['context']
@@ -124,7 +124,7 @@ final class PositionController extends AbstractController
     public function delete(Position $position, Request $request, EntityManagerInterface $entityManager): Response
     {
         // Ici la gestion du token CSRF est nécessaire, car l'appel de la route est fait en AJAX
-        if (!$this->isCsrfTokenValid('delete_position_'.$position->getId(), $request->headers->get('X-CSRF-TOKEN'))) {
+        if (!$this->isCsrfTokenValid('delete_position_' . $position->getId(), $request->headers->get('X-CSRF-TOKEN'))) {
             return new JsonResponse(['error' => 'Action non autorisée'], 403);
         }
 
@@ -160,7 +160,7 @@ final class PositionController extends AbstractController
         $submittedToken = $request->request->get('_token');
 
         // 2. On valide avec l'ID 'close' correspondant au template
-        if (!$this->isCsrfTokenValid('close'.$position->getId(), $submittedToken)) {
+        if (!$this->isCsrfTokenValid('close' . $position->getId(), $submittedToken)) {
             if ($request->isXmlHttpRequest()) {
                 return new JsonResponse(['error' => 'Action non autorisée'], 403);
             }

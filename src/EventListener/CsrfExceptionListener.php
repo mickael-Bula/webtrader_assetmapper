@@ -6,6 +6,7 @@ namespace App\EventListener;
 
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\RouterInterface;
@@ -32,6 +33,8 @@ class CsrfExceptionListener
         if ($exception instanceof InvalidCsrfTokenException || str_contains($exception->getMessage(), 'CSRF')) {
             // Récupération de la session depuis la requête
             $request = $event->getRequest();
+
+            /** @var Session $session */
             $session = $request->getSession();
 
             // On affiche un message flash pour avertir l'utilisateur.

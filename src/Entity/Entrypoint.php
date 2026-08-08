@@ -18,7 +18,7 @@ class Entrypoint
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $id = null;
+    private ?int $id = null; // @phpstan-ignore property.unusedType
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'entrypoints')]
     #[ORM\JoinColumn(nullable: false)]
@@ -33,6 +33,9 @@ class Entrypoint
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt;
 
+    /**
+     * @var Collection<int, Position>
+     */
     #[ORM\OneToMany(targetEntity: Position::class, mappedBy: 'entrypoint', orphanRemoval: true)]
     private Collection $positions;
 

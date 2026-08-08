@@ -41,7 +41,7 @@ final class HomeController extends AbstractController
         EntrypointRepository $entrypointRepository,
         PortfolioService $portfolioService,
     ): Response {
-        /** @var User $user */
+        /** @var User|null $user */
         $user = $this->getUser();
 
         if (!$user) {

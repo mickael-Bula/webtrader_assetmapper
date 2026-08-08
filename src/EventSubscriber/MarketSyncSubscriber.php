@@ -12,6 +12,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 
 final readonly class MarketSyncSubscriber implements EventSubscriberInterface
@@ -55,8 +56,9 @@ final readonly class MarketSyncSubscriber implements EventSubscriberInterface
                 $this->positionManager->checkAndUpdatePositions($user, $latestCacDto);
             } catch (\Exception $e) {
                 // On ajoute un message flash pour signaler l'erreur
-                $this->requestStack->getSession()
-                    ->getFlashBag()
+                /** @var Session $session */
+                $session = $this->requestStack->getSession();
+                $session->getFlashBag()
                     ->add('error', 'Les données de marché sont momentanément indisponibles.');
 
                 // On enregistre l'erreur dans le journal de trading (disponible dans le fichier var/log/trading.log).

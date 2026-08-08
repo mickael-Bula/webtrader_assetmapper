@@ -13,7 +13,7 @@ class CacDaily
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private ?int $id = null;
+    private ?int $id = null; // @phpstan-ignore property.unusedType
 
     #[ORM\Column(type: 'datetime', unique: true)]
     private \DateTimeInterface $date;

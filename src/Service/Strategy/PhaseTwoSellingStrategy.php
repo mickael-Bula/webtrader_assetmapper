@@ -69,7 +69,7 @@ readonly class PhaseTwoSellingStrategy implements SalesStrategyInterface
 
             $this->logManager->log(
                 sprintf('[Phase 2 - Expo %.1f%%] Arbitrage : Capital récupéré sur la ligne #%s '
-                        .'(Vente de %d LVC, PV fiscale : %s €). Création de la ligne CORE gratuite de %d LVC.',
+                        . '(Vente de %d LVC, PV fiscale : %s €). Création de la ligne CORE gratuite de %d LVC.',
                     $exposure,
                     $pos->getId(),
                     $qtyToSell,
@@ -100,7 +100,7 @@ readonly class PhaseTwoSellingStrategy implements SalesStrategyInterface
 
         $this->logManager->log(
             sprintf('[Phase 2] Reliquat inférieur à 1 LVC complet. Clôture intégrale de la ligne #%s. '
-                    .'PV fiscale : %s €.', $pos->getId(), round($realPnl, 2)
+                    . 'PV fiscale : %s €.', $pos->getId(), round($realPnl, 2)
             ),
             actionType: LogAction::SELL,
             context: LogContext::RUNNING

@@ -92,6 +92,10 @@ class PositionType extends AbstractType
 
     /**
      * Méthode utilitaire pour injecter les attributs Stimulus proprement.
+     *
+     * @param array<string, mixed> $defaultAttr
+     *
+     * @return array<string, mixed>
      */
     private function getAttr(?string $controller, array $defaultAttr, ?string $target = null, bool $withAction = false): array
     {

@@ -60,6 +60,8 @@ class PositionRepository extends ServiceEntityRepository
 
     /**
      * Récupère spécifiquement le bloc Core ou le bloc Trading.
+     *
+     * @return array<Position>
      */
     public function findByStatusUserAndCore(
         PositionStatus $status,
@@ -78,6 +80,8 @@ class PositionRepository extends ServiceEntityRepository
     /**
      * Retourne les positions en attente de l'utilisateur.
      * On trie par prix décroissant : on traite les targets les plus hautes d'abord.
+     *
+     * @return array<Position>
      */
     public function findWaitingPositionsOrderedByPrice(User $user): array
     {

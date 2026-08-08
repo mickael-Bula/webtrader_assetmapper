@@ -23,6 +23,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    /** @phpstan-ignore property.unusedType */
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
@@ -58,6 +59,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     private ?string $buyLimit = null;
 
+    #[ORM\Column(type: 'boolean')]
+    private bool $isVerified = false;
+
+    /**
+     * @var Collection<int, Entrypoint>
+     */
     #[ORM\OneToMany(targetEntity: Entrypoint::class, mappedBy: 'user', orphanRemoval: true)]
     private Collection $entrypoints;
 
@@ -143,7 +150,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function __serialize(): array
     {
         $data = (array) $this;
-        $data["\0".self::class."\0password"] = hash('crc32c', $this->password);
+        $data["\0" . self::class . "\0password"] = hash('crc32c', $this->password);
 
         return $data;
     }
@@ -220,6 +227,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function isVerified(): bool
+    {
+        return $this->isVerified;
+    }
+
+    public function setIsVerified(bool $isVerified): static
+    {
+        $this->isVerified = $isVerified;
+
+        return $this;
+    }
+
     /**
      * @return Collection<int, Entrypoint>
      */
@@ -230,6 +249,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * Méthode retournant les entrypoints dont le statut n'est pas CLOSED.
+     *
+     * @return array<int, Entrypoint>
      */
     public function getActiveEntrypoints(): array
     {

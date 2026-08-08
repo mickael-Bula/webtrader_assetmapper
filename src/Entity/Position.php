@@ -36,6 +36,7 @@ class Position
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    /** @phpstan-ignore property.unusedType */
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'positions')]
@@ -283,6 +284,12 @@ class Position
     /**
      * Méthode permettant de calculer la distance entre le prix actuel et le prix cible.
      * La propriété is_close permet d'identifier si le prix est proche de l'objectif.
+     *
+     * @return array{
+     *     points: float,
+     *     percent: float,
+     *     is_close: bool
+     * }
      *
      * @noinspection PhpUnused La méthode est utilisée dans le template _position_drawer.html.twig
      */

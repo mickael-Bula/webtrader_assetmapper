@@ -21,6 +21,18 @@ readonly class PortfolioService
     ) {
     }
 
+    /**
+     * @return array{
+     *     total_equity: float,
+     *     cash_amount: float,
+     *     exposure_value: float,
+     *     unrealized_pnl: float,
+     *     exposure_percent: float,
+     *     exposure_color: string,
+     *     exposure_label: string,
+     *     exposure_description: string
+     * }
+     */
     public function calculateCurrentSnapshot(User $user): array
     {
         // Récupère toutes les positions en cours de l'utilisateur (Core + Trading).
@@ -53,6 +65,7 @@ readonly class PortfolioService
             'exposure_color' => $this->getExposureColor($exposurePercent),
             'exposure_label' => $this->getExposureLabel($exposurePercent),
             'exposure_description' => $this->getExposureDescription($exposurePercent),
+            'exposure_value' => $totalEquity - $cashAmount,
         ];
     }
 
@@ -78,6 +91,15 @@ readonly class PortfolioService
     /**
      * Calcule le pourcentage d'exposition actuel du portefeuille.
      * Se base sur le snapshot enregistré en base et qui fait autorité.
+     *
+     * @return array{
+     *     chart: Chart,
+     *     percentage: float|int,
+     *     used: float,
+     *     remaining: float,
+     *     exposure_color: string,
+     *     exposure_status: string
+     * }
      */
     public function getExposureData(User $user): array
     {
@@ -175,6 +197,17 @@ readonly class PortfolioService
 
     /**
      * Regroupe les positions pour un affichage par ligne, présentant la quantité et le PRU de chaque position.
+     *
+     * @return array<string, array{
+     *     name: string,
+     *     total_quantity: float,
+     *     total_cost: float,
+     *     current_price: float,
+     *     total_current_value: float,
+     *     pru: float,
+     *     pnl_euro: float,
+     *     pnl_percent: float
+     * }>
      */
     public function getGroupedPositions(User $user): array
     {
@@ -217,6 +250,15 @@ readonly class PortfolioService
 
     /**
      * Calcule les statistiques de base pour le core.
+     *
+     * @return array{
+     *     current_value: float,
+     *     target_value: float,
+     *     pru: float,
+     *     performance_percent: float,
+     *     total_quantity: float,
+     *     progress_percent: float
+     * }
      */
     public function getCoreStats(User $user): array
     {
@@ -259,6 +301,14 @@ readonly class PortfolioService
 
     /**
      * Récupère les données de performance pour le graphique.
+     *
+     * @return array{
+     *     labels: array<int, string|null>,
+     *     data: array<int, mixed>,
+     *     performance_data: array{is_calculable: bool, diff: float|int, percent: float|int},
+     *     daily_diff: float|int,
+     *     daily_percent: float|int
+     * }
      */
     public function getPerformanceData(User $user): array
     {
@@ -326,7 +376,7 @@ readonly class PortfolioService
     public function calculateCoreQuantityToReduceExposure(User $user, float $lvcPrice): int
     {
         $portfolioData = $this->calculateCurrentSnapshot($user);
-        $totalPortfolioValue = $portfolioData['total_value'];
+        $totalPortfolioValue = $portfolioData['total_equity'];
         $currentExposureValue = $portfolioData['exposure_value'];
 
         // Calculer le montant en € à revendre pour atteindre 74.9%

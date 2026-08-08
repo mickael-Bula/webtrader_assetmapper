@@ -20,7 +20,7 @@ final class StrategyDescriptionController extends AbstractController
     #[Route('/strategy/description', name: 'app_strategy_description')]
     public function index(CacDailyRepository $cacRepo, LvcDailyRepository $lvcRepo): Response
     {
-        /** @var User $user */
+        /** @var User|null $user */
         $user = $this->getUser();
 
         if (!$user) {

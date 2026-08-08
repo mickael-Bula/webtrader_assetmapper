@@ -15,6 +15,9 @@ readonly class ChartService
 
     /**
      * Retourne un graphique de performance du portefeuille.
+     *
+     * @param array<int, string|null>    $labels
+     * @param array<int, float|int|null> $data
      */
     public function getPerformanceChart(array $labels, array $data): Chart
     {

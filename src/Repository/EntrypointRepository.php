@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\Entity\User;
 use App\Entity\Entrypoint;
+use App\Entity\User;
 use App\Enum\PositionStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -22,7 +22,7 @@ class EntrypointRepository extends ServiceEntityRepository
 
     /**
      * Retourne tous les entrypoints de l'utilisateur qui ont un statut différent de CLOSED.
-     * @param User $user
+     *
      * @return array<Entrypoint>
      */
     public function findActiveEntrypoints(User $user): array

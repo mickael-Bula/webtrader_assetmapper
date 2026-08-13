@@ -4,23 +4,25 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\User;
 use App\Entity\Position;
-use App\Form\PositionType;
-use Doctrine\DBAL\Exception;
+use App\Entity\User;
 use App\Enum\PositionStatus;
-use App\Service\StrategyManager;
-use App\Service\PortfolioService;
-use App\Repository\PositionRepository;
+use App\Form\PositionType;
 use App\Repository\EntrypointRepository;
+use App\Repository\MarketData\CacDailyRepository;
+use App\Repository\PositionRepository;
+use App\Service\PortfolioService;
+use App\Service\StrategyManager;
+use Doctrine\DBAL\Exception;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use App\Repository\MarketData\CacDailyRepository;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 final class HomeController extends AbstractController
 {
-    public function __construct(private readonly StrategyManager $strategyManager) {}
+    public function __construct(private readonly StrategyManager $strategyManager)
+    {
+    }
 
     /**
      * Affiche le tableau de bord principal.
@@ -37,10 +39,9 @@ final class HomeController extends AbstractController
         CacDailyRepository $cacRepository,
         PositionRepository $positionRepository,
         EntrypointRepository $entrypointRepository,
-        PortfolioService    $portfolioService,
-    ): Response
-    {
-        /** @var User $user */
+        PortfolioService $portfolioService,
+    ): Response {
+        /** @var User|null $user */
         $user = $this->getUser();
 
         if (!$user) {
@@ -48,7 +49,7 @@ final class HomeController extends AbstractController
         }
 
         // Si l'utilisateur n'a pas configuré son capital, on le redirige vers la page de description de la stratégie.
-        if ($user->getTotalPortfolio() === null) {
+        if (null === $user->getTotalPortfolio()) {
             return $this->redirectToRoute('app_settings');
         }
 
@@ -61,7 +62,7 @@ final class HomeController extends AbstractController
 
         // Calcule la variation du CAC et ajoute un signe + ou '' en fonction de la valeur. Le moins est déjà présent.
         $variation = (($currentClose - $previousClose) / $previousClose) * 100;
-        $cacSubtitle = sprintf('%s%.2f %%', ($variation > 0 ? '+' : ''), $variation);
+        $cacSubtitle = sprintf('%s%.2f %%', $variation > 0 ? '+' : '', $variation);
 
         $cacTrend = match (true) {
             $currentClose > $previousClose => 'up',
@@ -69,7 +70,7 @@ final class HomeController extends AbstractController
             default => 'neutral',
         };
 
-        $buyLimit = (float)$user->getBuyLimit();
+        $buyLimit = (float) $user->getBuyLimit();
 
         // Calcul la distance de la buy limit avec le cac actuel.
         $buyLimitSpread = $this->strategyManager->calculateBuyLimitGap($currentClose, $buyLimit);
@@ -98,6 +99,23 @@ final class HomeController extends AbstractController
             $user,
             false
         );
+
+        // On récupère l'exposition actuelle une seule fois pour tout le tableau
+        $snapshot = $portfolioService->calculateCurrentSnapshot($user);
+        $exposure = $snapshot['exposure_percent'];
+
+        foreach ($runningPositions as $pos) {
+            // Si l'exposition globale est critique (>= 75%) ET que la ligne n'est pas déjà une ligne `CORE`
+            if ($exposure >= 75.0 && !$pos->isCore()) {
+                $lvcSellPrice = (float) $pos->getLvcTargetPrice();
+
+                // On calcule combien de positions 'CORE' il faudra liquider en plus.
+                $qtyCoreToSell = $portfolioService->calculateCoreQuantityToReduceExposure($user, $lvcSellPrice);
+
+                // La quantité ajustée de LVC à revendre devient la quantité initiale + le complément CORE
+                $pos->setAdjustedTargetSellQuantity($pos->getQuantity() + $qtyCoreToSell);
+            }
+        }
 
         // Récupération des positions de trading en attente
         $waitingPositions = $positionRepository->findByStatusUserAndCore(

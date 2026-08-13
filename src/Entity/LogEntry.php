@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Enum\LogOrigin;
-use Doctrine\ORM\Mapping as ORM;
 use App\Repository\LogEntryRepository;
+use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: LogEntryRepository::class)]
 class LogEntry
@@ -14,7 +14,7 @@ class LogEntry
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $id = null;
+    private ?int $id = null; // @phpstan-ignore property.unusedType
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $message = null;
@@ -97,6 +97,7 @@ class LogEntry
     public function setContextLabel(?string $contextLabel): self
     {
         $this->contextLabel = $contextLabel;
+
         return $this;
     }
 }

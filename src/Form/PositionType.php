@@ -60,7 +60,7 @@ class PositionType extends AbstractType
                 'label_attr' => ['class' => 'x-small text-secondary fw-bold d-block mb-1'],
                 'attr' => $this->getAttr($controller, [
                     'class' => 'form-control form-control-sm bg-black text-white border-0 fw-bold',
-                    'placeholder' => 'Ex: 100'
+                    'placeholder' => 'Ex: 100',
                 ], 'quantity'),
                 'row_attr' => ['class' => 'mb-2'],
             ])
@@ -84,14 +84,18 @@ class PositionType extends AbstractType
                 'attr' => [
                     'class' => $inputClass,
                     'style' => 'color-scheme: dark;',
-                    'data-position-calculator-target' => 'validityDate' // Cible pour le calcul +3 mois
+                    'data-position-calculator-target' => 'validityDate', // Cible pour le calcul +3 mois
                 ],
                 'row_attr' => ['class' => 'mb-2'],
             ]);
     }
 
     /**
-     * Méthode utilitaire pour injecter les attributs Stimulus proprement
+     * Méthode utilitaire pour injecter les attributs Stimulus proprement.
+     *
+     * @param array<string, mixed> $defaultAttr
+     *
+     * @return array<string, mixed>
      */
     private function getAttr(?string $controller, array $defaultAttr, ?string $target = null, bool $withAction = false): array
     {

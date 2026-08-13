@@ -6,10 +6,10 @@ namespace App\Entity;
 
 use App\Enum\PositionStatus;
 use App\Repository\EntrypointRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\Common\Collections\Collection;
-use Doctrine\Common\Collections\ArrayCollection;
 
 #[ORM\Entity(repositoryClass: EntrypointRepository::class)]
 #[ORM\Table(name: 'entrypoint')]
@@ -18,7 +18,7 @@ class Entrypoint
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $id = null;
+    private ?int $id = null; // @phpstan-ignore property.unusedType
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'entrypoints')]
     #[ORM\JoinColumn(nullable: false)]
@@ -33,13 +33,17 @@ class Entrypoint
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt;
 
+    /**
+     * @var Collection<int, Position>
+     */
     #[ORM\OneToMany(targetEntity: Position::class, mappedBy: 'entrypoint', orphanRemoval: true)]
     private Collection $positions;
 
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private bool $isActive = false;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->createdAt = new \DateTimeImmutable();
         $this->positions = new ArrayCollection();
     }
@@ -105,7 +109,7 @@ class Entrypoint
     public function isLocked(): bool
     {
         foreach ($this->positions as $position) {
-            if ($position->getStatus() === PositionStatus::RUNNING) {
+            if (PositionStatus::RUNNING === $position->getStatus()) {
                 return true;
             }
         }

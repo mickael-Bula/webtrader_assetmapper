@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Command;
 
-use App\Service\PortfolioService;
 use App\Entity\PortfolioSnapshot;
 use App\Repository\UserRepository;
+use App\Service\PortfolioService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -18,9 +20,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 class PortfolioSnapshotCommand extends Command
 {
     public function __construct(
-        private readonly UserRepository   $userRepository,
+        private readonly UserRepository $userRepository,
         private readonly PortfolioService $portfolioService,
-        private readonly EntityManagerInterface $entityManager
+        private readonly EntityManagerInterface $entityManager,
     ) {
         parent::__construct();
     }

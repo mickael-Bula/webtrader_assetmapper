@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Entity\User;
 use App\Entity\Position;
+use App\Entity\User;
 use App\Enum\PositionStatus;
-use App\Repository\PositionRepository;
 use App\Repository\PortfolioSnapshotRepository;
+use App\Repository\PositionRepository;
 use Symfony\UX\Chartjs\Builder\ChartBuilderInterface;
 use Symfony\UX\Chartjs\Model\Chart;
 
@@ -18,10 +18,21 @@ readonly class PortfolioService
         private ChartBuilderInterface $chartBuilder,
         private PositionRepository $positionRepository,
         private PortfolioSnapshotRepository $snapshotRepo,
-    )
-    {
+    ) {
     }
 
+    /**
+     * @return array{
+     *     total_equity: float,
+     *     cash_amount: float,
+     *     exposure_value: float,
+     *     unrealized_pnl: float,
+     *     exposure_percent: float,
+     *     exposure_color: string,
+     *     exposure_label: string,
+     *     exposure_description: string
+     * }
+     */
     public function calculateCurrentSnapshot(User $user): array
     {
         // Récupère toutes les positions en cours de l'utilisateur (Core + Trading).
@@ -30,7 +41,7 @@ readonly class PortfolioService
             $user
         );
 
-        $totalCapital = (float)$user->getTotalPortfolio();
+        $totalCapital = (float) $user->getTotalPortfolio();
         $unrealizedPnl = 0;
 
         foreach ($runningPositions as $pos) {
@@ -54,11 +65,12 @@ readonly class PortfolioService
             'exposure_color' => $this->getExposureColor($exposurePercent),
             'exposure_label' => $this->getExposureLabel($exposurePercent),
             'exposure_description' => $this->getExposureDescription($exposurePercent),
+            'exposure_value' => $totalEquity - $cashAmount,
         ];
     }
 
     /**
-     * Calcule le capital total actuellement investi (en €)
+     * Calcule le capital total actuellement investi (en €).
      *
      * @param Position[] $runningPositions
      */
@@ -69,7 +81,7 @@ readonly class PortfolioService
         foreach ($runningPositions as $position) {
             // On vérifie que la quantité et le prix d'achat LVC sont renseignés
             if ($position->getQuantity() && $position->getLvcBuyPrice()) {
-                $totalEngaged += ($position->getQuantity() * (float)$position->getLvcBuyPrice());
+                $totalEngaged += ($position->getQuantity() * (float) $position->getLvcBuyPrice());
             }
         }
 
@@ -79,6 +91,15 @@ readonly class PortfolioService
     /**
      * Calcule le pourcentage d'exposition actuel du portefeuille.
      * Se base sur le snapshot enregistré en base et qui fait autorité.
+     *
+     * @return array{
+     *     chart: Chart,
+     *     percentage: float|int,
+     *     used: float,
+     *     remaining: float,
+     *     exposure_color: string,
+     *     exposure_status: string
+     * }
      */
     public function getExposureData(User $user): array
     {
@@ -149,73 +170,95 @@ readonly class PortfolioService
 
         $chart = $this->chartBuilder->createChart(Chart::TYPE_DOUGHNUT);
         $chart->setData([
-                            'labels' => ['Occupé', 'Libre'],
-                            'datasets' => [[
-                                'backgroundColor' => [$color, '#2c2c2c'],
-                                'borderColor' => 'transparent',
-                                'data' => [$used, $remaining],
-                                'cutout' => '80%',
-                            ]],
-                        ]);
+            'labels' => ['Occupé', 'Libre'],
+            'datasets' => [[
+                'backgroundColor' => [$color, '#2c2c2c'],
+                'borderColor' => 'transparent',
+                'data' => [$used, $remaining],
+                'cutout' => '80%',
+            ]],
+        ]);
 
         $chart->setOptions([
-                               'responsive' => true,
-                               'maintainAspectRatio' => false, // Crucial pour contrôler la taille en CSS
-                               'plugins' => [
-                                   'legend' => ['display' => false],
-                                   'tooltip' => ['enabled' => false],
-                               ],
-                               'interaction' => [
-                                   'intersect' => true,
-                               ],
-                               'cutout' => '80%', // Un anneau plus fin fait paraître le graphique plus petit et élégant
-                           ]);
+            'responsive' => true,
+            'maintainAspectRatio' => false, // Crucial pour contrôler la taille en CSS
+            'plugins' => [
+                'legend' => ['display' => false],
+                'tooltip' => ['enabled' => false],
+            ],
+            'interaction' => [
+                'intersect' => true,
+            ],
+            'cutout' => '80%', // Un anneau plus fin fait paraître le graphique plus petit et élégant
+        ]);
 
         return $chart;
     }
 
     /**
      * Regroupe les positions pour un affichage par ligne, présentant la quantité et le PRU de chaque position.
+     *
+     * @return array<string, array{
+     *     name: string,
+     *     total_quantity: float,
+     *     total_cost: float,
+     *     current_price: float,
+     *     total_current_value: float,
+     *     pru: float,
+     *     pnl_euro: float,
+     *     pnl_percent: float
+     * }>
      */
     public function getGroupedPositions(User $user): array
     {
         // Récupère toutes les positions en cours de l'utilisateur (Core + Trading).
         $positions = $this->positionRepository->findByStatusAndUser(PositionStatus::RUNNING, $user);
         $grouped = [];
+        $name = 'LVC';
 
         foreach ($positions as $position) {
-            $name = 'LVC';
-
             if (!isset($grouped[$name])) {
                 $grouped[$name] = [
                     'name' => $name,
                     'total_quantity' => 0,
                     'total_cost' => 0,
-                    'current_price' => (float)$position->getCurrentPrice(),
+                    'current_price' => $position->getCurrentPrice(),
                     'total_current_value' => 0,
                 ];
             }
 
-            $quantity = (float)$position->getQuantity();
-            $buyPrice = (float)$position->getLvcBuyPrice();
+            $quantity = (float) $position->getQuantity();
+            $buyPrice = (float) $position->getLvcBuyPrice();
 
             $grouped[$name]['total_quantity'] += $quantity;
             $grouped[$name]['total_cost'] += ($quantity * $buyPrice);
-            $grouped[$name]['total_current_value'] += ($quantity * (float)$position->getCurrentPrice());
+            $grouped[$name]['total_current_value'] += ($quantity * $position->getCurrentPrice());
         }
 
         // Calcul final du PRU et de la performance pour chaque groupe
-        foreach ($grouped as $name => &$data) {
+        foreach ($grouped as &$data) {
             $data['pru'] = $data['total_cost'] / $data['total_quantity'];
             $data['pnl_euro'] = $data['total_current_value'] - $data['total_cost'];
             $data['pnl_percent'] = ($data['pnl_euro'] / $data['total_cost']) * 100;
         }
+
+        // SÉCURITÉ : on détruit la variable "pointeur" $data pour casser le lien de référence (&).
+        unset($data);
 
         return $grouped;
     }
 
     /**
      * Calcule les statistiques de base pour le core.
+     *
+     * @return array{
+     *     current_value: float,
+     *     target_value: float,
+     *     pru: float,
+     *     performance_percent: float,
+     *     total_quantity: float,
+     *     progress_percent: float
+     * }
      */
     public function getCoreStats(User $user): array
     {
@@ -231,9 +274,9 @@ readonly class PortfolioService
         $totalQuantity = 0;
 
         foreach ($corePositions as $pos) {
-            $quantity = (float)$pos->getQuantity();
+            $quantity = (float) $pos->getQuantity();
             $totalQuantity += $quantity;
-            $totalCost += ($quantity * (float)$pos->getLvcBuyPrice());
+            $totalCost += ($quantity * (float) $pos->getLvcBuyPrice());
             $totalValue += ($quantity * $pos->getCurrentPrice());
         }
 
@@ -258,6 +301,14 @@ readonly class PortfolioService
 
     /**
      * Récupère les données de performance pour le graphique.
+     *
+     * @return array{
+     *     labels: array<int, string|null>,
+     *     data: array<int, mixed>,
+     *     performance_data: array{is_calculable: bool, diff: float|int, percent: float|int},
+     *     daily_diff: float|int,
+     *     daily_percent: float|int
+     * }
      */
     public function getPerformanceData(User $user): array
     {
@@ -289,7 +340,7 @@ readonly class PortfolioService
         $globalPerf = [
             'is_calculable' => false,
             'diff' => 0,
-            'percent' => 0
+            'percent' => 0,
         ];
 
         if ($firstSnapshot) {
@@ -300,7 +351,7 @@ readonly class PortfolioService
                 // On calcule par rapport à la valeur de départ
                 'percent' => ($firstSnapshot->getTotalEquity() > 0)
                     ? ($diff / $firstSnapshot->getTotalEquity()) * 100
-                    : 0
+                    : 0,
             ];
         }
 
@@ -314,7 +365,29 @@ readonly class PortfolioService
             'data' => $data,
             'performance_data' => $globalPerf,
             'daily_diff' => $dailyDiff,
-            'daily_percent' => $dailyPercent
+            'daily_percent' => $dailyPercent,
         ];
+    }
+
+    /**
+     * Calcule le nombre de LVC CORE qu'il faudra vendre pour repasser sous les 75% d'exposition,
+     * basé sur un prix de LVC donné (le prix de vente cible).
+     */
+    public function calculateCoreQuantityToReduceExposure(User $user, float $lvcPrice): int
+    {
+        $portfolioData = $this->calculateCurrentSnapshot($user);
+        $totalPortfolioValue = $portfolioData['total_equity'];
+        $currentExposureValue = $portfolioData['exposure_value'];
+
+        // Calculer le montant en € à revendre pour atteindre 74.9%
+        $targetExposureValue = $totalPortfolioValue * 0.749;
+        $amountToLiquidate = $currentExposureValue - $targetExposureValue;
+
+        if ($amountToLiquidate <= 0) {
+            return 0;
+        }
+
+        // Convertir en nombre de parts LVC complets
+        return (int) ceil($amountToLiquidate / $lvcPrice);
     }
 }

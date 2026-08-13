@@ -13,20 +13,11 @@ use App\Dto\MarketData\CacLvcQuoteDto;
  */
 interface CacDailyRepositoryInterface
 {
-
-    /**
-     * @param int $id
-     * @return CacDailyDto|null
-     */
     public function findById(int $id): ?CacDailyDto;
 
-    /**
-     * @return CacDailyDto|null
-     */
-    public function findLast(): ?CacDailyDto ;
+    public function findLast(): ?CacDailyDto;
 
     /**
-     * @param int $limit
      * @return array<CacLvcQuoteDto>
      */
     public function findLastQuotesWithLvc(int $limit = 15): array;

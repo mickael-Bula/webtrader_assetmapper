@@ -4,24 +4,27 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service;
 
-use App\Enum\LogOrigin;
 use App\Dto\MarketData\CacDailyDto;
 use App\Entity\Entrypoint;
 use App\Entity\Position;
 use App\Entity\User;
 use App\Enum\LogAction;
 use App\Enum\LogContext;
+use App\Enum\LogOrigin;
 use App\Enum\PositionStatus;
+use App\Repository\MarketData\CacDailyRepositoryInterface;
+use App\Repository\MarketData\LvcDailyRepositoryInterface;
 use App\Repository\PositionRepository;
 use App\Service\LogManager;
 use App\Service\PortfolioService;
 use App\Service\PositionManager;
+use App\Service\Strategy\PhaseFourSellingStrategy;
+use App\Service\Strategy\PhaseThreeSellingStrategy;
+use App\Service\Strategy\PhaseTwoSellingStrategy;
 use App\Service\StrategyManager;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use App\Repository\MarketData\CacDailyRepositoryInterface;
-use App\Repository\MarketData\LvcDailyRepositoryInterface;
 
 class PositionManagerTest extends TestCase
 {
@@ -36,10 +39,18 @@ class PositionManagerTest extends TestCase
 
     protected function setUp(): void
     {
+        $positionManagerMock = $this->createMock(PositionManager::class);
         $this->positionRepositoryMock = $this->createMock(PositionRepository::class);
         $this->entityManagerMock = $this->createMock(EntityManagerInterface::class);
         $this->portfolioServiceMock = $this->createMock(PortfolioService::class);
         $this->logManagerMock = $this->createMock(LogManager::class);
+
+        // Instanciation des stratégies réelles pour tester le comportement du pattern Strategy
+        $strategies = [
+            new PhaseTwoSellingStrategy($this->entityManagerMock, $positionManagerMock, $this->logManagerMock),
+            new PhaseThreeSellingStrategy($this->logManagerMock),
+            new PhaseFourSellingStrategy($this->entityManagerMock, $this->positionRepositoryMock, $this->logManagerMock),
+        ];
 
         $this->positionManager = new PositionManager(
             $this->createMock(CacDailyRepositoryInterface::class),
@@ -49,6 +60,7 @@ class PositionManagerTest extends TestCase
             $this->createMock(StrategyManager::class),
             $this->logManagerMock,
             $this->portfolioServiceMock,
+            $strategies // Injection des stratégies sous forme d'itérable
         );
 
         $this->user = new User();
@@ -73,7 +85,7 @@ class PositionManagerTest extends TestCase
     public function testExecuteStrategySellInPhase4LiquidatesEntirePosition(): void
     {
         // Arrange
-        $position = $this->createTradingPosition(quantity: 10, buyPrice: "8000.0", lvcBuyPrice: "40.0", targetPrice: "8200.0");
+        $position = $this->createTradingPosition(quantity: 10, buyPrice: '8000.0', lvcBuyPrice: '40.0', targetPrice: '8200.0');
 
         $this->positionRepositoryMock->expects($this->once())
             ->method('findByStatusUserAndCore')
@@ -114,7 +126,7 @@ class PositionManagerTest extends TestCase
     public function testExecuteStrategySellInPhase3ClosesEntirePosition(): void
     {
         // Arrange
-        $position = $this->createTradingPosition(quantity: 5, buyPrice: "8100.0", lvcBuyPrice: "42.0", targetPrice: "8250.0");
+        $position = $this->createTradingPosition(quantity: 5, buyPrice: '8100.0', lvcBuyPrice: '42.0', targetPrice: '8250.0');
 
         $this->positionRepositoryMock->method('findByStatusUserAndCore')->willReturn([$position]);
         $this->portfolioServiceMock->method('calculateCurrentSnapshot')->willReturn(['exposure_percent' => 62.0]); // Phase 3
@@ -147,8 +159,25 @@ class PositionManagerTest extends TestCase
         // Arrange
         // Conforme à la règle des +20% : Achat 45€ (Capital 450€) → Cible touchée à 54€ (Valeur 540€)
         // Calcul théorique de vente : 450 / 54 = 8.33 → arrondi à 8 parts. Reliquat = 2 parts CORE.
-        $position = $this->createTradingPosition(quantity: 10, buyPrice: "8000.0", lvcBuyPrice: "45.0", targetPrice: "8200.0");
-        $position->setLvcTargetPrice("54.0");
+        $position = $this->createTradingPosition(
+            quantity: 10,
+            buyPrice: '8000.0',
+            lvcBuyPrice: '45.0',
+            targetPrice: '8200.0',
+            lvcTargetPrice: '54.0'
+        );
+
+        // DTO de la journée où le LVC atteint au moins 54.0
+        $dayDtoWithHighLvc = new CacDailyDto(
+            id: 100,
+            date: new \DateTimeImmutable('2026-05-18'),
+            open: 8200.0,
+            high: 8300.0,
+            low: 8150.0,
+            close: 8250.0,
+            lvcHigh: 55.0, // <- Atteint ou dépasse 54.0
+            lvcClose: 54.0
+        );
 
         $this->positionRepositoryMock->method('findByStatusUserAndCore')->willReturn([$position]);
         $this->portfolioServiceMock->method('calculateCurrentSnapshot')->willReturn(['exposure_percent' => 35.0]); // Phase 2
@@ -170,7 +199,7 @@ class PositionManagerTest extends TestCase
         );
 
         // Act
-        $this->positionManager->processDailySales($this->user, $this->dayDto);
+        $this->positionManager->processDailySales($this->user, $dayDtoWithHighLvc);
 
         // Assertions sur la ligne de Trading initiale
         $this->assertSame(PositionStatus::CLOSED, $position->getStatus());
@@ -189,8 +218,8 @@ class PositionManagerTest extends TestCase
         // Cible touchée à 41€ (Valeur totale = 82€).
         // Calcul théorique de vente : 80 / 41 = 1.95 part, arrondie à 2.
         // Reliquat : 2 - 2 = 0. Inférieur à une part complète.
-        $position = $this->createTradingPosition(quantity: 2, buyPrice: "8000.0", lvcBuyPrice: "40.0", targetPrice: "8200.0");
-        $position->setLvcTargetPrice("41.0");
+        $position = $this->createTradingPosition(quantity: 2, buyPrice: '8000.0', lvcBuyPrice: '40.0', targetPrice: '8200.0');
+        $position->setLvcTargetPrice('41.0');
 
         $this->positionRepositoryMock->method('findByStatusUserAndCore')->willReturn([$position]);
         $this->portfolioServiceMock->method('calculateCurrentSnapshot')->willReturn(['exposure_percent' => 30.0]);
@@ -216,8 +245,13 @@ class PositionManagerTest extends TestCase
     /**
      * Helper de création rapide d'une entité Position pour les tests.
      */
-    private function createTradingPosition(int $quantity, string $buyPrice, string $lvcBuyPrice, string $targetPrice): Position
-    {
+    private function createTradingPosition(
+        int $quantity,
+        string $buyPrice,
+        string $lvcBuyPrice,
+        string $targetPrice,
+        ?string $lvcTargetPrice = '45.0',
+    ): Position {
         $entrypoint = new Entrypoint();
 
         $position = new Position();
@@ -229,6 +263,7 @@ class PositionManagerTest extends TestCase
         $position->setBuyPrice($buyPrice);
         $position->setLvcBuyPrice($lvcBuyPrice);
         $position->setTargetPrice($targetPrice);
+        $position->setLvcTargetPrice($lvcTargetPrice);
 
         return $position;
     }

@@ -12,13 +12,7 @@ use App\Dto\MarketData\LvcDailyDto;
  */
 interface LvcDailyRepositoryInterface
 {
-    /**
-     * @return LvcDailyDto|null
-     */
     public function findLast(): ?LvcDailyDto;
 
-    /**
-     * @return string
-     */
     public function findLastClose(): string;
 }

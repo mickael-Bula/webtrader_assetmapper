@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Repository\MarketData\CacDailyRepository;
+use App\Repository\MarketData\LvcDailyRepository;
 use Doctrine\DBAL\Exception;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use App\Repository\MarketData\LvcDailyRepository;
-use App\Repository\MarketData\CacDailyRepository;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 final class StrategyDescriptionController extends AbstractController
 {
@@ -20,7 +20,7 @@ final class StrategyDescriptionController extends AbstractController
     #[Route('/strategy/description', name: 'app_strategy_description')]
     public function index(CacDailyRepository $cacRepo, LvcDailyRepository $lvcRepo): Response
     {
-        /** @var User $user */
+        /** @var User|null $user */
         $user = $this->getUser();
 
         if (!$user) {

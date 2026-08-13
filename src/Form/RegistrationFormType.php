@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Form;
 
 use App\Entity\User;
@@ -31,8 +33,8 @@ class RegistrationFormType extends AbstractType
                 'constraints' => [
                     new NotBlank(message: 'Please enter a password'),
                     new Length(
-                        min:        6,
-                        max:        4096,
+                        min: 6,
+                        max: 4096,
                         minMessage: 'Your password should be at least {{ limit }} characters'
                     ),
                 ],

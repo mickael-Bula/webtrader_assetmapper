@@ -4,42 +4,43 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Enum\LogAction;
-use App\Entity\User;
-use App\Enum\LogOrigin;
-use App\Enum\LogContext;
 use App\Entity\Entrypoint;
-use App\Service\LogManager;
-use App\Form\EntrypointType;
+use App\Entity\User;
+use App\Enum\LogAction;
+use App\Enum\LogContext;
+use App\Enum\LogOrigin;
 use App\Enum\PositionStatus;
-use Doctrine\DBAL\Exception;
+use App\Form\EntrypointType;
+use App\Repository\MarketData\CacDailyRepository;
+use App\Repository\MarketData\LvcDailyRepository;
+use App\Service\LogManager;
 use App\Service\PositionManager;
 use App\Service\StrategyManager;
+use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use App\Repository\MarketData\LvcDailyRepository;
-use App\Repository\MarketData\CacDailyRepository;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 final class SettingsController extends AbstractController
 {
-    public function __construct(private readonly LogManager $logManager) {}
+    public function __construct(private readonly LogManager $logManager)
+    {
+    }
 
     /**
      * @throws Exception
      */
     #[Route('/settings', name: 'app_settings')]
     public function index(
-        Request                $request,
+        Request $request,
         EntityManagerInterface $em,
-        CacDailyRepository     $cacRepo,
-        LvcDailyRepository     $lvcRepo,
-        PositionManager        $positionManager,
-        StrategyManager        $strategyManager
-    ): Response
-    {
+        CacDailyRepository $cacRepo,
+        LvcDailyRepository $lvcRepo,
+        PositionManager $positionManager,
+        StrategyManager $strategyManager,
+    ): Response {
         /** @var User $user */
         $user = $this->getUser();
 
@@ -48,7 +49,8 @@ final class SettingsController extends AbstractController
         $lastLvcPrice = $lvcRepo->findLast()?->getClose();
 
         if (!$lastCacPrice) {
-            $this->addFlash('error', "Données de marché (CAC40) indisponibles.");
+            $this->addFlash('error', 'Données de marché (CAC40) indisponibles.');
+
             return $this->redirectToRoute('app_home');
         }
 
@@ -61,20 +63,20 @@ final class SettingsController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             // TODO : déplacer toute cette logique dans le service StrategyManager
             // 1. On met à jour l'entité User avec les données du formulaire
-            $user->setTotalPortfolio((string)$form->get('totalPortfolio')->getData());
-            $user->setPositionSize((string)$form->get('positionSize')->getData());
+            $user->setTotalPortfolio((string) $form->get('totalPortfolio')->getData());
+            $user->setPositionSize((string) $form->get('positionSize')->getData());
             $user->setSpread($form->get('spread')->getData());
 
             // Log des modifications de configuration
             $this->logManager->log(
-                            sprintf('Paramètres mis à jour : Portefeuille %.2f€, Size %.2f€, Spread %.2f',
-                        $user->getTotalPortfolio(),
-                        $user->getPositionSize(),
-                        $user->getSpread()
+                sprintf('Paramètres mis à jour : Portefeuille %.2f€, Size %.2f€, Spread %.2f',
+                    $user->getTotalPortfolio(),
+                    $user->getPositionSize(),
+                    $user->getSpread()
                 ),
                 actionType: LogAction::SETUP,
-                origin:     LogOrigin::USER,
-                context:    LogContext::PARAM
+                origin: LogOrigin::USER,
+                context: LogContext::PARAM
             );
 
             // 2. On lie l'entrypoint à son user
@@ -100,6 +102,7 @@ final class SettingsController extends AbstractController
             // 5. On s'assure de ne pas dupliquer les positions pour ne pas être surexposé.
             $deleteMessage = $positionManager->deleteFormerWaitingPositions($user);
             // TODO : Voir s'il est possible d'afficher les flash messages successivement
+            // TODO : Il serait bon de gérer le cas d'un entrypoint tout neuf, sans id encore défini (nous avons dans ce cas entrypoint 0) => persist ou flush non fait
             // On trace l'information.
             $message = sprintf('Entrypoint %d : %s', $entrypoint->getId(), $deleteMessage);
             if (str_contains($deleteMessage, 'Les anciens ordres en attente ont été supprimés.')) {
@@ -115,7 +118,7 @@ final class SettingsController extends AbstractController
             $entrypoint->setStatus(PositionStatus::WAITING);
             $user->setBuyLimit($entrypoint->getEntrypoint());
             $user->setUpperRange($strategyManager->calculateUpperRange($entrypoint));
-            $user->setLastCacUpdatedId($cacRepo->findLast()?->getId());
+            $user->setLastCacUpdatedId($cacRepo->findLast()->getId());
 
             // On enregistre en mémoire l'entrypoint.
             $em->persist($entrypoint);

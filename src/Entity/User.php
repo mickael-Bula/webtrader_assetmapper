@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Enum\PositionStatus;
-use Doctrine\DBAL\Types\Types;
 use App\Repository\UserRepository;
-use Doctrine\ORM\Mapping as ORM;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -23,6 +23,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    /** @phpstan-ignore property.unusedType */
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
@@ -40,7 +41,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2,  nullable: true)]
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     private ?string $totalPortfolio = null; // Valeur du portefeuille
 
     #[ORM\Column(type: 'integer', options: ['default' => 2])]
@@ -58,6 +59,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     private ?string $buyLimit = null;
 
+    #[ORM\Column(type: 'boolean')]
+    private bool $isVerified = false;
+
+    /**
+     * @var Collection<int, Entrypoint>
+     */
     #[ORM\OneToMany(targetEntity: Entrypoint::class, mappedBy: 'user', orphanRemoval: true)]
     private Collection $entrypoints;
 
@@ -143,7 +150,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function __serialize(): array
     {
         $data = (array) $this;
-        $data["\0".self::class."\0password"] = hash('crc32c', $this->password);
+        $data["\0" . self::class . "\0password"] = hash('crc32c', $this->password);
 
         return $data;
     }
@@ -177,13 +184,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getSpread(): int
     {
         return $this->spread;
-
     }
 
     public function setSpread(int $spread): void
     {
         $this->spread = $spread;
-
     }
 
     public function getLastCacUpdatedId(): ?int
@@ -222,6 +227,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function isVerified(): bool
+    {
+        return $this->isVerified;
+    }
+
+    public function setIsVerified(bool $isVerified): static
+    {
+        $this->isVerified = $isVerified;
+
+        return $this;
+    }
+
     /**
      * @return Collection<int, Entrypoint>
      */
@@ -232,12 +249,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * Méthode retournant les entrypoints dont le statut n'est pas CLOSED.
+     *
+     * @return array<int, Entrypoint>
      */
     public function getActiveEntrypoints(): array
     {
         $activeEntrypoints = [];
         foreach ($this->entrypoints as $entrypoint) {
-            if ($entrypoint->getStatus() !== PositionStatus::CLOSED) {
+            if (PositionStatus::CLOSED !== $entrypoint->getStatus()) {
                 $activeEntrypoints[] = $entrypoint;
             }
         }
@@ -251,7 +270,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getWaitingEntrypoint(): ?Entrypoint
     {
         foreach ($this->entrypoints as $entrypoint) {
-            if ($entrypoint->getStatus() === PositionStatus::WAITING) {
+            if (PositionStatus::WAITING === $entrypoint->getStatus()) {
                 return $entrypoint;
             }
         }

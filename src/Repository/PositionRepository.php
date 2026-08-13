@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\Entity\User;
 use App\Entity\Position;
+use App\Entity\User;
 use App\Enum\PositionStatus;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * @extends ServiceEntityRepository<Position>
@@ -24,10 +24,6 @@ class PositionRepository extends ServiceEntityRepository
     /**
      * Récupère les positions d'un utilisateur en passant par la table Entrypoint.
      * Cette méthode sert à construire les méthodes findByStatusAndUser et findByStatusUserAndCore.
-     *
-     * @param User $user
-     * @param PositionStatus $status
-     * @return QueryBuilder
      */
     private function getBaseQueryBuilder(User $user, PositionStatus $status): QueryBuilder
     {
@@ -43,19 +39,16 @@ class PositionRepository extends ServiceEntityRepository
      * Récupère TOUTES les positions RUNNING (Core + Trading).
      * Si un ID d'entrypoint est fourni, on exclut les positions de cet entrypoint.
      *
-     * @param PositionStatus $status
-     * @param User $user
-     * @param int|null $excludedEntrypointId
      * @return array<Position>
      */
     public function findByStatusAndUser(
         PositionStatus $status,
-        User           $user,
-        ?int           $excludedEntrypointId = null
+        User $user,
+        ?int $excludedEntrypointId = null,
     ): array {
         $qb = $this->getBaseQueryBuilder($user, $status);
 
-        if ($excludedEntrypointId !== null) {
+        if (null !== $excludedEntrypointId) {
             $qb->andWhere('e.id != :excludedId')
                 ->setParameter('excludedId', $excludedEntrypointId);
         }
@@ -66,13 +59,15 @@ class PositionRepository extends ServiceEntityRepository
     }
 
     /**
-     * Récupère spécifiquement le bloc Core ou le bloc Trading
+     * Récupère spécifiquement le bloc Core ou le bloc Trading.
+     *
+     * @return array<Position>
      */
     public function findByStatusUserAndCore(
         PositionStatus $status,
         User $user,
         bool $isCore,
-        string $order = 'ASC'
+        string $order = 'ASC',
     ): array {
         return $this->getBaseQueryBuilder($user, $status)
             ->andWhere('p.isCore = :isCore')
@@ -84,7 +79,9 @@ class PositionRepository extends ServiceEntityRepository
 
     /**
      * Retourne les positions en attente de l'utilisateur.
-     * On trie par prix décroissant : on traite les targets les plus hautes d'abord
+     * On trie par prix décroissant : on traite les targets les plus hautes d'abord.
+     *
+     * @return array<Position>
      */
     public function findWaitingPositionsOrderedByPrice(User $user): array
     {

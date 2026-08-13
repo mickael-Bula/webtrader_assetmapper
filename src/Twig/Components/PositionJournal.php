@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Twig\Components;
 
+use App\Entity\LogEntry;
 use App\Repository\LogEntryRepository;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 
@@ -13,6 +14,9 @@ use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 #[AsTwigComponent]
 class PositionJournal
 {
+    /**
+     * @var array<int, LogEntry>
+     */
     public array $logs = [];
 
     public function __construct(private readonly LogEntryRepository $logRepository)
@@ -20,7 +24,7 @@ class PositionJournal
     }
 
     /**
-     * Cette méthode est appelée automatiquement lors du rendu du composant
+     * Cette méthode est appelée automatiquement lors du rendu du composant.
      */
     public function mount(): void
     {

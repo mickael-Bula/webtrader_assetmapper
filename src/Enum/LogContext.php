@@ -8,7 +8,7 @@ enum LogContext: string
 {
     case WAITING = 'en attente';
     case RUNNING = 'en cours';
-    case CLOSED  = 'clôturé';
-    case ENTRYPOINT  = 'entrypoint';
+    case CLOSED = 'clôturé';
+    case ENTRYPOINT = 'entrypoint';
     case PARAM = 'param';
 }

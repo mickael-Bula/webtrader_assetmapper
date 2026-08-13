@@ -22,3 +22,12 @@
 # Ignorer les images dans le dossier des images, sauf pour le dossier .gitkeep (force le suivi du dossier vide).
 assets/images/*
 !assets/images/.gitkeep
+
+###> friendsofphp/php-cs-fixer ###
+/.php-cs-fixer.php
+/.php-cs-fixer.cache
+###< friendsofphp/php-cs-fixer ###
+
+###> phpstan/phpstan ###
+phpstan.neon
+###< phpstan/phpstan ###

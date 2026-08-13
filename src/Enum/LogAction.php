@@ -7,7 +7,8 @@ namespace App\Enum;
 /**
  * Utilisé pour distinguer dans les logs les actions réalisées sur les positions.
  */
-enum LogAction: string {
+enum LogAction: string
+{
     case PENDING_ORDER_CREATE = 'pending_order_create';
     case BUY = 'buy';
     case SELL = 'sell';

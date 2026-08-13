@@ -37,7 +37,24 @@
                     <td class="text-nowrap {{ this.isExpiringSoon(pos) ? 'text-warning fw-bold' : '' }}">
                         {{ this.formattedDate(pos) }}
                     </td>
-                    <td class="text-center">{{ pos.quantity ?? "—" }}</td>
+                    <td class="text-center">
+                        {% if pos.quantity is not null %}
+                            {# 1. Si la quantité prédite à la vente est supérieure à la quantité en portefeuille (Phase 4) #}
+                            {% if pos.adjustedTargetSellQuantity > pos.quantity %}
+                                <span class="text-danger fw-bold"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="top"
+                                      title="Inclus la liquidation forcée de {{ pos.adjustedTargetSellQuantity - pos.quantity }} LVC CORE pour désendettement (Expo >= 75%)">
+                                    {{ pos.adjustedTargetSellQuantity }} *
+                                </span>
+                                {# 2. Affichage classique standard #}
+                            {% else %}
+                                {{ pos.quantity }}
+                            {% endif %}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
                     <td class="text-center">{{ pos.lvcBuyPrice|number_format(2, ',', ' ') }}</td>
                     <td class="text-center">{{ pos.buyPrice|number_format(0, ',', ' ') }}</td>
                     {# Ce TD aura la bordure gauche via le CSS td:nth-child(5) #}
@@ -54,8 +71,7 @@
                         {# On inclut le menu latéral ici pour qu'il ait accès à la variable 'pos' #}
                         {{ include(
                             '_partials/_position_drawer.html.twig',
-                            { 'position': pos, 'lastPrice': lastPrice, 'lastLvcPrice': lastLvcPrice })
-                        }}
+                            { 'position': pos, 'lastPrice': lastPrice, 'lastLvcPrice': lastLvcPrice }) }}
                     </td>
                 </tr>
             {% else %}

@@ -17,7 +17,7 @@ class StockMarketTable
     public array $quotes = [];
 
     /**
-     * Formate n'importe quel nombre au format financier français
+     * Formate n'importe quel nombre au format financier français.
      */
     public function format(float $value): string
     {

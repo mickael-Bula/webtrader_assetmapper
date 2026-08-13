@@ -149,7 +149,7 @@ final readonly class CacDailyRepository implements CacDailyRepositoryInterface
     public function findRangeWithLvc(int $startId, int $endId): array
     {
         return $this->entityManager->createQueryBuilder()
-            ->select('new App\Dto\MarketData\CacDailyDto(c.id, c.date, c.open, c.high, c.low, c.close, l.high)')
+            ->select('new App\Dto\MarketData\CacDailyDto(c.id, c.date, c.open, c.high, c.low, c.close, l.high, l.close)')
             ->from(CacDaily::class, 'c')
             ->join(LvcDaily::class, 'l', 'WITH', 'l.date = c.date')
             ->where('c.id > :startId')

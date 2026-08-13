@@ -54,8 +54,8 @@ readonly class PositionManager
     /**
      * Synchronise les prix actuels et traite les événements de trading (achats/ventes).
      *
-     * Cette méthode met à jour 'lvcCurrentPrice' pour toutes les positions RUNNING,
-     * puis simule chronologiquement les jours manqués si nécessaire.
+     * Cette méthode simule chronologiquement les jours manqués
+     * et met à jour 'lvcCurrentPrice' pour toutes les positions RUNNING.
      *
      * @param User        $user         L'investisseur concerné
      * @param CacDailyDto $latestCacDto la dernière cotation de marché disponible
@@ -66,19 +66,6 @@ readonly class PositionManager
      */
     public function checkAndUpdatePositions(User $user, CacDailyDto $latestCacDto): void
     {
-        // MISE À JOUR DU PRIX LVC COURANT DES POSITIONS EN COURS
-        $runningPositions = $this->positionRepository->findByStatusAndUser(
-            PositionStatus::RUNNING,
-            $user
-        );
-
-        foreach ($runningPositions as $position) {
-            $position->setLvcCurrentPrice((string) $latestCacDto->getLvcClose());
-        }
-
-        // On flush la mise à jour de prix pour que le snapshot initial soit juste
-        $this->entityManager->flush();
-
         // Récupère l'historique manqué (du plus vieux au plus récent)
         $missedCacs = $this->cacRepository->findRangeWithLvc(
             $user->getLastCacUpdatedId(),
@@ -86,13 +73,34 @@ readonly class PositionManager
         );
 
         foreach ($missedCacs as $currentCac) {
-            // On traite chaque jour de manière isolée et chronologique
+            // 1. Mise à jour dynamique du cours au jour 'J' traité
+            $this->updatePositionsCurrentPrice($user, $currentCac->getLvcClose());
+
+            // 2. Traitement de la journée 'J'
             $this->processSingleDay($user, $currentCac);
 
-            // On met à jour le dernier CAC traité pour l'utilisateur.
-            $user->setLastCacUpdatedId($latestCacDto->getId());
+            // 3. On met à jour le dernier CAC traité pour l'utilisateur.
+            $user->setLastCacUpdatedId($currentCac->getId());
             $this->entityManager->flush();
         }
+    }
+
+    /**
+     * Mise à jour des positions en cours avec le prix LVC du jour en cours de traitement.
+     * Permet d'obtenir la valorisation et l'exposition réelles à la date du jour traité.
+     */
+    private function updatePositionsCurrentPrice(User $user, float $lvcClose): void
+    {
+        $runningPositions = $this->positionRepository->findByStatusAndUser(
+            PositionStatus::RUNNING,
+            $user
+        );
+
+        foreach ($runningPositions as $position) {
+            $position->setLvcCurrentPrice((string) $lvcClose);
+        }
+
+        $this->entityManager->flush();
     }
 
     /**
@@ -238,8 +246,8 @@ readonly class PositionManager
         );
 
         foreach ($runningPositions as $pos) {
-            // Vérification : est-ce que le plus haut du jour a touché l'objectif de vente ?
-            if (null !== $pos->getTargetPrice() && $day->getHigh() >= (float) $pos->getTargetPrice()) {
+            // Vérification : est-ce que le plus haut LVC du jour a touché l'objectif de vente LVC ?
+            if (null !== $pos->getLvcTargetPrice() && $day->getLvcHigh() >= (float) $pos->getLvcTargetPrice()) {
                 $this->executeStrategySell($user, $pos, $day, $exposure);
             }
         }
@@ -284,7 +292,10 @@ readonly class PositionManager
      */
     public function calculateGlobalPru(User $user): float
     {
-        $runningPositions = $this->positionRepository->findBy(['user' => $user, 'status' => PositionStatus::RUNNING]);
+        $runningPositions = $this->positionRepository->findByStatusAndUser(
+            PositionStatus::RUNNING,
+            $user
+        );
 
         $totalCost = 0.0;
         $totalQuantity = 0.0;
@@ -548,7 +559,7 @@ readonly class PositionManager
      */
     public function deleteFormerWaitingPositions(User $user): string
     {
-        // TODO : Voir s'il est posible d'utiliser le nouveau champ isActive pour effectuer la mise à jour
+        // TODO : Voir s'il est possible d'utiliser le nouveau champ isActive pour effectuer la mise à jour
         /** @var EntrypointRepository $entrypointRepo */
         $entrypointRepo = $this->entityManager->getRepository(Entrypoint::class);
 

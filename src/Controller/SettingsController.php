@@ -102,7 +102,7 @@ final class SettingsController extends AbstractController
             // 5. On s'assure de ne pas dupliquer les positions pour ne pas être surexposé.
             $deleteMessage = $positionManager->deleteFormerWaitingPositions($user);
             // TODO : Voir s'il est possible d'afficher les flash messages successivement
-            // TODO : Il serait bon de géer le cas d'un entrypoint tout neuf, sans id encore défini (nous avons dans ce cas entrypoint 0) => persist ou flush non fait
+            // TODO : Il serait bon de gérer le cas d'un entrypoint tout neuf, sans id encore défini (nous avons dans ce cas entrypoint 0) => persist ou flush non fait
             // On trace l'information.
             $message = sprintf('Entrypoint %d : %s', $entrypoint->getId(), $deleteMessage);
             if (str_contains($deleteMessage, 'Les anciens ordres en attente ont été supprimés.')) {
